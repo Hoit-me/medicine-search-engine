@@ -1,5 +1,3 @@
-/// 미니 프로젝트로써 어디서든 사용할 수 있는 회원을 주로 다룸
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,8 +7,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model medicine {
-  id String @id @map("_id") @db.String
-  
+type additive {
+  code String
+  name String
+}
 
+type changeContent {
+  content String
+  date    DateTime
+}
+
+type ingredients {
+  amount       String
+  en           String?
+  ko           String
+  pharmacopeia String
+  standard     String
+  unit         String
+}
+
+type mainIngredient {
+  code String
+  name String
+}
+
+type reExamination {
+  re_examination_end_date   DateTime?
+  re_examination_start_date DateTime?
+  type                      String
+}
+
+model medicine {
+  id                  String                       @id @map("_id")
+  additive            additive[]
+  atc_code            String?
+  cancel_date         DateTime?
+  cancel_status       String
+  caution             String?
+  caution_file_url    String?
+  change_content      changeContent[]
+  change_date         DateTime?
+  classification      String?
+  company             String
+  company_number      String?
+  document_file_url   String?
+  effect              String?
+  effect_file_url     String?
+  english_company     String?
+  english_name        String?
+  expiration_date     DateTime?
+  ingredients         ingredients[]
+  insurance_code      String[]
+  is_new_drug         Boolean
+  main_ingredient     mainIngredient[]
+  name                String
+  narcotic_type       String?
+  packing_unit        String
+  permit_date         DateTime?
+  raw_material        String
+  re_examination      reExamination?
+  re_examination_date String?
+  register_id         String
+  serial_number       String
+  standard_code       String?
+  state               String?
+  storage_method      String
+  total_amount        String?
+  type                String
+  usage               String?
+  usage_file_url      String?
 }
