@@ -1,10 +1,22 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    MedicineBatchModule,
+    {
+      ...HttpModule.register({
+        timeout: 5000,
+        maxRedirects: 5,
+      }),
+      global: true,
+    },
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
