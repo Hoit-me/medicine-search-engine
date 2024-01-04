@@ -1,15 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { medicine } from '@prisma/client';
 import { Medicine } from '@src/type/medicine';
 import { convertXlsxToJson } from '@src/utils/convertXlsxToJson';
 import { renameKeys } from '@src/utils/renameKeys';
-import { catchError, from, map, mergeMap } from 'rxjs';
+import { catchError, from, map, mergeMap, tap, toArray } from 'rxjs';
 
 @Injectable()
 export class MedicineBatchService {
   logger = console;
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    @Inject(HttpService)
+    private readonly httpService: HttpService,
+  ) {}
 
   save(medicine: medicine) {
     return medicine;
@@ -17,15 +20,19 @@ export class MedicineBatchService {
 
   processMedicineDetail() {
     const url =
-      'https://nedrug.mfds.go.kr/pbp/CCBBA01/getItemDetailExcelList?itemSeq=202003016';
+      'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
     return this.fetchMedicineDetailListXlsx(url).pipe(
+      tap((buffer) => this.logger.log('fetchMedicineDetailListXlsx')),
       map(this.convertMedicineDetailListXlsxToJson),
+      tap((json) => this.logger.log('convertMedicineDetailListXlsxToJson')),
       mergeMap(from),
-      map(this.converMedicineDetailKeyKrToEng),
-      map(this.convertFormatMedicineDetailToDBSchema),
+      tap((json) => this.logger.log('from')),
+      map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)),
+      map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)),
       map(this.save),
+      toArray(),
       catchError((err) => {
-        this.logger.error(err.message);
+        this.logger.error(err);
         return 'ERROR';
       }),
     );
@@ -40,7 +47,7 @@ export class MedicineBatchService {
   }
 
   convertMedicineDetailListXlsxToJson(buffer: any) {
-    return convertXlsxToJson<Medicine.DetailJson_Kr[]>(buffer);
+    return convertXlsxToJson<Medicine.DetailJson_Kr>(buffer);
   }
 
   converMedicineDetailKeyKrToEng(medicine: Medicine.DetailJson_Kr) {
@@ -65,8 +72,8 @@ export class MedicineBatchService {
       permit_date: medicine.permit_date ? new Date(medicine.permit_date) : null,
       classification: medicine.classification as medicine['classification'],
       ingredients: this.parseIngredients(
-        medicine.ingredients,
-        medicine.english_ingredients,
+        medicine.ingredients || null,
+        medicine.english_ingredients || null,
       ),
       main_ingredient: this.parseCompound(medicine.main_ingredient),
       additive: this.parseCompound(medicine.additive),

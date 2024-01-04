@@ -1,8 +1,6 @@
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MedicineBatchService } from '@src/batch/medicine/medicineBatch.service';
-import { catchError, firstValueFrom, map } from 'rxjs';
-import * as XLSX from 'xlsx';
 
 describe('MedicineBatchService', () => {
   let mockMedicineBatchService: MedicineBatchService;
@@ -17,7 +15,7 @@ describe('MedicineBatchService', () => {
       ],
       providers: [
         MedicineBatchService,
-        { provide: HttpService, useValue: HttpService },
+        { provide: HttpService, useValue: new HttpService() },
       ],
     })
       // .overrideProvider(HttpService)
@@ -48,23 +46,11 @@ describe('MedicineBatchService', () => {
     });
     it('기본테스트', async () => {
       expect(true).toBe(true);
+
       const a = await firstValueFrom(
-        mockHttpService
-          .get<ArrayBuffer>(
-            'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail',
-            { responseType: 'arraybuffer' },
-          )
-          .pipe(
-            map((res) => res.data),
-            map((buffer) => {
-              return XLSX.read(buffer);
-            }),
-            catchError((err) => {
-              console.log(err.message);
-              return [];
-            }),
-          ),
+        mockMedicineBatchService.processMedicineDetail(),
       );
+      // const a = await firstValueFrom(mockMedicineBatchService.test());
       console.log(a);
     });
   });
