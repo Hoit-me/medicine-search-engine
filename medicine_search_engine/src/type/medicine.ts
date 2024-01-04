@@ -89,45 +89,45 @@ export namespace Medicine {
 
   export interface Detail {
     name: string; // 품목명
-    english_name?: string; // "품목 영문명"
+    english_name: string | null; // "품목 영문명"
     serial_number: string; // 품목일련번호
     type: string; // "허가/신고구분"
     cancel_status: string; // 취소상태
-    cancel_date?: string; // 취소일자
-    change_date?: string; // 변경일자
+    cancel_date: string | null; // 취소일자
+    change_date: string | null; // 변경일자
     company: string; // 업체명
-    english_company?: string; // "업체 영문명"
-    permit_date?: string; // 허가일자
-    classification?: string; // 전문일반
-    state?: string; // 성상
-    standard_code?: string; // 표준코드
-    ingredients?: string; // 원료성분
-    english_ingredients?: string; // 영문성분명
-    effect?: string; // 효능효과
-    usage?: string; // 용법용량
-    caution?: string; // 주의사항
-    document?: string; // 첨부문서
-    storage_method?: string; // 저장방법
-    expiration_date?: string; // 유효기간
-    re_examination?: string; // 재심사대상
-    re_examination_date?: string; // 재심사기간
-    packing_unit?: string; // 포장단위
-    insurance_code?: string; // 보험코드
-    narcotic_type?: string; // 마약류분류
+    english_company: string | null; // "업체 영문명"
+    permit_date: string | null; // 허가일자
+    classification: string | null; // 전문일반
+    state: string | null; // 성상
+    standard_code: string | null; // 표준코드
+    ingredients: string | null; // 원료성분
+    english_ingredients: string | null; // 영문성분명
+    effect: string | null; // 효능효과
+    usage: string | null; // 용법용량
+    caution: string | null; // 주의사항
+    document: string | null; // 첨부문서
+    storage_method: string | null; // 저장방법
+    expiration_date: string | null; // 유효기간
+    re_examination: string | null; // 재심사대상
+    re_examination_date: string | null; // 재심사기간
+    packing_unit: string | null; // 포장단위
+    insurance_code: string | null; // 보험코드
+    narcotic_type: string | null; // 마약류분류
     raw_material: string; // 완제원료구분
-    is_new_drug?: string; // 신약여부
-    change_content?: string; // 변경내용
-    total_amount?: string; // 총량
-    main_ingredient?: string; // 주성분명
-    additive?: string; // 첨가제명
-    atc_code?: string; // ATC코드
+    is_new_drug: string | null; // 신약여부
+    change_content: string | null; // 변경내용
+    total_amount: string | null; // 총량
+    main_ingredient: string | null; // 주성분명
+    additive: string | null; // 첨가제명
+    atc_code: string | null; // ATC코드
     register_id: string; // 등록자ID
-    company_number?: string; // 사업자번호
+    company_number: string | null; // 사업자번호
   }
 
-  type KorKey = keyof DetailJson_Kr;
-  type EngKey = keyof Detail;
-  type KorToEngKeyMap = Record<KorKey, EngKey>;
+  export type DetailKorKey = keyof DetailJson_Kr;
+  export type DetailEngKey = keyof Detail;
+  export type KorToEngKeyMap = Record<DetailKorKey, DetailEngKey>;
   export const KOR_TO_ENG_KEY_MAP: KorToEngKeyMap = {
     품목명: 'name',
     '품목 영문명': 'english_name',
@@ -177,14 +177,14 @@ export namespace Medicine {
     | 'EP'
     | 'BP'
     | 'DAB'
-    | 'PF'
-    | null;
+    | 'PF';
   export interface Ingredient {
-    ko: string | null;
+    ko: string;
     en: string | null;
     pharmacopeia: Pharmacoepia;
-    amount: string | null;
-    standard: string | null;
+    amount: string;
+    standard: string;
+    unit: string;
   }
 
   export interface Compound {
