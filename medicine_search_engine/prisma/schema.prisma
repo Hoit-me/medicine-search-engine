@@ -21,7 +21,7 @@ type ingredients {
   amount       String
   en           String?
   ko           String
-  pharmacopeia String
+  pharmacopoeia String
   standard     String
   unit         String
 }
@@ -65,8 +65,7 @@ model medicine {
   packing_unit        String
   permit_date         DateTime?
   raw_material        String
-  re_examination      reExamination?
-  re_examination_date DateTime?
+  re_examination      reExamination[]
   register_id         String
   serial_number       String
   standard_code       String?
