@@ -4,7 +4,7 @@ import { medicine } from '@prisma/client';
 import { Medicine } from '@src/type/medicine';
 import { convertXlsxToJson } from '@src/utils/convertXlsxToJson';
 import { renameKeys } from '@src/utils/renameKeys';
-import { catchError, from, map, mergeMap, tap, toArray } from 'rxjs';
+import { catchError, from, map, mergeMap, toArray } from 'rxjs';
 
 @Injectable()
 export class MedicineBatchService {
@@ -22,14 +22,11 @@ export class MedicineBatchService {
     const url =
       'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
     return this.fetchMedicineDetailListXlsx(url).pipe(
-      tap((buffer) => this.logger.log('fetchMedicineDetailListXlsx')),
-      map(this.convertMedicineDetailListXlsxToJson),
-      tap((json) => this.logger.log('convertMedicineDetailListXlsxToJson')),
+      map(this.convertMedicineDetailListXlsxToJson.bind(this)),
       mergeMap(from),
-      tap((json) => this.logger.log('from')),
-      map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)),
-      map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)),
-      map(this.save),
+      map(this.converMedicineDetailKeyKrToEng.bind(this)),
+      map(this.convertFormatMedicineDetailToDBSchema.bind(this)),
+      map(this.save.bind(this)),
       toArray(),
       catchError((err) => {
         this.logger.error(err);
@@ -62,18 +59,28 @@ export class MedicineBatchService {
   }
 
   convertFormatMedicineDetailToDBSchema(medicine: Medicine.Detail): medicine {
-    const { document, usage, effect, caution, ...rest } = medicine;
+    const {
+      document,
+      usage,
+      effect,
+      caution,
+      english_ingredients,
+      ingredients,
+      re_examination_date,
+      ...rest
+    } = medicine;
     return {
       ...rest,
       id: medicine.serial_number,
+
       type: medicine.type as medicine['type'],
       cancel_date: medicine.cancel_date ? new Date(medicine.cancel_date) : null,
       change_date: medicine.change_date ? new Date(medicine.change_date) : null,
       permit_date: medicine.permit_date ? new Date(medicine.permit_date) : null,
       classification: medicine.classification as medicine['classification'],
       ingredients: this.parseIngredients(
-        medicine.ingredients || null,
-        medicine.english_ingredients || null,
+        ingredients || null,
+        english_ingredients || null,
       ),
       main_ingredient: this.parseCompound(medicine.main_ingredient),
       additive: this.parseCompound(medicine.additive),
@@ -95,10 +102,10 @@ export class MedicineBatchService {
       company_number: medicine.company_number,
       register_id: medicine.register_id,
       atc_code: medicine.atc_code,
-      re_examination_date: medicine.re_examination_date
-        ? new Date(medicine.re_examination_date)
-        : null,
-      re_examination: this.parseReExamination(medicine.re_examination),
+      re_examination: this.parseReExamination(
+        medicine.re_examination,
+        re_examination_date,
+      ),
       usage_file_url: usage || null,
       caution_file_url: caution || null,
       effect_file_url: effect || null,
@@ -129,7 +136,7 @@ export class MedicineBatchService {
         standard,
         ko,
         en,
-        pharmacopeia: pharmacoepia as Medicine.Pharmacoepia,
+        pharmacopoeia: pharmacoepia as Medicine.Pharmacopoeia,
         amount,
         unit,
       };
@@ -170,21 +177,37 @@ export class MedicineBatchService {
       const [content, date] = changeContent.split(',');
       return {
         content,
-        date: new Date(date),
+        date: new Date(date.trim()),
       };
     });
     return _changeContents;
   }
 
-  parseReExamination(reExaminationString: string | null) {
-    if (!reExaminationString) return null;
-    // "type: 신규, re_examination_start_date: 2021-08-27, re_examination_end_date: 2021-08-27"
-    const [type, re_examination_start_date, re_examination_end_date] =
-      reExaminationString.split('~');
-    return {
-      type,
-      re_examination_start_date: new Date(re_examination_start_date),
-      re_examination_end_date: new Date(re_examination_end_date),
-    };
+  parseReExamination(
+    reExaminationString: string | null,
+    periodString: string | null,
+  ) {
+    if (!reExaminationString) return [];
+    if (!periodString) return [];
+    // "재심사대상": "재심사대상(6년),재심사대상(6년),재심사대상(6년),재심사대상(6년)",
+    // "재심사기간": "2018-12-26~2024-12-25,2018-12-26~2024-12-25,~2024-12-25,~2024-12-25",
+
+    const types = reExaminationString.split(',');
+    // 기간
+    const periods = periodString.split(',');
+
+    const _reExaminations = types.map((type, index) => {
+      const [re_examination_start_date, re_examination_end_date] =
+        periods[index].split('~');
+      return {
+        type,
+        re_examination_start_date: re_examination_start_date
+          ? new Date(re_examination_start_date)
+          : null,
+        re_examination_end_date: new Date(re_examination_end_date),
+      };
+    });
+
+    return _reExaminations;
   }
 }

@@ -166,7 +166,7 @@ export namespace Medicine {
     사업자번호: 'company_number',
   };
 
-  export type Pharmacoepia =
+  export type Pharmacopoeia =
     | 'KP'
     | 'KCP'
     | 'KHP'
@@ -181,7 +181,7 @@ export namespace Medicine {
   export interface Ingredient {
     ko: string;
     en: string | null;
-    pharmacopeia: Pharmacoepia;
+    pharmacopoeia: Pharmacopoeia;
     amount: string;
     standard: string;
     unit: string;
