@@ -209,6 +209,10 @@ export namespace Medicine {
   // - 매일 4시 업데이트
   // - 특이사항:
   //   - 이미지를 다운링크로 제공
+  //      - 이미지가 변경될시, 다운로드 링크가 변경됨
+  //      - 예시, 이소졸정
+  //      - 201606230001604 (변경된 이미지)
+  //      - 201606230001602 (변경전 이미지)
   //   - 품목허가번호 존재
   //   - 분류명 존재
   //   - 사업자번호 존재
@@ -265,6 +269,56 @@ export namespace Medicine {
     보험코드: string;
     사업자번호: string;
   }
+
+  export interface Common {
+    serial_number: string; // 품목일련번호
+    name: string; // 품목명
+    item: string; // 품목
+    english_name: string; // 영문명
+    company_name: string; // 업체명
+    company: string; // 업체
+    company_english_name: string; // 업체영문명
+    business_license_number: string; // 업허가번호
+    business_serial_number: string; // 업일련번호
+    business_type: string; // 업종
+    professional_general_classification: string; // 전문일반구분
+    main_ingredient: string; // 주성분
+    number_of_main_ingredients: string; // 주성분수
+    large_image: string; // 큰제품이미지
+    declaration_permission_classification: string; // 신고허가구분
+    cancellation_withdrawal_date: string; // 취소취하일자
+    cancellation_withdrawal_classification: string; // 취소취하구분
+    classification_name: string; // 분류명
+    item_approval_number: string; // 품목허가번호
+    insurance_code: string; // 보험코드
+    company_number: string; // 사업자번호
+  }
+  export type CommonKorKey = keyof CommonJson_Kr;
+  export type CommonEngKey = keyof Common;
+  export type CommonKorToEngKeyMap = Record<CommonKorKey, CommonEngKey>;
+  export const COMMON_KOR_TO_ENG_KEY_MAP: CommonKorToEngKeyMap = {
+    품목일련번호: 'serial_number',
+    품목명: 'name',
+    품목: 'item',
+    영문명: 'english_name',
+    업체명: 'company_name',
+    업체: 'company',
+    업체영문명: 'company_english_name',
+    업허가번호: 'business_license_number',
+    업일련번호: 'business_serial_number',
+    업종: 'business_type',
+    전문일반구분: 'professional_general_classification',
+    주성분: 'main_ingredient',
+    주성분수: 'number_of_main_ingredients',
+    큰제품이미지: 'large_image',
+    신고허가구분: 'declaration_permission_classification',
+    취소취하일자: 'cancellation_withdrawal_date',
+    취소취하구분: 'cancellation_withdrawal_classification',
+    분류명: 'classification_name',
+    품목허가번호: 'item_approval_number',
+    보험코드: 'insurance_code',
+    사업자번호: 'company_number',
+  };
 
   // --------------------------------------
   // 3. 의약품 낱알 식별 정보

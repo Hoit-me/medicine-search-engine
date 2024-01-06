@@ -2,12 +2,15 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { medicine } from '@prisma/client';
 import { MedicineBatchService } from '@src/batch/medicine/medicineBatch.service';
+import { PrismaService } from '@src/common/prisma/prisma.service';
 import { Medicine } from '@src/type/medicine';
+import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 import { createTestXslxBufferAndExpected } from './xlsx.testHelper';
 describe('MedicineBatchService', () => {
   let mockMedicineBatchService: MedicineBatchService;
   let mockHttpService: HttpService;
+  let mockPrismaService: PrismaService;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -19,15 +22,20 @@ describe('MedicineBatchService', () => {
       providers: [
         MedicineBatchService,
         { provide: HttpService, useValue: new HttpService() },
+        PrismaService,
       ],
     })
       // .overrideProvider(HttpService)
       // .useValue(mockDeep<HttpService>())
+      .overrideProvider(PrismaService)
+      .useValue(mockDeep<PrismaService>())
       .compile();
 
     mockMedicineBatchService =
       module.get<MedicineBatchService>(MedicineBatchService);
     mockHttpService = module.get<HttpService>(HttpService);
+    mockPrismaService = module.get<PrismaService>(PrismaService);
+    mockPrismaService.medicine.findUnique = jest.fn().mockReturnValue(null);
   });
 
   afterEach(() => {
@@ -394,4 +402,51 @@ describe('MedicineBatchService', () => {
       expect(resultBothNull).toEqual(expected);
     });
   });
+
+  describe('test', () => {
+    // it('test', async () => {
+    //   const pdfArrayBuffer = await fetch(
+    //     'https://nedrug.mfds.go.kr/pbp/cmn/pdfDownload/195600004/UD',
+    //   ).then((res) => res.arrayBuffer());
+    //   const pdfBuffer = Buffer.from(pdfArrayBuffer);
+    //   const a = (await pdf(pdfBuffer)).text;
+    //   console.log(a.trim());
+    // });
+    // it('test', async () => {
+    //   const testFn = async (t) => {
+    //     return new Promise((resolve) => {
+    //       setTimeout(resolve, t * 10);
+    //     });
+    //   };
+    //   const task = async (t: number) => {
+    //     await testFn(t);
+    //     return t;
+    //   };
+    //   const obs$ = range(1, 300)
+    //     .pipe(bufferCount(100))
+    //     .pipe(
+    //       mergeMap((item) => item),
+    //       mergeMap((item) => task(item), 30),
+    //       map((a) => a),
+    //       toArray(),
+    //     );
+    //   const array = await firstValueFrom(obs$);
+    //   console.log(array);
+    // });
+  });
+
+  // describe('changedType', () => {
+  //   it('a', async () => {
+  //     const a = await firstValueFrom(
+  //       mockMedicineBatchService.processMedicineDetail(),
+  //     );
+  //     const set = new Set();
+  //     a.forEach((item) => {
+  //       item.change_content.forEach(({ content }) => {
+  //         set.add(content);
+  //       });
+  //     });
+  //     console.log(set);
+  //   });
+  // });
 });

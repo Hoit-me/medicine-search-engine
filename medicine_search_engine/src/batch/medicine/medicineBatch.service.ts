@@ -1,49 +1,144 @@
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { medicine } from '@prisma/client';
+import { PrismaService } from '@src/common/prisma/prisma.service';
 import { Medicine } from '@src/type/medicine';
 import { convertXlsxToJson } from '@src/utils/convertXlsxToJson';
 import { renameKeys } from '@src/utils/renameKeys';
-import { catchError, from, map, mergeMap, toArray } from 'rxjs';
-
+import pdf from 'pdf-parse';
+import {
+  catchError,
+  firstValueFrom,
+  from,
+  iif,
+  map,
+  mergeMap,
+  of,
+  retry,
+  toArray,
+} from 'rxjs';
 @Injectable()
 export class MedicineBatchService {
   logger = console;
   constructor(
     @Inject(HttpService)
     private readonly httpService: HttpService,
+    private readonly prisma: PrismaService,
   ) {}
 
+  async fetchArrayBuffer(url: string) {
+    const { data } = await firstValueFrom(
+      this.httpService
+        .get<ArrayBuffer>(url, {
+          responseType: 'arraybuffer',
+        })
+        .pipe(
+          retry(3), // 3번까지 재시도
+          catchError((error) => {
+            this.logger.error(error.response.data); // 실패한 경우 로그 출력
+            return [];
+          }),
+        ),
+    );
+    return data;
+  }
   save(medicine: medicine) {
     return medicine;
   }
 
-  processMedicineDetail() {
+  //------------------------
+  // Detail
+  //------------------------
+  /**
+   * 1. 데이터 가져오기,
+   * 2. 데이터 변환하기
+   *    - key 한글 -> 영어
+   *    - format 변환 (Detail -> DB Schema)
+   * 3. 데이터 저장하기
+   *
+   * ## 고려해야할것
+   * - 1. db에 이미 있는 데이터인지 확인
+   * - 2. 변경된 내용이 있는지 확인
+   * - 3. 변경된 내용이 있다면, 변경된 내용만 저장
+   *      - 해당 데이터 변경여부는 change_content에 저장되어있음
+   *        - 1일단위로 체크
+   *      -- 성상  [state]  // 따로 fetch작업 안해도됨
+   *      - 성상
+   *      - 성상변경
+   *
+   *      -- 저장방법 [storage_method] // 따로 fetch작업 안해도됨
+   *      - 저장방법 및 사용(유효)기간
+   *      - 저장방법 및 유효기간(사용기간)변경
+   *
+   *      -- 제품명  [name] // 따로 fetch작업 안해도됨
+   *      - 제품명칭변경
+   *      - 제품명
+   *
+   *      -- 사용상주의사항  [caution]
+   *      - 사용상주의사항변경(부작용포함)
+   *      - 사용상의 주의사항
+   *
+   *      -- 효능효과 [effect] - 효능
+   *      - 효능효과변경
+   *      - 효능·효과
+   *
+   *      -- 용법용량 [usage]
+   *      - 용법용량변경
+   *      - 용법·용량
+   *
+   *
+   * - 4. 변경된 내용이 없다면, 저장하지 않음
+   *
+   */
+  fetchMedicineDetailListXlsx$() {
     const url =
       'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
-    return this.fetchMedicineDetailListXlsx(url).pipe(
-      map(this.convertMedicineDetailListXlsxToJson.bind(this)),
-      mergeMap(from),
-      map(this.converMedicineDetailKeyKrToEng.bind(this)),
-      map(this.convertFormatMedicineDetailToDBSchema.bind(this)),
-      map(this.save.bind(this)),
+    const buffer = this.fetchArrayBuffer(url);
+    return of(buffer).pipe(
+      mergeMap((buffer) => buffer),
+      map((buffer) => this.convertMedicineDetailListXlsxToJson(buffer)),
+    );
+  }
+
+  processMedicineDetail$(detailJson_kr: Medicine.DetailJson_Kr[]) {
+    return from(detailJson_kr).pipe(
+      // 2. 데이터 변환하기
+      map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)), // - key 한글 -> 영어
+      map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)), // - format 변환 (Detail -> DB Schema)
+      mergeMap((medicine) => this.checkExistMedicine(medicine), 100), // 고려1. db에 이미 있는 데이터인지 확인
+      mergeMap(
+        ({ beforeMedicine, medicine }) =>
+          iif(
+            () => !!beforeMedicine,
+            this.iifExistsMedicine$(medicine, beforeMedicine!),
+            this.iifNotExistsMedicine$(medicine),
+          ),
+        100,
+      ), // 고려2. 변경된 내용이 있는지 확인
       toArray(),
       catchError((err) => {
-        this.logger.error(err);
-        return 'ERROR';
+        this.logger.error(err.message, err.stack);
+        return [];
       }),
     );
   }
 
-  fetchMedicineDetailListXlsx(url: string) {
-    return this.httpService
-      .get(url, {
-        responseType: 'arraybuffer',
-      })
-      .pipe(map((res) => res.data));
+  iifNotExistsMedicine$(medicine: medicine) {
+    return of(medicine).pipe(
+      mergeMap((medicine) => this.setMedicineCaution(medicine)),
+      mergeMap((medicine) => this.setMedicineEffect(medicine)),
+      mergeMap((medicine) => this.setMedicineUsage(medicine)),
+    );
   }
 
-  convertMedicineDetailListXlsxToJson(buffer: any) {
+  iifExistsMedicine$(medicine: medicine, beforeMedicine?: medicine) {
+    // detail이후 파이프라인에서 작업한 정보가 있을수있기에 두 객체를 합쳐 이전 사항을 덮어씌워준다.
+    return of({ ...beforeMedicine, ...medicine }).pipe(
+      mergeMap((medicine) => this.updateMedicineInfo$(medicine)),
+    );
+  }
+
+  convertMedicineDetailListXlsxToJson(buffer: any): Medicine.DetailJson_Kr[] {
     return convertXlsxToJson<Medicine.DetailJson_Kr>(buffer);
   }
 
@@ -209,5 +304,204 @@ export class MedicineBatchService {
     });
 
     return _reExaminations;
+  }
+
+  updateMedicineInfo$(detail: medicine) {
+    /**
+     *      -- 성상  [state]  // 따로 fetch작업 안해도됨
+     *      - 성상
+     *      - 성상변경
+     *
+     *      -- 저장방법 [storage_method] // 따로 fetch작업 안해도됨
+     *      - 저장방법 및 사용(유효)기간
+     *      - 저장방법 및 유효기간(사용기간)변경
+     *
+     *      -- 제품명  [name] // 따로 fetch작업 안해도됨
+     *      - 제품명칭변경
+     *      - 제품명
+     *
+     *      -- 사용상주의사항  [caution] - RegExp  사용
+     *      - 사용상주의사항변경(부작용포함)
+     *      - 사용상의 주의사항
+     *
+     *      -- 효능효과 [effect] - RegExp 효능
+     *      - 효능효과변경
+     *      - 효능·효과
+     *
+     *      -- 용법용량 [usage] - RegExp  용법
+     *      - 용법용량변경
+     *      - 용법·용량
+     */
+    const medicine$ = of(detail).pipe(
+      map((medicne) => this.checkChangeContents(medicne, new Date())),
+      mergeMap(([medicine, changed]) =>
+        this.checkAndSet(
+          medicine,
+          changed,
+          /효능/,
+          this.setMedicineEffect.bind(this),
+        ),
+      ),
+      mergeMap(([medicine, changed]) =>
+        this.checkAndSet(
+          medicine,
+          changed,
+          /용법/,
+          this.setMedicineUsage.bind(this),
+        ),
+      ),
+      mergeMap(([medicine, changed]) =>
+        this.checkAndSet(
+          medicine,
+          changed,
+          /사용/,
+          this.setMedicineCaution.bind(this),
+        ),
+      ),
+      map(([medicine, _]) => medicine),
+      // 기존 데이터에 url이 있지만, 데이터가 없는경우
+      mergeMap((medicine) => this.existHaveUrlButNotHaveData$(medicine)),
+    );
+    return medicine$;
+  }
+
+  //------------------------
+  // Common
+  //------------------------
+
+  fetchMedicineListXlsx$(url: string) {
+    return this.httpService
+      .get<ArrayBuffer>(url, {
+        responseType: 'arraybuffer',
+      })
+      .pipe(
+        map((res) => res.data),
+        catchError((error) => {
+          this.logger.error(error.response.data); // 실패한 경우 로그 출력
+          return [];
+        }),
+      );
+  }
+
+  convertMedicineCommonListXlsxToJson(buffer: any) {
+    return convertXlsxToJson<Medicine.CommonJson_Kr>(buffer);
+  }
+
+  converMedicineCommonKeyKrToEng(medicine: Medicine.CommonJson_Kr) {
+    const keys = Object.keys(
+      Medicine.KOR_TO_ENG_KEY_MAP,
+    ) as Medicine.CommonKorKey[];
+    const args: [Medicine.CommonKorKey, Medicine.CommonEngKey][] = keys.map(
+      (key) => [key, Medicine.KOR_TO_ENG_KEY_MAP[key]],
+    );
+    const result = renameKeys(medicine, args, { undefinedToNull: true });
+    return result as Medicine.Common;
+  }
+
+  checkChangeContents(detail: medicine, standard: Date): [medicine, string[]] {
+    const { change_content } = detail;
+    if (!change_content) return [detail, []];
+
+    const chaged = change_content
+      .filter((change) => {
+        return change.date > standard;
+      })
+      .map((change) => {
+        return change.content;
+      });
+
+    return [detail, chaged];
+  }
+
+  async checkExistMedicine(medicine: medicine) {
+    const { id } = medicine;
+    const exist = await this.prisma.medicine.findUnique({ where: { id } });
+    if (!exist) return { beforeMedicine: null, medicine };
+    return {
+      beforeMedicine: exist,
+      medicine,
+    };
+  }
+
+  existHaveUrlButNotHaveData$(medicine: medicine) {
+    return of(medicine).pipe(
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.effect_file_url && !medicine.effect,
+          this.setMedicineEffect(medicine),
+          of(medicine),
+        ),
+      ),
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.usage_file_url && !medicine.usage,
+          this.setMedicineUsage(medicine),
+          of(medicine),
+        ),
+      ),
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.caution_file_url && !medicine.caution,
+          this.setMedicineCaution(medicine),
+          of(medicine),
+        ),
+      ),
+    );
+  }
+
+  async checkAndSet(
+    medicine: medicine,
+    changed: string[],
+    regex: RegExp,
+    setFn: (medicine: medicine) => Promise<medicine>,
+  ): Promise<[medicine, string[]]> {
+    return changed.filter((change) => change.match(regex)).length > 0
+      ? [await setFn(medicine), changed]
+      : [medicine, changed];
+  }
+
+  async getPdfText(PdfBuffer: ArrayBuffer) {
+    const pdfBuffer = Buffer.from(PdfBuffer);
+    const pdfData = await pdf(pdfBuffer);
+    console.log(pdfData);
+    if (!pdfData.text) return '';
+    const text = pdfData.text.replaceAll('\x00', ' ');
+    return text;
+  }
+
+  async setMedicineEffect(detail: medicine) {
+    const { effect_file_url } = detail;
+    if (!effect_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(effect_file_url);
+    const text = await this.getPdfText(pdfArrayBuffer);
+
+    return {
+      ...detail,
+      effect: text,
+    };
+  }
+
+  async setMedicineUsage(detail: medicine) {
+    const { usage_file_url } = detail;
+    if (!usage_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(usage_file_url);
+    if (!pdfArrayBuffer) return detail;
+    if (pdfArrayBuffer.byteLength === 0) return detail; // pdf가 없는경우
+    const text = await this.getPdfText(pdfArrayBuffer);
+    return {
+      ...detail,
+      usage: text,
+    };
+  }
+
+  async setMedicineCaution(detail: medicine) {
+    const { caution_file_url } = detail;
+    if (!caution_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(caution_file_url);
+    const text = await this.getPdfText(pdfArrayBuffer);
+    return {
+      ...detail,
+      caution: text,
+    };
   }
 }
