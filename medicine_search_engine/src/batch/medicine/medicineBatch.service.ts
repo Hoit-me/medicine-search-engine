@@ -42,6 +42,15 @@ export class MedicineBatchService {
     );
     return data;
   }
+
+  async getPdfText(PdfBuffer: ArrayBuffer) {
+    const pdfBuffer = Buffer.from(PdfBuffer);
+    const pdfData = await pdf(pdfBuffer);
+    console.log(pdfData);
+    if (!pdfData.text) return '';
+    const text = pdfData.text.replaceAll('\x00', ' ');
+    return text;
+  }
   save(medicine: medicine) {
     return medicine;
   }
@@ -90,7 +99,7 @@ export class MedicineBatchService {
    * - 4. 변경된 내용이 없다면, 저장하지 않음
    *
    */
-  fetchMedicineDetailListXlsx$() {
+  fetchAndConvertMedicineDetailListXlsx$() {
     const url =
       'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
     const buffer = this.fetchArrayBuffer(url);
@@ -110,8 +119,8 @@ export class MedicineBatchService {
         ({ beforeMedicine, medicine }) =>
           iif(
             () => !!beforeMedicine,
-            this.iifExistsMedicine$(medicine, beforeMedicine!),
-            this.iifNotExistsMedicine$(medicine),
+            this.processExistingMedicine$(medicine, beforeMedicine!),
+            this.processNotExistsMedicine$(medicine),
           ),
         100,
       ), // 고려2. 변경된 내용이 있는지 확인
@@ -123,7 +132,7 @@ export class MedicineBatchService {
     );
   }
 
-  iifNotExistsMedicine$(medicine: medicine) {
+  processNotExistsMedicine$(medicine: medicine) {
     return of(medicine).pipe(
       mergeMap((medicine) => this.setMedicineCaution(medicine)),
       mergeMap((medicine) => this.setMedicineEffect(medicine)),
@@ -131,7 +140,7 @@ export class MedicineBatchService {
     );
   }
 
-  iifExistsMedicine$(medicine: medicine, beforeMedicine?: medicine) {
+  processExistingMedicine$(medicine: medicine, beforeMedicine?: medicine) {
     // detail이후 파이프라인에서 작업한 정보가 있을수있기에 두 객체를 합쳐 이전 사항을 덮어씌워준다.
     return of({ ...beforeMedicine, ...medicine }).pipe(
       mergeMap((medicine) => this.updateMedicineInfo$(medicine)),
@@ -335,7 +344,7 @@ export class MedicineBatchService {
     const medicine$ = of(detail).pipe(
       map((medicne) => this.checkChangeContents(medicne, new Date())),
       mergeMap(([medicine, changed]) =>
-        this.checkAndSet(
+        this.checkAndSetMedicineContent(
           medicine,
           changed,
           /효능/,
@@ -343,7 +352,7 @@ export class MedicineBatchService {
         ),
       ),
       mergeMap(([medicine, changed]) =>
-        this.checkAndSet(
+        this.checkAndSetMedicineContent(
           medicine,
           changed,
           /용법/,
@@ -351,7 +360,7 @@ export class MedicineBatchService {
         ),
       ),
       mergeMap(([medicine, changed]) =>
-        this.checkAndSet(
+        this.checkAndSetMedicineContent(
           medicine,
           changed,
           /사용/,
@@ -360,15 +369,87 @@ export class MedicineBatchService {
       ),
       map(([medicine, _]) => medicine),
       // 기존 데이터에 url이 있지만, 데이터가 없는경우
-      mergeMap((medicine) => this.existHaveUrlButNotHaveData$(medicine)),
+      mergeMap((medicine) => this.updateMissingContentFromUrls$(medicine)),
     );
     return medicine$;
+  }
+
+  async setMedicineEffect(detail: medicine) {
+    const { effect_file_url } = detail;
+    if (!effect_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(effect_file_url);
+    const text = await this.getPdfText(pdfArrayBuffer);
+
+    return {
+      ...detail,
+      effect: text,
+    };
+  }
+
+  async setMedicineUsage(detail: medicine) {
+    const { usage_file_url } = detail;
+    if (!usage_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(usage_file_url);
+    if (!pdfArrayBuffer) return detail;
+    if (pdfArrayBuffer.byteLength === 0) return detail; // pdf가 없는경우
+    const text = await this.getPdfText(pdfArrayBuffer);
+    return {
+      ...detail,
+      usage: text,
+    };
+  }
+
+  async setMedicineCaution(detail: medicine) {
+    const { caution_file_url } = detail;
+    if (!caution_file_url) return detail;
+    const pdfArrayBuffer = await this.fetchArrayBuffer(caution_file_url);
+    const text = await this.getPdfText(pdfArrayBuffer);
+    return {
+      ...detail,
+      caution: text,
+    };
+  }
+
+  async checkAndSetMedicineContent(
+    medicine: medicine,
+    changed: string[],
+    regex: RegExp,
+    setFn: (medicine: medicine) => Promise<medicine>,
+  ): Promise<[medicine, string[]]> {
+    return changed.filter((change) => change.match(regex)).length > 0
+      ? [await setFn(medicine), changed]
+      : [medicine, changed];
+  }
+
+  updateMissingContentFromUrls$(medicine: medicine) {
+    return of(medicine).pipe(
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.effect_file_url && !medicine.effect,
+          this.setMedicineEffect(medicine),
+          of(medicine),
+        ),
+      ),
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.usage_file_url && !medicine.usage,
+          this.setMedicineUsage(medicine),
+          of(medicine),
+        ),
+      ),
+      mergeMap((medicine) =>
+        iif(
+          () => !!medicine.caution_file_url && !medicine.caution,
+          this.setMedicineCaution(medicine),
+          of(medicine),
+        ),
+      ),
+    );
   }
 
   //------------------------
   // Common
   //------------------------
-
   fetchMedicineListXlsx$(url: string) {
     return this.httpService
       .get<ArrayBuffer>(url, {
@@ -420,88 +501,6 @@ export class MedicineBatchService {
     return {
       beforeMedicine: exist,
       medicine,
-    };
-  }
-
-  existHaveUrlButNotHaveData$(medicine: medicine) {
-    return of(medicine).pipe(
-      mergeMap((medicine) =>
-        iif(
-          () => !!medicine.effect_file_url && !medicine.effect,
-          this.setMedicineEffect(medicine),
-          of(medicine),
-        ),
-      ),
-      mergeMap((medicine) =>
-        iif(
-          () => !!medicine.usage_file_url && !medicine.usage,
-          this.setMedicineUsage(medicine),
-          of(medicine),
-        ),
-      ),
-      mergeMap((medicine) =>
-        iif(
-          () => !!medicine.caution_file_url && !medicine.caution,
-          this.setMedicineCaution(medicine),
-          of(medicine),
-        ),
-      ),
-    );
-  }
-
-  async checkAndSet(
-    medicine: medicine,
-    changed: string[],
-    regex: RegExp,
-    setFn: (medicine: medicine) => Promise<medicine>,
-  ): Promise<[medicine, string[]]> {
-    return changed.filter((change) => change.match(regex)).length > 0
-      ? [await setFn(medicine), changed]
-      : [medicine, changed];
-  }
-
-  async getPdfText(PdfBuffer: ArrayBuffer) {
-    const pdfBuffer = Buffer.from(PdfBuffer);
-    const pdfData = await pdf(pdfBuffer);
-    console.log(pdfData);
-    if (!pdfData.text) return '';
-    const text = pdfData.text.replaceAll('\x00', ' ');
-    return text;
-  }
-
-  async setMedicineEffect(detail: medicine) {
-    const { effect_file_url } = detail;
-    if (!effect_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(effect_file_url);
-    const text = await this.getPdfText(pdfArrayBuffer);
-
-    return {
-      ...detail,
-      effect: text,
-    };
-  }
-
-  async setMedicineUsage(detail: medicine) {
-    const { usage_file_url } = detail;
-    if (!usage_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(usage_file_url);
-    if (!pdfArrayBuffer) return detail;
-    if (pdfArrayBuffer.byteLength === 0) return detail; // pdf가 없는경우
-    const text = await this.getPdfText(pdfArrayBuffer);
-    return {
-      ...detail,
-      usage: text,
-    };
-  }
-
-  async setMedicineCaution(detail: medicine) {
-    const { caution_file_url } = detail;
-    if (!caution_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(caution_file_url);
-    const text = await this.getPdfText(pdfArrayBuffer);
-    return {
-      ...detail,
-      caution: text,
     };
   }
 }
