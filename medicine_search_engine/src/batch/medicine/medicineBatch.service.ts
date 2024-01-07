@@ -8,14 +8,13 @@ import { renameKeys } from '@src/utils/renameKeys';
 import pdf from 'pdf-parse';
 import {
   catchError,
+  finalize,
   firstValueFrom,
   from,
   iif,
   map,
   mergeMap,
   of,
-  retry,
-  toArray,
 } from 'rxjs';
 @Injectable()
 export class MedicineBatchService {
@@ -27,29 +26,37 @@ export class MedicineBatchService {
   ) {}
 
   async fetchArrayBuffer(url: string) {
-    const { data } = await firstValueFrom(
+    const value = await firstValueFrom(
       this.httpService
         .get<ArrayBuffer>(url, {
           responseType: 'arraybuffer',
+          timeout: 1000000,
         })
         .pipe(
-          retry(3), // 3번까지 재시도
-          catchError((error) => {
-            this.logger.error(error.response.data); // 실패한 경우 로그 출력
-            return [];
+          catchError((e) => {
+            this.logger.error(e.message);
+            return of(null);
           }),
         ),
     );
+    if (!value) return null;
+    const { data } = value;
     return data;
   }
 
   async getPdfText(PdfBuffer: ArrayBuffer) {
-    const pdfBuffer = Buffer.from(PdfBuffer);
-    const pdfData = await pdf(pdfBuffer);
-    console.log(pdfData);
-    if (!pdfData.text) return '';
-    const text = pdfData.text.replaceAll('\x00', ' ');
-    return text;
+    try {
+      const pdfBuffer = Buffer.from(PdfBuffer);
+      if (!pdfBuffer) return '';
+      if (pdfBuffer.byteLength === 0) return '';
+
+      const pdfData = await pdf(pdfBuffer);
+      if (!pdfData.text) return '';
+      const text = pdfData.text.replaceAll('\x00', ' ');
+      return text.trim();
+    } catch (err) {
+      return '';
+    }
   }
   save(medicine: medicine) {
     return medicine;
@@ -99,6 +106,25 @@ export class MedicineBatchService {
    * - 4. 변경된 내용이 없다면, 저장하지 않음
    *
    */
+  detailBatch() {
+    return this.fetchAndConvertMedicineDetailListXlsx$().pipe(
+      mergeMap((detailJson_kr) => this.processMedicineDetail$(detailJson_kr)),
+      mergeMap((medicines) => this.upsertMedicine(medicines), 100),
+      finalize(() => {
+        console.log('detailBatch Observable completed');
+      }),
+    );
+  }
+
+  async upsertMedicine(medicine: medicine) {
+    const { id, ...rest } = medicine;
+    return await this.prisma.medicine.upsert({
+      where: { id: id },
+      create: medicine,
+      update: { ...rest },
+    });
+  }
+
   fetchAndConvertMedicineDetailListXlsx$() {
     const url =
       'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
@@ -122,11 +148,10 @@ export class MedicineBatchService {
             this.processExistingMedicine$(medicine, beforeMedicine!),
             this.processNotExistsMedicine$(medicine),
           ),
-        100,
+        50,
       ), // 고려2. 변경된 내용이 있는지 확인
-      toArray(),
       catchError((err) => {
-        this.logger.error(err.message, err.stack);
+        this.logger.error('processMedicineDetail$', err.message);
         return [];
       }),
     );
@@ -169,18 +194,32 @@ export class MedicineBatchService {
       effect,
       caution,
       english_ingredients,
+      change_date,
       ingredients,
       re_examination_date,
+      cancel_date,
+      permit_date,
+      expiration_date,
       ...rest
     } = medicine;
+    //yyyymmdd -> yyyy-mm-dd
+    const _cancel_date = cancel_date
+      ? cancel_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+      : null;
+    const _change_date = change_date
+      ? change_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+      : null;
+    const _permit_date = permit_date
+      ? permit_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+      : null;
+
     return {
       ...rest,
       id: medicine.serial_number,
-
+      cancel_date: _cancel_date ? new Date(_cancel_date) : null,
       type: medicine.type as medicine['type'],
-      cancel_date: medicine.cancel_date ? new Date(medicine.cancel_date) : null,
-      change_date: medicine.change_date ? new Date(medicine.change_date) : null,
-      permit_date: medicine.permit_date ? new Date(medicine.permit_date) : null,
+      change_date: _change_date ? new Date(_change_date) : null,
+      permit_date: _permit_date ? new Date(_permit_date) : null,
       classification: medicine.classification as medicine['classification'],
       ingredients: this.parseIngredients(
         ingredients || null,
@@ -190,9 +229,7 @@ export class MedicineBatchService {
       additive: this.parseCompound(medicine.additive),
       document_file_url: document || null,
 
-      expiration_date: medicine.expiration_date
-        ? new Date(medicine.expiration_date)
-        : null,
+      expiration_date: expiration_date || null,
       change_content: this.parseChangeContent(medicine.change_content),
       insurance_code: medicine.insurance_code
         ? medicine.insurance_code.split(',')
@@ -225,26 +262,41 @@ export class MedicineBatchService {
   ): Medicine.Ingredient[] {
     if (!ingredients) return [];
     // ex  "1000밀리리터|포도당|USP|50|그램|;1000밀리리터|염화나트륨|KP|9|그램|"
-    // standard | ko | Pharmacoepia | amount | unit
+    // standard | ko | Pharmacoepia | amount | unit|;standard | ko | Pharmacoepia | amount | unit
     // amount : amunt + unit
     // ko : ko
 
-    const korIngredients = ingredients.split(';');
+    const korIngredients = ingredients.split('|').filter((s) => !!s);
+    const chunkSize = 5;
+    const chunks = Array(Math.ceil(korIngredients.length / chunkSize))
+      .fill(null)
+      .map((_, index) => index);
+    const korIngredientsChunk = chunks.map(
+      (_, index) =>
+        !!korIngredients &&
+        korIngredients.slice(index * chunkSize, (index + 1) * chunkSize),
+    );
+
     const engIngredients = english_ingredients?.split('/') || [];
 
-    const _ingredients = korIngredients.map((kor, index) => {
-      const [standard, ko, pharmacoepia, amount, unit] = kor.split('|');
-      const en = engIngredients[index] || null;
+    const _ingredients = korIngredientsChunk
+      .map((kor, index) => {
+        const [standard, ko, pharmacoepia, amount, unit] = kor;
+        const en = engIngredients[index] || null;
 
-      return {
-        standard,
-        ko,
-        en,
-        pharmacopoeia: pharmacoepia as Medicine.Pharmacopoeia,
-        amount,
-        unit,
-      };
-    });
+        return {
+          standard: standard.trim().replace(';', ''),
+          ko,
+          en,
+          pharmacopoeia: pharmacoepia as Medicine.Pharmacopoeia,
+          amount,
+          unit,
+        };
+      })
+      .filter(
+        ({ standard, ko, en, pharmacopoeia, amount, unit }) =>
+          !!standard && !!ko && !!pharmacopoeia && !!amount && !!unit && !!en,
+      );
 
     return _ingredients;
   }
@@ -378,8 +430,8 @@ export class MedicineBatchService {
     const { effect_file_url } = detail;
     if (!effect_file_url) return detail;
     const pdfArrayBuffer = await this.fetchArrayBuffer(effect_file_url);
+    if (!pdfArrayBuffer) return detail;
     const text = await this.getPdfText(pdfArrayBuffer);
-
     return {
       ...detail,
       effect: text,
@@ -403,6 +455,7 @@ export class MedicineBatchService {
     const { caution_file_url } = detail;
     if (!caution_file_url) return detail;
     const pdfArrayBuffer = await this.fetchArrayBuffer(caution_file_url);
+    if (!pdfArrayBuffer) return detail;
     const text = await this.getPdfText(pdfArrayBuffer);
     return {
       ...detail,

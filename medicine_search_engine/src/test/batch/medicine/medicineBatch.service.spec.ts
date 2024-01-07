@@ -16,7 +16,7 @@ describe('MedicineBatchService', () => {
       imports: [
         HttpModule.register({
           timeout: 5000,
-          maxRedirects: 5,
+          maxRedirects: 0,
         }),
       ],
       providers: [
