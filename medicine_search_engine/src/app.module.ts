@@ -11,8 +11,8 @@ import { PrismaModule } from './common/prisma/prisma.module';
     MedicineBatchModule,
     {
       ...HttpModule.register({
-        timeout: 5000,
-        maxRedirects: 5,
+        timeout: 100000,
+        maxRedirects: 0,
       }),
       global: true,
     },

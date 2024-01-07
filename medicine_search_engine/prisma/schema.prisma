@@ -38,7 +38,7 @@ type reExamination {
 }
 
 model medicine {
-  id                  String                       @id @map("_id")
+  id                  String   @id @map("_id")
   additive            additive[]
   atc_code            String?
   cancel_date         DateTime?
@@ -55,7 +55,7 @@ model medicine {
   effect_file_url     String?
   english_company     String?
   english_name        String?
-  expiration_date     DateTime?
+  expiration_date     String?
   ingredients         ingredients[]
   insurance_code      String[]
   is_new_drug         Boolean
