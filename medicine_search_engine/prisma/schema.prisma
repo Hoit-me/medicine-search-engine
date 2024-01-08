@@ -46,6 +46,7 @@ model medicine {
   caution             String?
   caution_file_url    String?
   change_content      changeContent[]
+  
   change_date         DateTime?
   classification      String?
   company             String
@@ -68,11 +69,18 @@ model medicine {
   re_examination      reExamination[]
   register_id         String
   serial_number       String
-  standard_code       String?
+  standard_code       String[]
   state               String?
   storage_method      String
   total_amount        String?
   type                String
   usage               String?
   usage_file_url      String?
+  document String?
+
+
+  image_url           String? //COMMON //이미지
+  product_type    String? //COMMON //분류명
+  ingredients_count Int? //COMMON //성분수 
+  company_serial_number String? //COMMON //업체일련번호
 }

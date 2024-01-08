@@ -1,3 +1,18 @@
+export interface OpenApiDTO<T> {
+  pageNo: number;
+  numOfRows: number;
+  totalCount: number;
+  items: T[];
+}
+
+export interface OpenApiResponse<T> {
+  body: OpenApiDTO<T>;
+  header: {
+    resultCode: string;
+    resultMsg: string;
+  };
+}
+
 export namespace Medicine {
   // --------------------------------------
   // 1. 대한민국 의약품 제품허가 상세정보
@@ -11,82 +26,56 @@ export namespace Medicine {
   // fileFormat: xls
   // url: https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail
   //
-  /**feilds
-   * 품목명
-   * 품목 영문명
-   * 품목일련번호
-   * 허가/신고구분
-   * 취소상태
-   * 취소일자
-   * 변경일자
-   * 업체명
-   * 업체 영문명
-   * 허가일자
-   * 전문일반
-   * 성상
-   * 표준코드
-   * 원료성분
-   * 영문성분명
-   * 효능효과
-   * 용법용량
-   * 주의사항
-   * 첨부문서
-   * 저장방법
-   * 유효기간
-   * 재심사대상
-   * 재심사기간
-   * 포장단위
-   * 보험코드
-   * 마약류분류
-   * 완제원료구분
-   * 신약여부
-   * 변경내용
-   * 총량
-   * 주성분명
-   * 첨가제명
-   * ATC코드
-   * 등록자ID
-   * 사업자번호
-   */
-  // --------------------------------------
-  export interface DetailJson_Kr {
-    품목명: string;
-    '품목 영문명'?: string;
-    품목일련번호: string;
-    '허가/신고구분': string;
-    취소상태: string;
-    취소일자?: string;
-    변경일자?: string;
-    업체명: string;
-    '업체 영문명'?: string;
-    허가일자?: string;
-    전문일반?: string;
-    성상?: string;
-    표준코드?: string;
-    원료성분?: string;
-    영문성분명?: string;
-    효능효과?: string;
-    용법용량?: string;
-    주의사항?: string;
-    첨부문서?: string;
-    저장방법?: string;
-    유효기간?: string;
-    재심사대상?: string;
-    재심사기간?: string;
-    포장단위?: string;
-    보험코드?: string;
-    마약류분류?: string;
-    완제원료구분: string;
-    신약여부?: string;
-    변경내용?: string;
-    총량?: string;
-    주성분명?: string;
-    첨가제명?: string;
-    ATC코드?: string;
-    등록자ID: string;
-    사업자번호?: string;
-  }
+  export interface OpenApiDetailDTO {
+    ITEM_NAME?: string; // 품목명
+    ITEM_ENG_NAME?: string; // 품목 영문명
+    ITEM_SEQ?: string; // 품목일련번호
+    PERMIT_KIND_NAME?: string; // 허가/신고구분
+    CANCEL_DATE?: string; // 취소 일자
+    CANCEL_NAME?: string; // 상태
+    CHANGE_DATE?: string; // 변경일자
+    GBN_NAME?: string; // 변경이력
 
+    ENTP_NAME?: string; // 업체명
+    ENTP_ENG_NAME?: string; // 업체 영문명
+    BIZRNO?: string; // 사업자번호
+    ITEM_PERMIT_DATE?: string; // 허가일자
+    ETC_OTC_CODE?: string; // 전문/일반구분 [전문의약품,일반의약품]
+
+    CHART?: string; // 성상
+
+    MAIN_ITEM_INGR?: string; // 주성분명  "[M040426]염화나트륨|[M040702]포도당"
+    MAIN_INGR_ENG?: string; // 주성분 영문명  "Glucose/Sodium Chloride"
+    BAR_CODE?: string; // 표준코드
+
+    INGR_NAME?: string; // 첨가제  "[M040534]주사용수",
+    ATC_CODE?: string; // ATC코드
+    CNSGN_MANUF?: string; // 위탁제조업체
+    MATERIAL_NAME?: string; // 원료성분 // 총량 : 1000밀리리터|성분명 : 포도당|분량 : 50|단위 : 그램|규격 : USP|성분정보 : |비고 : ;총량 : 1000밀리리터|성분명 : 염화나트륨|분량 : 9|단위 : 그램|규격 : KP|성분정보 : |비고 :
+
+    STORAGE_METHOD?: string; // 저장방법
+    VALID_TERM?: string; // 유효기간
+    REEXAM_TARGET?: string; // 재심사대상
+    REEXAM_DATE?: string; // 재심사기간
+    PACK_UNIT?: string; // 포장단위
+    EDI_CODE?: string; // 보험코드
+    DOC_TEXT?: string; // 제조방법
+    ENTP_NO?: string; // 업체허가번호
+    MAKE_MATERIAL_FLAG?: string; //완제/원료구분
+    NEWDRUG_CLASS_NAME?: string; //신약
+    INDUTY_TYPE?: string; // 업종 구분
+    NARCOTIC_KIND_CODE?: string; // 마약종류코드
+    TOTAL_CONTENT?: string; // 총량
+
+    EE_DOC_ID?: string; // 효능효과 문서ID
+    UD_DOC_ID?: string; // 용법용량 문서ID
+    NB_DOC_ID?: string; // 주의사항(일반) 문서ID
+    INSERT_FILE?: string; // 첨부문서(전문) 문서ID
+    EE_DOC_DATA?: string; // 효능효과 문서 데이터
+    UD_DOC_DATA?: string; // 용법용량 문서 데이터
+    NB_DOC_DATA?: string; // 주의사항(일반) 문서 데이터
+    PN_DOC_DATA?: string; // 첨부문서(전문) 문서 데이터
+  }
   export interface Detail {
     name: string; // 품목명
     english_name: string | null; // "품목 영문명"
@@ -95,18 +84,22 @@ export namespace Medicine {
     cancel_status: string; // 취소상태
     cancel_date: string | null; // 취소일자
     change_date: string | null; // 변경일자
+
     company: string; // 업체명
     english_company: string | null; // "업체 영문명"
+    company_number: string | null; // 사업자번호
     permit_date: string | null; // 허가일자
     classification: string | null; // 전문일반
+
     state: string | null; // 성상
-    standard_code: string | null; // 표준코드
+
     ingredients: string | null; // 원료성분
     english_ingredients: string | null; // 영문성분명
-    effect: string | null; // 효능효과
-    usage: string | null; // 용법용량
-    caution: string | null; // 주의사항
-    document: string | null; // 첨부문서
+    standard_code: string | null; // 표준코드 // 바코드 string -> string[]으로 변경
+
+    main_ingredient: string | null; // 주성분명
+    additive: string | null; // 첨가제명
+
     storage_method: string | null; // 저장방법
     expiration_date: string | null; // 유효기간
     re_examination: string | null; // 재심사대상
@@ -118,53 +111,21 @@ export namespace Medicine {
     is_new_drug: string | null; // 신약여부
     change_content: string | null; // 변경내용
     total_amount: string | null; // 총량
-    main_ingredient: string | null; // 주성분명
-    additive: string | null; // 첨가제명
     atc_code: string | null; // ATC코드
     register_id: string; // 등록자ID
-    company_number: string | null; // 사업자번호
+
+    effect: string | null; // 효능효과
+    usage: string | null; // 용법용량
+    caution: string | null; // 주의사항
+    document: string | null; // 첨부문서
+    effect_file_url: string | null; // 효능효과
+    usage_file_url: string | null; // 용법용량
+    caution_file_url: string | null; // 주의사항
+    document_file_url: string | null; // 첨부문서
+    industry_type: string | null; // 업종 구분
   }
 
-  export type DetailKorKey = keyof DetailJson_Kr;
-  export type DetailEngKey = keyof Detail;
-  export type KorToEngKeyMap = Record<DetailKorKey, DetailEngKey>;
-  export const KOR_TO_ENG_KEY_MAP: KorToEngKeyMap = {
-    품목명: 'name',
-    '품목 영문명': 'english_name',
-    품목일련번호: 'serial_number',
-    '허가/신고구분': 'type',
-    취소상태: 'cancel_status',
-    취소일자: 'cancel_date',
-    변경일자: 'change_date',
-    업체명: 'company',
-    '업체 영문명': 'english_company',
-    허가일자: 'permit_date',
-    전문일반: 'classification',
-    성상: 'state',
-    표준코드: 'standard_code',
-    원료성분: 'ingredients',
-    영문성분명: 'english_ingredients',
-    효능효과: 'effect',
-    용법용량: 'usage',
-    주의사항: 'caution',
-    첨부문서: 'document',
-    저장방법: 'storage_method',
-    유효기간: 'expiration_date',
-    재심사대상: 're_examination',
-    재심사기간: 're_examination_date',
-    포장단위: 'packing_unit',
-    보험코드: 'insurance_code',
-    마약류분류: 'narcotic_type',
-    완제원료구분: 'raw_material',
-    신약여부: 'is_new_drug',
-    변경내용: 'change_content',
-    총량: 'total_amount',
-    주성분명: 'main_ingredient',
-    첨가제명: 'additive',
-    ATC코드: 'atc_code',
-    등록자ID: 'register_id',
-    사업자번호: 'company_number',
-  };
+  export type DetailKey = keyof Detail;
 
   export type Pharmacopoeia =
     | 'KP'
@@ -178,6 +139,7 @@ export namespace Medicine {
     | 'BP'
     | 'DAB'
     | 'PF';
+
   export interface Ingredient {
     ko: string;
     en: string | null;
@@ -202,6 +164,55 @@ export namespace Medicine {
     re_examination_start_date: Date;
     re_examination_end_date: Date;
   }
+  export type OpenAPiDetailResponse = OpenApiResponse<OpenApiDetailDTO>;
+
+  export type OpenApiDetailKey = keyof OpenApiDetailDTO;
+  export type OpenApiDetailToDetailKeyMap = Record<OpenApiDetailKey, DetailKey>;
+  export const OPEN_API_DETAIL_TO_DETAIL_KEY_MAP: OpenApiDetailToDetailKeyMap =
+    {
+      EE_DOC_DATA: 'effect', // 효능효과
+      UD_DOC_DATA: 'usage', // 용법용량
+      NB_DOC_DATA: 'caution', // 주의사항
+      PN_DOC_DATA: 'document', // 첨부문서
+      MAIN_ITEM_INGR: 'main_ingredient', // 주성분명
+      INGR_NAME: 'ingredients', // 원료성분
+      ATC_CODE: 'atc_code', // ATC코드
+      ITEM_ENG_NAME: 'english_name', // 품목 영문명
+      ENTP_ENG_NAME: 'english_company', // 업체 영문명
+      MAIN_INGR_ENG: 'english_ingredients', // 영문성분명
+      ITEM_SEQ: 'serial_number', // 품목일련번호
+      ITEM_NAME: 'name', // 품목명
+      ENTP_NAME: 'company', // 업체명
+      ITEM_PERMIT_DATE: 'permit_date', // 허가일자
+      CNSGN_MANUF: 'raw_material', // 수입및제조
+      ETC_OTC_CODE: 'classification', // 전문일반구분
+      CHART: 'state', // 성상
+      BAR_CODE: 'standard_code', // 표준코드
+      MATERIAL_NAME: 'ingredients', // 원료성분
+      STORAGE_METHOD: 'storage_method', // 저장방법
+      VALID_TERM: 'expiration_date', // 유효기간
+      REEXAM_TARGET: 're_examination', // 재심사대상
+      REEXAM_DATE: 're_examination_date', // 재심사기간
+      PACK_UNIT: 'packing_unit', // 포장단위
+      EDI_CODE: 'insurance_code', // 보험코드
+      DOC_TEXT: 'change_content', // 변경내용
+      PERMIT_KIND_NAME: 'type', // 허가/신고구분
+      ENTP_NO: 'company_number', // 사업자번호
+      MAKE_MATERIAL_FLAG: 'raw_material', // 완제원료구분
+      NEWDRUG_CLASS_NAME: 'is_new_drug', // 신약여부
+      CANCEL_DATE: 'cancel_date', // 취소일자
+      CANCEL_NAME: 'cancel_status', // 취소상태
+      CHANGE_DATE: 'change_date', // 변경일자
+      NARCOTIC_KIND_CODE: 'narcotic_type', // 마약류분류
+      TOTAL_CONTENT: 'total_amount', // 총량
+      EE_DOC_ID: 'effect_file_url', // 효능효과 문서ID
+      UD_DOC_ID: 'usage_file_url', // 용법용량 문서ID
+      NB_DOC_ID: 'caution_file_url', // 주의사항 문서ID
+      INSERT_FILE: 'document_file_url', // 첨부문서 문서ID
+      BIZRNO: 'company_number', // 사업자번호
+      INDUTY_TYPE: 'classification', // 업종 구분
+      GBN_NAME: 'change_content', // 변경이력
+    };
 
   // --------------------------------------
   // 2. 대한민국 의약품 제품허가목록
@@ -246,37 +257,36 @@ export namespace Medicine {
    * 사업자번호
    */
   // --------------------------------------
-  export interface CommonJson_Kr {
-    품목일련번호: string;
-    품목명: string;
-    품목: string;
-    영문명: string;
-    업체명: string;
-    업체: string;
-    업체영문명: string;
-    업허가번호: string;
-    업일련번호: string;
-    업종: string;
-    전문일반구분: string;
-    주성분: string;
-    주성분수: string;
-    큰제품이미지: string;
-    신고허가구분: string;
-    취소취하일자: string;
-    취소취하구분: string;
-    분류명: string;
-    품목허가번호: string;
-    보험코드: string;
-    사업자번호: string;
-  }
 
+  export interface OpenApiCommonDto {
+    ITEM_SEQ: string;
+    ITEM_NAME: string;
+    ENTP_NAME: string;
+    ITEM_PERMIT_DATE: string;
+    INDUTY: string;
+    PRDLST_STDR_CODE: string;
+    SPCLTY_PBLC: string;
+    PRDUCT_TYPE: string;
+    PRDUCT_PRMISN_NO: string;
+    ITEM_INGR_NAME: string;
+    ITEM_INGR_CNT: string;
+    PERMIT_KIND_CODE: string;
+    CANCEL_DATE: string;
+    CANCEL_NAME: string;
+    BIG_PRDT_IMG_URL: string;
+    ENTP_SEQ: string;
+    ENTP_NO: string;
+    EDI_CODE: string;
+    ITEM_ENG_NAME: string;
+    ENTP_ENG_NAME: string;
+  }
   export interface Common {
     serial_number: string; // 품목일련번호
     name: string; // 품목명
     item: string; // 품목
     english_name: string; // 영문명
     company_name: string; // 업체명
-    company: string; // 업체
+    company_serial_number: string; // 업체
     company_english_name: string; // 업체영문명
     business_license_number: string; // 업허가번호
     business_serial_number: string; // 업일련번호
@@ -292,33 +302,40 @@ export namespace Medicine {
     item_approval_number: string; // 품목허가번호
     insurance_code: string; // 보험코드
     company_number: string; // 사업자번호
+    permit_date: string; // 허가일자
+    standard_code: string; // 표준코드
   }
-  export type CommonKorKey = keyof CommonJson_Kr;
-  export type CommonEngKey = keyof Common;
-  export type CommonKorToEngKeyMap = Record<CommonKorKey, CommonEngKey>;
-  export const COMMON_KOR_TO_ENG_KEY_MAP: CommonKorToEngKeyMap = {
-    품목일련번호: 'serial_number',
-    품목명: 'name',
-    품목: 'item',
-    영문명: 'english_name',
-    업체명: 'company_name',
-    업체: 'company',
-    업체영문명: 'company_english_name',
-    업허가번호: 'business_license_number',
-    업일련번호: 'business_serial_number',
-    업종: 'business_type',
-    전문일반구분: 'professional_general_classification',
-    주성분: 'main_ingredient',
-    주성분수: 'number_of_main_ingredients',
-    큰제품이미지: 'large_image',
-    신고허가구분: 'declaration_permission_classification',
-    취소취하일자: 'cancellation_withdrawal_date',
-    취소취하구분: 'cancellation_withdrawal_classification',
-    분류명: 'classification_name',
-    품목허가번호: 'item_approval_number',
-    보험코드: 'insurance_code',
-    사업자번호: 'company_number',
-  };
+
+  export type OpenApiCommonResponse = OpenApiResponse<OpenApiCommonDto>;
+  export type OpenApiCommonKey = keyof OpenApiCommonDto;
+  export type CommonKey = keyof Common;
+  export type OpenApiCommonToCommonKeyMap = Record<
+    OpenApiCommonKey,
+    CommonKey | null
+  >;
+  export const OPEN_API_COMMON_TO_COMMON_KEY_MAP: OpenApiCommonToCommonKeyMap =
+    {
+      ITEM_SEQ: 'serial_number',
+      ITEM_NAME: 'name',
+      ENTP_NAME: 'company_name',
+      ITEM_PERMIT_DATE: 'permit_date',
+      INDUTY: 'business_type',
+      PRDLST_STDR_CODE: 'serial_number',
+      SPCLTY_PBLC: 'professional_general_classification',
+      PRDUCT_TYPE: 'item',
+      PRDUCT_PRMISN_NO: 'item_approval_number',
+      ITEM_INGR_NAME: 'main_ingredient',
+      ITEM_INGR_CNT: 'number_of_main_ingredients',
+      PERMIT_KIND_CODE: 'declaration_permission_classification',
+      CANCEL_DATE: 'cancellation_withdrawal_date',
+      CANCEL_NAME: 'cancellation_withdrawal_classification',
+      BIG_PRDT_IMG_URL: 'large_image',
+      ENTP_SEQ: 'company_serial_number',
+      ENTP_NO: 'company_number',
+      EDI_CODE: 'insurance_code',
+      ITEM_ENG_NAME: 'english_name',
+      ENTP_ENG_NAME: 'company_english_name',
+    };
 
   // --------------------------------------
   // 3. 의약품 낱알 식별 정보
