@@ -2,19 +2,24 @@ import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { medicine } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
+import { DETAIL_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
-import { convertXlsxToJson } from '@src/utils/convertXlsxToJson';
 import { renameKeys } from '@src/utils/renameKeys';
+import { XMLParser } from 'fast-xml-parser';
 import pdf from 'pdf-parse';
 import {
+  EMPTY,
   catchError,
-  finalize,
   firstValueFrom,
   from,
   iif,
   map,
   mergeMap,
   of,
+  range,
+  reduce,
+  retry,
+  tap,
 } from 'rxjs';
 @Injectable()
 export class MedicineBatchService {
@@ -24,6 +29,99 @@ export class MedicineBatchService {
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
   ) {}
+
+  async checkExistMedicine(medicine: medicine) {
+    const { id } = medicine;
+    if (!id) return { beforeMedicine: null, medicine };
+    const exist = await this.prisma.medicine.findUnique({ where: { id } });
+    if (!exist) return { beforeMedicine: null, medicine };
+    return {
+      beforeMedicine: exist,
+      medicine,
+    };
+  }
+
+  extractContentFromXml$(xml?: string | null) {
+    if (!xml) return EMPTY;
+
+    type Paragraph = {
+      '#text'?: string;
+    };
+
+    type Article = {
+      '@_title'?: string;
+      PARAGRAPH: Paragraph[] | Paragraph;
+    };
+
+    type Section = {
+      ARTICLE: Article[] | Article;
+      '@_title'?: string;
+    };
+
+    type XML_DATA = {
+      DOC: {
+        SECTION: Section[] | Section;
+        '@_title'?: string;
+      };
+    };
+
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+    });
+
+    const parsedXml: XML_DATA = parser.parse(xml);
+    if (!parsedXml.DOC) return of('');
+
+    const xmlDocTitle = parsedXml.DOC['@_title']
+      ? `\n${parsedXml.DOC['@_title']}`
+      : '';
+    const xmlSections = Array.isArray(parsedXml.DOC.SECTION)
+      ? parsedXml.DOC.SECTION
+      : [parsedXml.DOC.SECTION];
+
+    const section$ = from(xmlSections).pipe(
+      mergeMap((section) => {
+        const sectionTitle = section['@_title']
+          ? `\n${section['@_title']}`
+          : '';
+        const articles = Array.isArray(section.ARTICLE)
+          ? section.ARTICLE
+          : [section.ARTICLE];
+
+        return from(articles).pipe(
+          mergeMap((article) => {
+            if (!article) return EMPTY;
+
+            const articleTitle = article['@_title']
+              ? `\n${article['@_title']}`
+              : '';
+            const paragraphs = Array.isArray(article.PARAGRAPH)
+              ? article.PARAGRAPH
+              : [article.PARAGRAPH];
+
+            const paragraphTexts = paragraphs
+              .filter((p) => p && typeof p === 'object') // Ensure p is an object
+              .filter((p) => p['#text']) // Ensure p has '#text'
+              .map((p) => p['#text']?.trim() || '') // Safely access '#text'
+              .join('\n\t');
+
+            return of(`${sectionTitle}${articleTitle}${paragraphTexts}`);
+          }),
+        );
+      }),
+      reduce((acc, text) => `${acc}${text}`, xmlDocTitle),
+    );
+
+    return section$;
+  }
+
+  // processOpenApiDetail$(detail: Medicine.OpenApiDetailDTO) {
+  //   return of(detail).pipe(
+  //     map((detail) => this.pickAndConvertOpenApiDetailToInfo(detail)),
+  //     map((a) => a),
+  //   );
+  // }
 
   async fetchArrayBuffer(url: string) {
     const value = await firstValueFrom(
@@ -41,16 +139,23 @@ export class MedicineBatchService {
             this.logger.error(e.message);
             return of(null);
           }),
+          retry({
+            count: 3,
+            delay: 5000,
+          }),
         ),
     );
     if (!value) return null;
     const { data } = value;
+
     return data;
   }
 
   async getPdfText(PdfBuffer: ArrayBuffer) {
     try {
       const pdfBuffer = Buffer.from(PdfBuffer);
+      console.log(pdfBuffer);
+      console.log(PdfBuffer);
       if (!pdfBuffer) return '';
       if (pdfBuffer.byteLength === 0) return '';
 
@@ -59,9 +164,11 @@ export class MedicineBatchService {
       const text = pdfData.text.replaceAll('\x00', ' ');
       return text.trim();
     } catch (err) {
+      console.log(err.message);
       return '';
     }
   }
+
   save(medicine: medicine) {
     return medicine;
   }
@@ -70,96 +177,152 @@ export class MedicineBatchService {
   // Detail
   //------------------------
   /**
-   * 1. 데이터 가져오기,
+   * 1. 데이터 가져오기, OpenAPI로부터
+   *    - 첫 요청은 totalCount를 가져와서 전체 페이지를 계산한다.
+   *    - 전체 페이지를 계산하여 다시 요청한다.
    * 2. 데이터 변환하기
-   *    - key 한글 -> 영어
-   *    - format 변환 (Detail -> DB Schema)
-   * 3. 데이터 저장하기
+   *    - OpenAPI -> Detail (시스템 내부에서 사용하는 데이터 형식)
+   *    - Detail -> DB Schema (DB에 저장되는 데이터 형식)
    *
-   * ## 고려해야할것
-   * - 1. db에 이미 있는 데이터인지 확인
-   * - 2. 변경된 내용이 있는지 확인
-   * - 3. 변경된 내용이 있다면, 변경된 내용만 저장
-   *      - 해당 데이터 변경여부는 change_content에 저장되어있음
-   *        - 1일단위로 체크
-   *      -- 성상  [state]  // 따로 fetch작업 안해도됨
-   *      - 성상
-   *      - 성상변경
-   *
-   *      -- 저장방법 [storage_method] // 따로 fetch작업 안해도됨
-   *      - 저장방법 및 사용(유효)기간
-   *      - 저장방법 및 유효기간(사용기간)변경
-   *
-   *      -- 제품명  [name] // 따로 fetch작업 안해도됨
-   *      - 제품명칭변경
-   *      - 제품명
-   *
-   *      -- 사용상주의사항  [caution]
-   *      - 사용상주의사항변경(부작용포함)
-   *      - 사용상의 주의사항
-   *
-   *      -- 효능효과 [effect] - 효능
-   *      - 효능효과변경
-   *      - 효능·효과
-   *
-   *      -- 용법용량 [usage]
-   *      - 용법용량변경
-   *      - 용법·용량
-   *
-   *
-   * - 4. 변경된 내용이 없다면, 저장하지 않음
+   * 3. 데이터 저장하기 (DB에 저장)
    *
    */
-  detailBatch() {
-    return this.fetchAndConvertMedicineDetailListXlsx$().pipe(
-      mergeMap((detailJson_kr) => this.processMedicineDetail$(detailJson_kr)),
-      mergeMap((medicines) => this.upsertMedicine(medicines), 100),
-      finalize(() => {
-        console.log('detailBatch Observable completed');
-      }),
+
+  // detailBatch() {
+  //   return this.fetchAndConvertMedicineDetailListXlsx$().pipe(
+  //     mergeMap((detailJson_kr) => this.processMedicineDetail$(detailJson_kr)),
+  //     mergeMap((medicines) => this.upsertMedicine(medicines), 100),
+  //     finalize(() => {
+  //       console.log('detailBatch Observable completed');
+  //     }),
+  //   );
+  // }
+
+  fetchOpenApiDetailList$() {
+    return of(DETAIL_API_URL_BUILD(process.env.API_KEY!, 1)).pipe(
+      mergeMap((url) =>
+        this.httpService.get<Medicine.OpenAPiDetailResponse>(url).pipe(
+          tap(console.log),
+          map(({ data }) => data.body),
+          catchError((e) => {
+            console.log(e.message);
+            return [];
+          }),
+        ),
+      ),
+      map((data) => Math.ceil(data.totalCount / data.numOfRows)),
+      mergeMap((value) => range(0, value)),
+      map((page) => DETAIL_API_URL_BUILD(process.env.API_KEY!, page + 1)),
+      mergeMap(
+        (url) =>
+          this.httpService
+            .get<Medicine.OpenAPiDetailResponse>(url, {
+              timeout: 1000000,
+            })
+            .pipe(
+              map(({ data }) => data.body.items),
+              catchError((e) => {
+                console.log(e.message);
+                return [];
+              }),
+            ),
+        20,
+      ),
+      mergeMap((items) => from(items)),
     );
+  }
+
+  batch() {
+    return this.fetchOpenApiDetailList$().pipe(
+      map((item) => this.convertOpenApiDtoToDetail(item)),
+      map((item) => this.convertFormatMedicineDetailToDBSchema(item)),
+      mergeMap((medicine) => this.setMedicineDetailInfo$(medicine)),
+      mergeMap((item) => this.checkExistMedicine(item)),
+      map(({ beforeMedicine, medicine }) =>
+        this.processMedicineWithBeforeMedicine(medicine, beforeMedicine),
+      ),
+      mergeMap((medicine) => this.upsertMedicine(medicine), 30),
+    );
+  }
+
+  processMedicineWithBeforeMedicine(
+    medicine: medicine,
+    beforeMedicine: medicine | null,
+  ) {
+    if (!beforeMedicine) return medicine;
+    const {
+      image_url,
+      product_type,
+      ingredients_count,
+      company_serial_number,
+    } = beforeMedicine;
+
+    return {
+      ...medicine,
+      image_url,
+      product_type,
+      ingredients_count,
+      company_serial_number,
+    };
+  }
+
+  setMedicineDetailInfo$(medicine: medicine) {
+    return of(medicine).pipe(
+      mergeMap((medicine) => this.setMedicineCaution(medicine)),
+      mergeMap((medicine) => this.setMedicineEffect(medicine)),
+      mergeMap((medicine) => this.setMedicineUsage(medicine)),
+      mergeMap((medicine) => this.setMedicineDocument$(medicine)),
+    );
+  }
+
+  async setMedicineDocument$(medicine: medicine) {
+    if (!medicine.document_file_url) return medicine;
+    const document = await firstValueFrom(
+      this.extractContentFromXml$(medicine.document_file_url),
+    );
+    return {
+      ...medicine,
+      document,
+    };
   }
 
   async upsertMedicine(medicine: medicine) {
-    const { id, ...rest } = medicine;
-    return await this.prisma.medicine.upsert({
-      where: { id: id },
-      create: medicine,
-      update: { ...rest },
-    });
+    try {
+      console.log(medicine);
+      const { id, ...rest } = medicine;
+      return await this.prisma.medicine.upsert({
+        where: { id: id },
+        create: medicine,
+        update: { ...rest },
+      });
+    } catch (error) {
+      console.error('Error in upsertMedicine:', error);
+      // Handle or throw the error appropriately
+    }
   }
 
-  fetchAndConvertMedicineDetailListXlsx$() {
-    const url =
-      'https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail';
-    const buffer = this.fetchArrayBuffer(url);
-    return of(buffer).pipe(
-      mergeMap((buffer) => buffer),
-      map((buffer) => this.convertMedicineDetailListXlsxToJson(buffer)),
-    );
-  }
-
-  processMedicineDetail$(detailJson_kr: Medicine.DetailJson_Kr[]) {
-    return from(detailJson_kr).pipe(
-      // 2. 데이터 변환하기
-      map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)), // - key 한글 -> 영어
-      map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)), // - format 변환 (Detail -> DB Schema)
-      mergeMap((medicine) => this.checkExistMedicine(medicine), 100), // 고려1. db에 이미 있는 데이터인지 확인
-      mergeMap(
-        ({ beforeMedicine, medicine }) =>
-          iif(
-            () => !!beforeMedicine,
-            this.processExistingMedicine$(medicine, beforeMedicine!),
-            this.processNotExistsMedicine$(medicine),
-          ),
-        50,
-      ), // 고려2. 변경된 내용이 있는지 확인
-      catchError((err) => {
-        this.logger.error('processMedicineDetail$', err.message);
-        return [];
-      }),
-    );
-  }
+  // processMedicineDetail$(detailJson_kr: Medicine.DetailJson_Kr[]) {
+  //   return from(detailJson_kr).pipe(
+  //     // 2. 데이터 변환하기
+  //     map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)), // - key 한글 -> 영어
+  //     map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)), // - format 변환 (Detail -> DB Schema)
+  //     mergeMap((medicine) => this.checkExistMedicine(medicine), 100), // 고려1. db에 이미 있는 데이터인지 확인
+  //     delay(1000),
+  //     mergeMap(
+  //       ({ beforeMedicine, medicine }) =>
+  //         iif(
+  //           () => !!beforeMedicine,
+  //           this.processExistingMedicine$(medicine, beforeMedicine!),
+  //           this.processNotExistsMedicine$(medicine),
+  //         ),
+  //       25,
+  //     ), // 고려2. 변경된 내용이 있는지 확인
+  //     catchError((err) => {
+  //       this.logger.error('processMedicineDetail$', err.message);
+  //       return [];
+  //     }),
+  //   );
+  // }
 
   processNotExistsMedicine$(medicine: medicine) {
     return of(medicine).pipe(
@@ -169,23 +332,19 @@ export class MedicineBatchService {
     );
   }
 
-  processExistingMedicine$(medicine: medicine, beforeMedicine?: medicine) {
-    // detail이후 파이프라인에서 작업한 정보가 있을수있기에 두 객체를 합쳐 이전 사항을 덮어씌워준다.
-    return of({ ...beforeMedicine, ...medicine }).pipe(
-      mergeMap((medicine) => this.updateMedicineInfo$(medicine)),
-    );
-  }
+  // processExistingMedicine$(medicine: medicine, beforeMedicine?: medicine) {
+  //   // detail이후 파이프라인에서 작업한 정보가 있을수있기에 두 객체를 합쳐 이전 사항을 덮어씌워준다.
+  //   return of({ ...beforeMedicine, ...medicine }).pipe(
+  //     mergeMap((medicine) => this.updateMedicineInfo$(medicine)),
+  //   );
+  // }
 
-  convertMedicineDetailListXlsxToJson(buffer: any): Medicine.DetailJson_Kr[] {
-    return convertXlsxToJson<Medicine.DetailJson_Kr>(buffer);
-  }
-
-  converMedicineDetailKeyKrToEng(medicine: Medicine.DetailJson_Kr) {
+  convertOpenApiDtoToDetail(medicine: Medicine.OpenApiDetailDTO) {
     const keys = Object.keys(
-      Medicine.KOR_TO_ENG_KEY_MAP,
-    ) as Medicine.DetailKorKey[];
-    const args: [Medicine.DetailKorKey, Medicine.DetailEngKey][] = keys.map(
-      (key) => [key, Medicine.KOR_TO_ENG_KEY_MAP[key]],
+      Medicine.OPEN_API_DETAIL_TO_DETAIL_KEY_MAP,
+    ) as Medicine.OpenApiDetailKey[];
+    const args: [Medicine.OpenApiDetailKey, Medicine.DetailKey][] = keys.map(
+      (key) => [key, Medicine.OPEN_API_DETAIL_TO_DETAIL_KEY_MAP[key]],
     );
     const result = renameKeys(medicine, args, { undefinedToNull: true });
     return result as Medicine.Detail;
@@ -193,14 +352,11 @@ export class MedicineBatchService {
 
   convertFormatMedicineDetailToDBSchema(medicine: Medicine.Detail): medicine {
     const {
-      document,
-      usage,
-      effect,
-      caution,
       english_ingredients,
       change_date,
       ingredients,
       re_examination_date,
+      standard_code,
       cancel_date,
       permit_date,
       expiration_date,
@@ -219,6 +375,7 @@ export class MedicineBatchService {
 
     return {
       ...rest,
+      standard_code: this.parseStandardCode(standard_code),
       id: medicine.serial_number,
       cancel_date: _cancel_date ? new Date(_cancel_date) : null,
       type: medicine.type as medicine['type'],
@@ -231,7 +388,6 @@ export class MedicineBatchService {
       ),
       main_ingredient: this.parseCompound(medicine.main_ingredient),
       additive: this.parseCompound(medicine.additive),
-      document_file_url: document || null,
 
       expiration_date: expiration_date || null,
       change_content: this.parseChangeContent(medicine.change_content),
@@ -245,19 +401,23 @@ export class MedicineBatchService {
       storage_method: medicine.storage_method || '',
       packing_unit: medicine.packing_unit || '',
       company_number: medicine.company_number,
-      register_id: medicine.register_id,
+      register_id: medicine.register_id || '',
       atc_code: medicine.atc_code,
       re_examination: this.parseReExamination(
         medicine.re_examination,
         re_examination_date,
       ),
-      usage_file_url: usage || null,
-      caution_file_url: caution || null,
-      effect_file_url: effect || null,
-      usage: null,
-      effect: null,
-      caution: null,
+      image_url: null,
+      product_type: null,
+      company_serial_number: null,
+      ingredients_count: null,
     };
+  }
+
+  parseStandardCode(standardCode: string | null) {
+    if (!standardCode) return [];
+    const code = standardCode.split(',');
+    return code;
   }
 
   parseIngredients(
@@ -265,42 +425,33 @@ export class MedicineBatchService {
     english_ingredients: string | null,
   ): Medicine.Ingredient[] {
     if (!ingredients) return [];
-    // ex  "1000밀리리터|포도당|USP|50|그램|;1000밀리리터|염화나트륨|KP|9|그램|"
-    // standard | ko | Pharmacoepia | amount | unit|;standard | ko | Pharmacoepia | amount | unit
-    // amount : amunt + unit
-    // ko : ko
 
-    const korIngredients = ingredients.split('|').filter((s) => !!s);
-    const chunkSize = 5;
-    const chunks = Array(Math.ceil(korIngredients.length / chunkSize))
-      .fill(null)
-      .map((_, index) => index);
-    const korIngredientsChunk = chunks.map(
-      (_, index) =>
-        !!korIngredients &&
-        korIngredients.slice(index * chunkSize, (index + 1) * chunkSize),
-    );
+    // ex  "총량 : 1000밀리리터|성분명 : 포도당|분량 : 50|단위 : 그램|규격 : USP|성분정보 : |비고 : ;총량 : 1000밀리리터|성분명 : 염화나트륨|분량 : 9|단위 : 그램|규격 : KP|성분정보 : |비고 :"
 
-    const engIngredients = english_ingredients?.split('/') || [];
+    // MAIN_INGR_ENG: "SODIUM CHLORIDE|GLUCOSE"
+    // ; 으로 split하면 안되는이유 : 성분정보에 ;이 들어갈수있음
 
-    const _ingredients = korIngredientsChunk
-      .map((kor, index) => {
-        const [standard, ko, pharmacoepia, amount, unit] = kor;
-        const en = engIngredients[index] || null;
+    const ingredientsString = ingredients.split(' ;');
+    const englishIngredientsString = english_ingredients
+      ? english_ingredients.split('/')
+      : [];
 
-        return {
-          standard: standard.trim().replace(';', ''),
-          ko,
-          en,
-          pharmacopoeia: pharmacoepia as Medicine.Pharmacopoeia,
-          amount,
-          unit,
-        };
-      })
-      .filter(
-        ({ standard, ko, en, pharmacopoeia, amount, unit }) =>
-          !!standard && !!ko && !!pharmacopoeia && !!amount && !!unit && !!en,
-      );
+    const _ingredients = ingredientsString.map((ingredient, index) => {
+      const _ingredient = ingredient.split('|').map((item) => {
+        const [_, value] = item.split(' : ');
+        return value;
+      });
+      const [standard, ko, amount, unit, pharmacopoeia] = _ingredient;
+      const en = englishIngredientsString[index] || '';
+      return {
+        standard,
+        ko,
+        en,
+        amount,
+        unit,
+        pharmacopoeia: pharmacopoeia as Medicine.Pharmacopoeia,
+      };
+    });
 
     return _ingredients;
   }
@@ -356,114 +507,51 @@ export class MedicineBatchService {
     // 기간
     const periods = periodString.split(',');
 
-    const _reExaminations = types.map((type, index) => {
-      const [re_examination_start_date, re_examination_end_date] =
-        periods[index].split('~');
-      return {
-        type,
-        re_examination_start_date: re_examination_start_date
-          ? new Date(re_examination_start_date)
-          : null,
-        re_examination_end_date: new Date(re_examination_end_date),
-      };
-    });
+    const _reExaminations = types
+      .map((type, index) => {
+        if (!periods[index]) return undefined;
+        const [re_examination_start_date, re_examination_end_date] =
+          periods[index].split('~');
+        return {
+          type,
+          re_examination_start_date: re_examination_start_date
+            ? new Date(re_examination_start_date)
+            : null,
+          re_examination_end_date: new Date(re_examination_end_date),
+        };
+      })
+      .filter((item) => !!item);
 
-    return _reExaminations;
-  }
-
-  updateMedicineInfo$(detail: medicine) {
-    /**
-     *      -- 성상  [state]  // 따로 fetch작업 안해도됨
-     *      - 성상
-     *      - 성상변경
-     *
-     *      -- 저장방법 [storage_method] // 따로 fetch작업 안해도됨
-     *      - 저장방법 및 사용(유효)기간
-     *      - 저장방법 및 유효기간(사용기간)변경
-     *
-     *      -- 제품명  [name] // 따로 fetch작업 안해도됨
-     *      - 제품명칭변경
-     *      - 제품명
-     *
-     *      -- 사용상주의사항  [caution] - RegExp  사용
-     *      - 사용상주의사항변경(부작용포함)
-     *      - 사용상의 주의사항
-     *
-     *      -- 효능효과 [effect] - RegExp 효능
-     *      - 효능효과변경
-     *      - 효능·효과
-     *
-     *      -- 용법용량 [usage] - RegExp  용법
-     *      - 용법용량변경
-     *      - 용법·용량
-     */
-    const medicine$ = of(detail).pipe(
-      map((medicne) => this.checkChangeContents(medicne, new Date())),
-      mergeMap(([medicine, changed]) =>
-        this.checkAndSetMedicineContent(
-          medicine,
-          changed,
-          /효능/,
-          this.setMedicineEffect.bind(this),
-        ),
-      ),
-      mergeMap(([medicine, changed]) =>
-        this.checkAndSetMedicineContent(
-          medicine,
-          changed,
-          /용법/,
-          this.setMedicineUsage.bind(this),
-        ),
-      ),
-      mergeMap(([medicine, changed]) =>
-        this.checkAndSetMedicineContent(
-          medicine,
-          changed,
-          /사용/,
-          this.setMedicineCaution.bind(this),
-        ),
-      ),
-      map(([medicine, _]) => medicine),
-      // 기존 데이터에 url이 있지만, 데이터가 없는경우
-      mergeMap((medicine) => this.updateMissingContentFromUrls$(medicine)),
-    );
-    return medicine$;
+    return _reExaminations as Medicine.ReExamination[];
   }
 
   async setMedicineEffect(detail: medicine) {
-    const { effect_file_url } = detail;
-    if (!effect_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(effect_file_url);
-    if (!pdfArrayBuffer) return detail;
-    const text = await this.getPdfText(pdfArrayBuffer);
+    const { effect } = detail;
+    if (!effect) return detail;
+    const _effect = await firstValueFrom(this.extractContentFromXml$(effect));
     return {
       ...detail,
-      effect: text,
+      effect: _effect,
     };
   }
 
   async setMedicineUsage(detail: medicine) {
-    const { usage_file_url } = detail;
-    if (!usage_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(usage_file_url);
-    if (!pdfArrayBuffer) return detail;
-    if (pdfArrayBuffer.byteLength === 0) return detail; // pdf가 없는경우
-    const text = await this.getPdfText(pdfArrayBuffer);
+    const { usage } = detail;
+    if (!usage) return detail;
+    const _usage = await firstValueFrom(this.extractContentFromXml$(usage));
     return {
       ...detail,
-      usage: text,
+      usage: _usage,
     };
   }
 
   async setMedicineCaution(detail: medicine) {
-    const { caution_file_url } = detail;
-    if (!caution_file_url) return detail;
-    const pdfArrayBuffer = await this.fetchArrayBuffer(caution_file_url);
-    if (!pdfArrayBuffer) return detail;
-    const text = await this.getPdfText(pdfArrayBuffer);
+    const { caution } = detail;
+    if (!caution) return detail;
+    const _caution = await firstValueFrom(this.extractContentFromXml$(caution));
     return {
       ...detail,
-      caution: text,
+      caution: _caution,
     };
   }
 
@@ -521,43 +609,29 @@ export class MedicineBatchService {
       );
   }
 
-  convertMedicineCommonListXlsxToJson(buffer: any) {
-    return convertXlsxToJson<Medicine.CommonJson_Kr>(buffer);
-  }
+  // converMedicineCommonKeyKrToEng(medicine: Medicine.CommonJson_Kr) {
+  //   const keys = Object.keys(
+  //     Medicine.KOR_TO_ENG_KEY_MAP,
+  //   ) as Medicine.CommonKorKey[];
+  //   const args: [Medicine.CommonKorKey, Medicine.CommonEngKey][] = keys.map(
+  //     (key) => [key, Medicine.KOR_TO_ENG_KEY_MAP[key]],
+  //   );
+  //   const result = renameKeys(medicine, args, { undefinedToNull: true });
+  //   return result as Medicine.Common;
+  // }
 
-  converMedicineCommonKeyKrToEng(medicine: Medicine.CommonJson_Kr) {
-    const keys = Object.keys(
-      Medicine.KOR_TO_ENG_KEY_MAP,
-    ) as Medicine.CommonKorKey[];
-    const args: [Medicine.CommonKorKey, Medicine.CommonEngKey][] = keys.map(
-      (key) => [key, Medicine.KOR_TO_ENG_KEY_MAP[key]],
-    );
-    const result = renameKeys(medicine, args, { undefinedToNull: true });
-    return result as Medicine.Common;
-  }
+  // checkChangeContents(detail: medicine, standard: Date): [medicine, string[]] {
+  //   const { change_content } = detail;
+  //   if (!change_content) return [detail, []];
 
-  checkChangeContents(detail: medicine, standard: Date): [medicine, string[]] {
-    const { change_content } = detail;
-    if (!change_content) return [detail, []];
+  //   const chaged = change_content
+  //     .filter((change) => {
+  //       return change.date > standard;
+  //     })
+  //     .map((change) => {
+  //       return change.content;
+  //     });
 
-    const chaged = change_content
-      .filter((change) => {
-        return change.date > standard;
-      })
-      .map((change) => {
-        return change.content;
-      });
-
-    return [detail, chaged];
-  }
-
-  async checkExistMedicine(medicine: medicine) {
-    const { id } = medicine;
-    const exist = await this.prisma.medicine.findUnique({ where: { id } });
-    if (!exist) return { beforeMedicine: null, medicine };
-    return {
-      beforeMedicine: exist,
-      medicine,
-    };
-  }
+  //   return [detail, chaged];
+  // }
 }
