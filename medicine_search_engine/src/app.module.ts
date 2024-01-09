@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
+import { AwsModule } from './common/aws/aws.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
       }),
       global: true,
     },
+    AwsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

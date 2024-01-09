@@ -1,12 +1,14 @@
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MedicineBatchService } from '@src/batch/medicine/medicineBatch.service';
+import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { mockDeep } from 'jest-mock-extended';
 describe('MedicineBatchService', () => {
   let mockMedicineBatchService: MedicineBatchService;
   let mockHttpService: HttpService;
   let mockPrismaService: PrismaService;
+  let mockS3Service: S3Service;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -19,6 +21,7 @@ describe('MedicineBatchService', () => {
         MedicineBatchService,
         { provide: HttpService, useValue: new HttpService() },
         PrismaService,
+        S3Service,
       ],
     })
       // .overrideProvider(HttpService)
@@ -30,6 +33,7 @@ describe('MedicineBatchService', () => {
     mockMedicineBatchService =
       module.get<MedicineBatchService>(MedicineBatchService);
     mockHttpService = module.get<HttpService>(HttpService);
+    mockS3Service = module.get<S3Service>(S3Service);
     mockPrismaService = module.get<PrismaService>(PrismaService);
     mockPrismaService.medicine.findUnique = jest.fn().mockReturnValue(null);
   });
