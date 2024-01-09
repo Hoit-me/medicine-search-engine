@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { medicine } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { DETAIL_API_URL_BUILD } from '@src/constant';
+import { COMMON_API_URL_BUILD, DETAIL_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
 import { renameKeys } from '@src/utils/renameKeys';
 import { XMLParser } from 'fast-xml-parser';
@@ -106,11 +106,11 @@ export class MedicineBatchService {
               .map((p) => p['#text']?.trim() || '') // Safely access '#text'
               .join('\n\t');
 
-            return of(`${sectionTitle}${articleTitle}${paragraphTexts}`);
+            return of(`${sectionTitle}${articleTitle}\n\t${paragraphTexts}`);
           }),
         );
       }),
-      reduce((acc, text) => `${acc}${text}`, xmlDocTitle),
+      reduce((acc, text) => `${acc}\n${text}`, xmlDocTitle),
     );
 
     return section$;
@@ -300,29 +300,6 @@ export class MedicineBatchService {
       // Handle or throw the error appropriately
     }
   }
-
-  // processMedicineDetail$(detailJson_kr: Medicine.DetailJson_Kr[]) {
-  //   return from(detailJson_kr).pipe(
-  //     // 2. 데이터 변환하기
-  //     map((medicine) => this.converMedicineDetailKeyKrToEng(medicine)), // - key 한글 -> 영어
-  //     map((medicine) => this.convertFormatMedicineDetailToDBSchema(medicine)), // - format 변환 (Detail -> DB Schema)
-  //     mergeMap((medicine) => this.checkExistMedicine(medicine), 100), // 고려1. db에 이미 있는 데이터인지 확인
-  //     delay(1000),
-  //     mergeMap(
-  //       ({ beforeMedicine, medicine }) =>
-  //         iif(
-  //           () => !!beforeMedicine,
-  //           this.processExistingMedicine$(medicine, beforeMedicine!),
-  //           this.processNotExistsMedicine$(medicine),
-  //         ),
-  //       25,
-  //     ), // 고려2. 변경된 내용이 있는지 확인
-  //     catchError((err) => {
-  //       this.logger.error('processMedicineDetail$', err.message);
-  //       return [];
-  //     }),
-  //   );
-  // }
 
   processNotExistsMedicine$(medicine: medicine) {
     return of(medicine).pipe(
@@ -595,18 +572,141 @@ export class MedicineBatchService {
   //------------------------
   // Common
   //------------------------
-  fetchMedicineListXlsx$(url: string) {
-    return this.httpService
-      .get<ArrayBuffer>(url, {
-        responseType: 'arraybuffer',
-      })
-      .pipe(
-        map((res) => res.data),
-        catchError((error) => {
-          this.logger.error(error.response.data); // 실패한 경우 로그 출력
-          return [];
-        }),
-      );
+
+  fetchCommonList$() {
+    return of(COMMON_API_URL_BUILD(process.env.API_KEY!, 1)).pipe(
+      mergeMap((url) =>
+        this.httpService.get<Medicine.OpenApiCommonResponse>(url).pipe(
+          map(({ data }) => data.body),
+          catchError((e) => {
+            console.log(e.message);
+            return [];
+          }),
+        ),
+      ),
+      map((data) => Math.ceil(data.totalCount / data.numOfRows)),
+      mergeMap((value) => range(0, value)),
+      map((page) => COMMON_API_URL_BUILD(process.env.API_KEY!, page + 1)),
+      mergeMap(
+        (url) =>
+          this.httpService
+            .get<Medicine.OpenApiCommonResponse>(url, {
+              timeout: 1000000,
+            })
+            .pipe(
+              map(({ data }) => data.body.items),
+              catchError((e) => {
+                console.log(e.message);
+                return [];
+              }),
+            ),
+        20,
+      ),
+      mergeMap((items) => from(items)),
+    );
+  }
+
+  convertOpenApiCommonDtoToCommon(medicine: Medicine.OpenApiCommonDto) {
+    const { ITEM_SEQ, PRDUCT_TYPE, ENTP_SEQ, BIG_PRDT_IMG_URL } = medicine;
+    return {
+      id: ITEM_SEQ,
+      product_type: PRDUCT_TYPE,
+      company_serial_number: ENTP_SEQ,
+      image_url: BIG_PRDT_IMG_URL,
+    };
+  }
+
+  async checkExistAndMergeCommonMedicine(medicine: {
+    id: string;
+    product_type: string;
+    company_serial_number: string;
+    image_url: string;
+  }) {
+    const { id } = medicine;
+    if (!id) return { beforeMedicine: null, medicine };
+    const exist = await this.prisma.medicine.findUnique({ where: { id } });
+    if (!exist) return { beforeMedicine: null, medicine };
+    return {
+      beforeMedicine: exist,
+      medicine,
+    };
+  }
+
+  batchCommon() {
+    return this.fetchCommonList$().pipe(
+      map((item) => this.convertOpenApiCommonDtoToCommon(item)),
+      mergeMap((medicine) => this.checkExistAndMergeCommonMedicine(medicine)),
+      map(({ medicine, beforeMedicine }) =>
+        this.checkImageChanged({ medicine, beforeMedicine }),
+      ),
+      mergeMap(({ medicine, changed, new_image_url }) =>
+        iif(
+          () => changed,
+          this.uploadAndSetImage(medicine, new_image_url),
+          of(medicine),
+        ),
+      ),
+    );
+  }
+
+  checkImageChanged({
+    medicine,
+    beforeMedicine,
+  }: {
+    medicine: {
+      id: string;
+      product_type: string;
+      company_serial_number: string;
+      image_url?: string;
+    };
+    beforeMedicine: medicine | null;
+  }) {
+    const { image_url, product_type, company_serial_number, id } = medicine;
+
+    const updated = {
+      ...beforeMedicine,
+      product_type,
+      company_serial_number,
+      id,
+    };
+    if (!beforeMedicine) return { medicine: updated, changed: true };
+    const { image_url: beforeIamge } = beforeMedicine;
+    //https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152035092098000085
+    if (!image_url)
+      return {
+        medicine: updated,
+        changed: true,
+        new_image_url: image_url || '',
+      };
+    const image_name = image_url.split('/').pop();
+    const check = beforeIamge?.includes(image_name || '');
+    if (check)
+      return {
+        medicine: updated,
+        changed: false,
+      };
+    return {
+      medicine: updated,
+      changed: true,
+      new_image_url: image_url || '',
+    };
+  }
+
+  async uploadAndSetImage(
+    medicine: {
+      id: string;
+      product_type: string;
+      company_serial_number: string;
+    },
+    new_image_url?: string,
+  ) {
+    if (!new_image_url) return medicine;
+    const s3Url = 'test';
+    const image_url = s3Url;
+    return {
+      ...medicine,
+      image_url,
+    };
   }
 
   // converMedicineCommonKeyKrToEng(medicine: Medicine.CommonJson_Kr) {
