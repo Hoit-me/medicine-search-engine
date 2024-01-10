@@ -23,7 +23,6 @@ import {
   range,
   reduce,
   retry,
-  take,
   toArray,
 } from 'rxjs';
 @Injectable()
@@ -647,7 +646,6 @@ export class MedicineBatchService {
       map((data) => Math.ceil(data.totalCount / data.numOfRows)),
       mergeMap((value) => range(0, value)),
       map((page) => COMMON_API_URL_BUILD(process.env.API_KEY!, page + 1)),
-      take(1),
       mergeMap(
         (url) =>
           this.httpService
@@ -662,9 +660,38 @@ export class MedicineBatchService {
                 return [];
               }),
             ),
-        20,
+        1,
       ),
       mergeMap((items) => from(items)),
+    );
+  }
+
+  batchCommon() {
+    return this.fetchCommonList$().pipe(
+      map((item) => this.convertOpenApiCommonDtoToCommon(item)),
+      bufferCount(100),
+      mergeMap((medicines) => this.bulkCheckExistCommonMedicine(medicines)),
+      mergeMap((m) => m),
+      filter(({ beforeMedicine }) => !!beforeMedicine),
+      map(({ medicine, beforeMedicine }) =>
+        this.checkImageChanged({ medicine, beforeMedicine }),
+      ),
+      mergeMap(
+        ({ medicine, changed, new_image_url }) =>
+          iif(
+            () => !!changed,
+            this.uploadAndSetImage(medicine, new_image_url),
+            of(medicine),
+          ),
+        10,
+      ),
+      delay(1500),
+      bufferCount(100),
+      mergeMap((medicines, i) => this.bulkUpdateCommonMedicine(medicines, i)),
+      retry({
+        count: 3,
+        delay: 5000,
+      }),
     );
   }
 
@@ -694,29 +721,26 @@ export class MedicineBatchService {
     };
   }
 
-  batchCommon() {
-    return this.fetchCommonList$().pipe(
-      map((item) => this.convertOpenApiCommonDtoToCommon(item)),
-      // tap(console.log),
-      mergeMap((medicine) => this.checkExistAndMergeCommonMedicine(medicine)),
-      // tap(console.log),
-
-      filter(({ beforeMedicine }) => !!beforeMedicine),
-      // tap(console.log),
-
-      map(({ medicine, beforeMedicine }) =>
-        this.checkImageChanged({ medicine, beforeMedicine }),
-      ),
-
-      mergeMap(({ medicine, changed, new_image_url }) =>
-        iif(
-          () => !!changed,
-          this.uploadAndSetImage(medicine, new_image_url),
-          of(medicine),
-        ),
-      ),
-      mergeMap((medicine) => this.updateCommonMedicine(medicine)),
-    );
+  async bulkCheckExistCommonMedicine(
+    medicines: {
+      id: string;
+      product_type: string;
+      company_serial_number: string;
+      image_url: string;
+    }[],
+  ) {
+    const ids = medicines.map((medicine) => medicine.id).filter((id) => id);
+    const exists = await this.prisma.medicine.findMany({
+      where: { id: { in: ids } },
+    });
+    const result = medicines.map((medicine) => {
+      const exist = exists.find((item) => item.id === medicine.id);
+      return {
+        beforeMedicine: exist,
+        medicine,
+      };
+    });
+    return result;
   }
 
   checkImageChanged({
@@ -729,7 +753,7 @@ export class MedicineBatchService {
       company_serial_number: string | null;
       image_url: string | null;
     };
-    beforeMedicine: medicine | null;
+    beforeMedicine?: medicine | null;
   }) {
     const { image_url } = medicine;
     if (!image_url) return { medicine, changed: false, new_image_url: null };
@@ -742,9 +766,16 @@ export class MedicineBatchService {
       return { medicine, changed: true, new_image_url: image_url };
 
     //이전 이미지는 s3에 새로저장되어, 주소가 다르므로, 이미지의 이름으로만 비교한다.
+    // ex) https://hoit-medicines.s3.ap-northeast-2.amazonaws.com/medicines/0000000000000.jpg // 변경안됨
+    // ex)  nedrug-image.s3.ap-northeast-2.amazonaws.com/medicines/0000000000000.jpg // 변경됨
     const image_name = image_url.split('/').pop();
-    const changed = before_image_url?.includes(image_name || '');
+    const before_image_url_domain_check = before_image_url?.includes('nedrug'); // 이전 이미지가 nedrug이미지인지 확인
+    const changed =
+      before_image_url_domain_check || !before_image_url?.includes(image_name!) // 이전 이미지가 nedrug이미지이거나, 이미지 이름이 다르면 변경된것으로 간주
+        ? true
+        : false;
 
+    console.log('changed', changed, image_name, before_image_url, medicine.id);
     return { medicine, changed, new_image_url: changed ? image_url : null };
   }
 
@@ -809,6 +840,36 @@ export class MedicineBatchService {
       data: updateData,
     });
 
+    return result;
+  }
+
+  async bulkUpdateCommonMedicine(
+    medicines: {
+      id: string;
+      product_type: string | null;
+      company_serial_number: string | null;
+      image_url: string | null;
+    }[],
+    i?: number,
+  ) {
+    const updateData = medicines
+      .map((medicine) => {
+        const { id, product_type, company_serial_number, image_url } = medicine;
+        if (!id) return undefined;
+        if (!product_type && !company_serial_number && !image_url)
+          return undefined;
+        return {
+          where: { id },
+          data: {
+            ...(product_type ? { product_type } : {}),
+            ...(company_serial_number ? { company_serial_number } : {}),
+            ...(image_url ? { image_url } : {}),
+          },
+        };
+      })
+      .filter((item) => !!item)
+      .map((arg) => this.prisma.medicine.update(arg!));
+    const result = await this.prisma.$transaction(updateData);
     return result;
   }
 }
