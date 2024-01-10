@@ -4,6 +4,7 @@ import { MedicineBatchService } from '@src/batch/medicine/medicineBatch.service'
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { mockDeep } from 'jest-mock-extended';
+import { mergeMap, of, toArray } from 'rxjs';
 describe('MedicineBatchService', () => {
   let mockMedicineBatchService: MedicineBatchService;
   let mockHttpService: HttpService;
@@ -397,6 +398,18 @@ describe('MedicineBatchService', () => {
       //   );
       //   console.log(a);
       // }, 1000000000);
+      it('test', async () => {
+        const source = of(1, 2, 3, 4, 5);
+
+        source
+          .pipe(
+            toArray(),
+            mergeMap((arr) => arr.reverse()),
+          )
+          .subscribe((result) => {
+            console.log(result); // [5, 4, 3, 2, 1]
+          });
+      });
     });
   });
 });

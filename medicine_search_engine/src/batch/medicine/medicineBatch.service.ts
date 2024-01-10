@@ -10,7 +10,9 @@ import { XMLParser } from 'fast-xml-parser';
 import pdf from 'pdf-parse';
 import {
   EMPTY,
+  bufferCount,
   catchError,
+  delay,
   filter,
   firstValueFrom,
   from,
@@ -22,7 +24,7 @@ import {
   reduce,
   retry,
   take,
-  tap,
+  toArray,
 } from 'rxjs';
 @Injectable()
 export class MedicineBatchService {
@@ -35,14 +37,20 @@ export class MedicineBatchService {
   ) {}
 
   async checkExistMedicine(medicine: medicine) {
-    const { id } = medicine;
-    if (!id) return { beforeMedicine: null, medicine };
-    const exist = await this.prisma.medicine.findUnique({ where: { id } });
-    if (!exist) return { beforeMedicine: null, medicine };
-    return {
-      beforeMedicine: exist,
-      medicine,
-    };
+    try {
+      const { id } = medicine;
+      if (!id) return { beforeMedicine: null, medicine };
+      const exist = await this.prisma.medicine.findUnique({ where: { id } });
+      if (!exist) return { beforeMedicine: null, medicine };
+      return {
+        beforeMedicine: exist,
+        medicine,
+      };
+    } catch (err) {
+      console.log(medicine.name + 'checkExistMedicine 에러');
+      console.log(err.message);
+      return { beforeMedicine: null, medicine };
+    }
   }
 
   extractContentFromXml$(xml?: string | null) {
@@ -83,7 +91,6 @@ export class MedicineBatchService {
     const xmlSections = Array.isArray(parsedXml.DOC.SECTION)
       ? parsedXml.DOC.SECTION
       : [parsedXml.DOC.SECTION];
-
     const section$ = from(xmlSections).pipe(
       mergeMap((section) => {
         const sectionTitle = section['@_title']
@@ -95,28 +102,34 @@ export class MedicineBatchService {
 
         return from(articles).pipe(
           mergeMap((article) => {
-            if (!article) return EMPTY;
+            try {
+              if (!article) return EMPTY;
 
-            const articleTitle = article['@_title']
-              ? `\n${article['@_title']}`
-              : '';
-            const paragraphs = Array.isArray(article.PARAGRAPH)
-              ? article.PARAGRAPH
-              : [article.PARAGRAPH];
+              const articleTitle = article['@_title']
+                ? `\n${article['@_title']}`
+                : '';
+              const paragraphs = Array.isArray(article.PARAGRAPH)
+                ? article.PARAGRAPH
+                : [article.PARAGRAPH];
 
-            const paragraphTexts = paragraphs
-              .filter((p) => p && typeof p === 'object') // Ensure p is an object
-              .filter((p) => p['#text']) // Ensure p has '#text'
-              .map((p) => p['#text']?.trim() || '') // Safely access '#text'
-              .join('\n\t');
+              const paragraphTexts = paragraphs
+                .filter((p) => p && typeof p === 'object' && p['#text']) // Ensure p is an object and has '#text'
+                .map((p) =>
+                  typeof p['#text'] === 'string' ? p['#text'].trim() : '',
+                ) // Safely access '#text'
+                .join('\n\t');
 
-            return of(`${sectionTitle}${articleTitle}\n\t${paragraphTexts}`);
+              return of(`${sectionTitle}${articleTitle}\n\t${paragraphTexts}`);
+            } catch (err) {
+              console.log(xml);
+              console.log(err.message);
+              return of(xml);
+            }
           }),
         );
       }),
       reduce((acc, text) => `${acc}\n${text}`, xmlDocTitle),
     );
-
     return section$;
   }
 
@@ -158,8 +171,7 @@ export class MedicineBatchService {
   async getPdfText(PdfBuffer: ArrayBuffer) {
     try {
       const pdfBuffer = Buffer.from(PdfBuffer);
-      console.log(pdfBuffer);
-      console.log(PdfBuffer);
+
       if (!pdfBuffer) return '';
       if (pdfBuffer.byteLength === 0) return '';
 
@@ -206,7 +218,6 @@ export class MedicineBatchService {
     return of(DETAIL_API_URL_BUILD(process.env.API_KEY!, 1)).pipe(
       mergeMap((url) =>
         this.httpService.get<Medicine.OpenAPiDetailResponse>(url).pipe(
-          tap(console.log),
           map(({ data }) => data.body),
           catchError((e) => {
             console.log(e.message);
@@ -216,6 +227,8 @@ export class MedicineBatchService {
       ),
       map((data) => Math.ceil(data.totalCount / data.numOfRows)),
       mergeMap((value) => range(0, value)),
+      toArray(),
+      mergeMap((arr) => arr.reverse()),
       map((page) => DETAIL_API_URL_BUILD(process.env.API_KEY!, page + 1)),
       mergeMap(
         (url) =>
@@ -230,7 +243,7 @@ export class MedicineBatchService {
                 return [];
               }),
             ),
-        20,
+        1,
       ),
       mergeMap((items) => from(items)),
     );
@@ -241,17 +254,41 @@ export class MedicineBatchService {
       map((item) => this.convertOpenApiDtoToDetail(item)),
       map((item) => this.convertFormatMedicineDetailToDBSchema(item)),
       mergeMap((medicine) => this.setMedicineDetailInfo$(medicine)),
-      mergeMap((item) => this.checkExistMedicine(item)),
+      bufferCount(100),
+      mergeMap((medicine) => this.bulkCheckExistMedicine(medicine)),
+      mergeMap((m) => m),
       map(({ beforeMedicine, medicine }) =>
         this.processMedicineWithBeforeMedicine(medicine, beforeMedicine),
       ),
-      mergeMap((medicine) => this.upsertMedicine(medicine), 30),
+      delay(1500),
+      bufferCount(100), // 100개씩 묶어서 페이지당 100개씩 요청하기에, 100개씩 묶어서 처리한다.
+      // tap(() => console.log(process.memoryUsage())),  // 메모리 사용량 확인 평균 200MB
+      mergeMap((medicines, i) => this.bulkUpsertMedicine(medicines, i), 1),
+      retry({
+        count: 3,
+        delay: 5000,
+      }),
     );
+  }
+
+  async bulkCheckExistMedicine(medicines: medicine[]) {
+    const ids = medicines.map((medicine) => medicine.id).filter((id) => id);
+    const exists = await this.prisma.medicine.findMany({
+      where: { id: { in: ids } },
+    });
+    const result = medicines.map((medicine) => {
+      const exist = exists.find((item) => item.id === medicine.id);
+      return {
+        beforeMedicine: exist,
+        medicine,
+      };
+    });
+    return result;
   }
 
   processMedicineWithBeforeMedicine(
     medicine: medicine,
-    beforeMedicine: medicine | null,
+    beforeMedicine?: medicine | null,
   ) {
     if (!beforeMedicine) return medicine;
     const {
@@ -289,10 +326,26 @@ export class MedicineBatchService {
       document,
     };
   }
+  async bulkUpsertMedicine(medicines: medicine[], i?: number) {
+    try {
+      const upsert = medicines.map((medicine) => {
+        const { id, ...rest } = medicine;
+        return this.prisma.medicine.upsert({
+          where: { id: id },
+          create: medicine,
+          update: { ...rest },
+        });
+      });
+      return await this.prisma.$transaction(upsert);
+    } catch (err) {
+      console.log('bulkUpsertMedicine 에러:', i, '번째');
+      console.log(err.message);
+      return [];
+    }
+  }
 
   async upsertMedicine(medicine: medicine) {
     try {
-      console.log(medicine);
       const { id, ...rest } = medicine;
       return await this.prisma.medicine.upsert({
         where: { id: id },
@@ -300,6 +353,7 @@ export class MedicineBatchService {
         update: { ...rest },
       });
     } catch (error) {
+      console.log(medicine.name + 'upsertMedicine 에러');
       console.error('Error in upsertMedicine:', error);
       // Handle or throw the error appropriately
     }
@@ -417,22 +471,24 @@ export class MedicineBatchService {
       ? english_ingredients.split('/')
       : [];
 
-    const _ingredients = ingredientsString.map((ingredient, index) => {
-      const _ingredient = ingredient.split('|').map((item) => {
-        const [_, value] = item.split(' : ');
-        return value;
-      });
-      const [standard, ko, amount, unit, pharmacopoeia] = _ingredient;
-      const en = englishIngredientsString[index] || '';
-      return {
-        standard,
-        ko,
-        en,
-        amount,
-        unit,
-        pharmacopoeia: pharmacopoeia as Medicine.Pharmacopoeia,
-      };
-    });
+    const _ingredients = ingredientsString
+      .map((ingredient, index) => {
+        const _ingredient = ingredient.split('|').map((item) => {
+          const [_, value] = item.split(' : ');
+          return value;
+        });
+        const [standard, ko, amount, unit, pharmacopoeia] = _ingredient;
+        const en = englishIngredientsString[index] || '';
+        return {
+          standard,
+          ko,
+          en,
+          amount,
+          unit,
+          pharmacopoeia: pharmacopoeia as Medicine.Pharmacopoeia,
+        };
+      })
+      .filter((item) => item.ko);
 
     return _ingredients;
   }
@@ -579,7 +635,6 @@ export class MedicineBatchService {
 
   fetchCommonList$() {
     return of(COMMON_API_URL_BUILD(process.env.API_KEY!, 1)).pipe(
-      tap(console.log),
       mergeMap((url) =>
         this.httpService.get<Medicine.OpenApiCommonResponse>(url).pipe(
           map(({ data }) => data.body),
@@ -601,7 +656,6 @@ export class MedicineBatchService {
             })
             .pipe(
               map(({ data }) => data),
-              tap((a) => console.log(a)),
               map(({ body }) => body.items),
               catchError((e) => {
                 console.log(e.message);
@@ -634,7 +688,6 @@ export class MedicineBatchService {
     if (!id) return { beforeMedicine: null, medicine };
     const exist = await this.prisma.medicine.findUnique({ where: { id } });
     if (!exist) return { beforeMedicine: null, medicine };
-    console.log(exist);
     return {
       beforeMedicine: exist,
       medicine,
