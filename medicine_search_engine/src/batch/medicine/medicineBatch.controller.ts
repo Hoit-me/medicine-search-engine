@@ -22,4 +22,14 @@ export class MedicineBatchController {
 
     return 'updateMedicine';
   }
+  @Get('/update/image')
+  async updateMedicineImage() {
+    console.log('updateMedicineImage start');
+    this.medicineBatchService.batchCommon().subscribe({
+      complete: () => console.log('updateMedicineImage complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+      // next: (value) => console.log('subNext', value),
+    });
+    return 'updateMedicineImage';
+  }
 }

@@ -345,5 +345,58 @@ describe('MedicineBatchService', () => {
     //     });
     // });
     // });
+    describe('parseStorageMethod', () => {
+      // it('test', async () => {
+      //   const testUrl = await mockS3Service.getPresignedURLs({
+      //     bucket: 'hoit-medicine',
+      //     fileNames: ['test1', 'test2'],
+      //     path: 'test',
+      //   });
+      //   console.log(testUrl);
+      // });
+      // it('test', async () => {
+      //   const fileurl =
+      //     'https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152035092098000085';
+      //   const file = await firstValueFrom(
+      //     mockHttpService
+      //       .get(fileurl, {
+      //         responseType: 'arraybuffer',
+      //       })
+      //       .pipe(map((res) => res.data)),
+      //   );
+      //   const buffer = Buffer.from(file, 'binary');
+      //   const upload = await mockS3Service.upload({
+      //     bucket: 'hoit-medicines',
+      //     key: 'test/test.jpg',
+      //     file: buffer,
+      //   });
+      //   console.log(upload);
+      // });
+      // it('test', async () => {
+      //   const fileurl =
+      //     'https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152035092098000085';
+      //   const a = await mockMedicineBatchService.uploadAndSetImage(
+      //     {
+      //       id: 'test',
+      //       product_type: '의약외품',
+      //       company_serial_number: '152035092',
+      //     },
+      //     fileurl,
+      //   );
+      //   console.log(a);
+      // });
+      // it('test', async () => {
+      //   const a = await firstValueFrom(
+      //     mockMedicineBatchService.batchCommon().pipe(
+      //       map(toArray),
+      //       catchError((err) => {
+      //         console.log(err);
+      //         return [];
+      //       }),
+      //     ),
+      //   );
+      //   console.log(a);
+      // }, 1000000000);
+    });
   });
 });
