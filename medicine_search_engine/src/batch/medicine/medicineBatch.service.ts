@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { medicine } from '@prisma/client';
+import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { COMMON_API_URL_BUILD, DETAIL_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
@@ -10,6 +11,7 @@ import pdf from 'pdf-parse';
 import {
   EMPTY,
   catchError,
+  filter,
   firstValueFrom,
   from,
   iif,
@@ -19,6 +21,7 @@ import {
   range,
   reduce,
   retry,
+  take,
   tap,
 } from 'rxjs';
 @Injectable()
@@ -28,6 +31,7 @@ export class MedicineBatchService {
     @Inject(HttpService)
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
+    private readonly s3Service: S3Service,
   ) {}
 
   async checkExistMedicine(medicine: medicine) {
@@ -575,6 +579,7 @@ export class MedicineBatchService {
 
   fetchCommonList$() {
     return of(COMMON_API_URL_BUILD(process.env.API_KEY!, 1)).pipe(
+      tap(console.log),
       mergeMap((url) =>
         this.httpService.get<Medicine.OpenApiCommonResponse>(url).pipe(
           map(({ data }) => data.body),
@@ -587,6 +592,7 @@ export class MedicineBatchService {
       map((data) => Math.ceil(data.totalCount / data.numOfRows)),
       mergeMap((value) => range(0, value)),
       map((page) => COMMON_API_URL_BUILD(process.env.API_KEY!, page + 1)),
+      take(1),
       mergeMap(
         (url) =>
           this.httpService
@@ -594,7 +600,9 @@ export class MedicineBatchService {
               timeout: 1000000,
             })
             .pipe(
-              map(({ data }) => data.body.items),
+              map(({ data }) => data),
+              tap((a) => console.log(a)),
+              map(({ body }) => body.items),
               catchError((e) => {
                 console.log(e.message);
                 return [];
@@ -626,6 +634,7 @@ export class MedicineBatchService {
     if (!id) return { beforeMedicine: null, medicine };
     const exist = await this.prisma.medicine.findUnique({ where: { id } });
     if (!exist) return { beforeMedicine: null, medicine };
+    console.log(exist);
     return {
       beforeMedicine: exist,
       medicine,
@@ -635,17 +644,25 @@ export class MedicineBatchService {
   batchCommon() {
     return this.fetchCommonList$().pipe(
       map((item) => this.convertOpenApiCommonDtoToCommon(item)),
+      // tap(console.log),
       mergeMap((medicine) => this.checkExistAndMergeCommonMedicine(medicine)),
+      // tap(console.log),
+
+      filter(({ beforeMedicine }) => !!beforeMedicine),
+      // tap(console.log),
+
       map(({ medicine, beforeMedicine }) =>
         this.checkImageChanged({ medicine, beforeMedicine }),
       ),
+
       mergeMap(({ medicine, changed, new_image_url }) =>
         iif(
-          () => changed,
+          () => !!changed,
           this.uploadAndSetImage(medicine, new_image_url),
           of(medicine),
         ),
       ),
+      mergeMap((medicine) => this.updateCommonMedicine(medicine)),
     );
   }
 
@@ -655,83 +672,90 @@ export class MedicineBatchService {
   }: {
     medicine: {
       id: string;
-      product_type: string;
-      company_serial_number: string;
-      image_url?: string;
+      product_type: string | null;
+      company_serial_number: string | null;
+      image_url: string | null;
     };
     beforeMedicine: medicine | null;
   }) {
-    const { image_url, product_type, company_serial_number, id } = medicine;
+    const { image_url } = medicine;
+    if (!image_url) return { medicine, changed: false, new_image_url: null };
+    // 이전 정보가 없다면 이미지가 변경된것으로 간주한다.
+    if (!beforeMedicine)
+      return { medicine, changed: true, new_image_url: image_url };
 
-    const updated = {
-      ...beforeMedicine,
-      product_type,
-      company_serial_number,
-      id,
-    };
-    if (!beforeMedicine) return { medicine: updated, changed: true };
-    const { image_url: beforeIamge } = beforeMedicine;
-    //https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152035092098000085
-    if (!image_url)
-      return {
-        medicine: updated,
-        changed: true,
-        new_image_url: image_url || '',
-      };
+    const { image_url: before_image_url } = beforeMedicine;
+    if (image_url && !before_image_url)
+      return { medicine, changed: true, new_image_url: image_url };
+
+    //이전 이미지는 s3에 새로저장되어, 주소가 다르므로, 이미지의 이름으로만 비교한다.
     const image_name = image_url.split('/').pop();
-    const check = beforeIamge?.includes(image_name || '');
-    if (check)
-      return {
-        medicine: updated,
-        changed: false,
-      };
-    return {
-      medicine: updated,
-      changed: true,
-      new_image_url: image_url || '',
-    };
+    const changed = before_image_url?.includes(image_name || '');
+
+    return { medicine, changed, new_image_url: changed ? image_url : null };
   }
 
   async uploadAndSetImage(
     medicine: {
       id: string;
-      product_type: string;
-      company_serial_number: string;
+      product_type: string | null;
+      company_serial_number: string | null;
+      image_url: string | null;
     },
-    new_image_url?: string,
+    new_image_url: string | null,
   ) {
     if (!new_image_url) return medicine;
-    const s3Url = 'test';
-    const image_url = s3Url;
+
+    const newImageName = new_image_url.split('/').pop();
+    const newKey = `medicines/${newImageName}.jpg`;
+    const imageArrayBuffer = await this.fetchArrayBuffer(new_image_url);
+
+    if (!imageArrayBuffer)
+      return {
+        ...medicine,
+        image_url: null,
+      };
+    const imageBuffer = Buffer.from(imageArrayBuffer);
+
+    const uploadResult = await this.s3Service.upload({
+      bucket: process.env.AWS_S3_BUCKET!,
+      key: newKey,
+      file: imageBuffer,
+    });
+    if (uploadResult.$metadata.httpStatusCode !== 200)
+      return {
+        ...medicine,
+        image_url: null,
+      };
+
+    const new_image_url_s3 = `https://${process.env.AWS_S3_BUCKET}.s3.ap-northeast-2.amazonaws.com/${newKey}`;
     return {
       ...medicine,
-      image_url,
+      image_url: new_image_url_s3,
     };
   }
 
-  // converMedicineCommonKeyKrToEng(medicine: Medicine.CommonJson_Kr) {
-  //   const keys = Object.keys(
-  //     Medicine.KOR_TO_ENG_KEY_MAP,
-  //   ) as Medicine.CommonKorKey[];
-  //   const args: [Medicine.CommonKorKey, Medicine.CommonEngKey][] = keys.map(
-  //     (key) => [key, Medicine.KOR_TO_ENG_KEY_MAP[key]],
-  //   );
-  //   const result = renameKeys(medicine, args, { undefinedToNull: true });
-  //   return result as Medicine.Common;
-  // }
+  async updateCommonMedicine({
+    id,
+    product_type,
+    company_serial_number,
+    image_url,
+  }: {
+    id: string;
+    product_type: string | null;
+    company_serial_number: string | null;
+    image_url: string | null;
+  }) {
+    const updateData = {
+      ...(product_type ? { product_type } : {}),
+      ...(company_serial_number ? { company_serial_number } : {}),
+      ...(image_url ? { image_url } : {}),
+    };
+    const result = await this.prisma.medicine.update({
+      where: { id },
+      data: updateData,
+    });
 
-  // checkChangeContents(detail: medicine, standard: Date): [medicine, string[]] {
-  //   const { change_content } = detail;
-  //   if (!change_content) return [detail, []];
-
-  //   const chaged = change_content
-  //     .filter((change) => {
-  //       return change.date > standard;
-  //     })
-  //     .map((change) => {
-  //       return change.content;
-  //     });
-
-  //   return [detail, chaged];
-  // }
+    return result;
+  }
 }

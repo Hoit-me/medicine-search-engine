@@ -7,3 +7,5 @@ export const DETAIL_API_URL_BUILD = (API_KEY: string, pageNo: number) =>
 
 export const COMMON_API_URL_BUILD = (API_KEY: string, pageNo: number) =>
   COMMON_API_URL + `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=100`;
+
+export const MEDICINE_IMAGE_BUCKET_FOLDER = 'medicines';
