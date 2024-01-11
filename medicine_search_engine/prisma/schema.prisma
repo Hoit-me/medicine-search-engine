@@ -78,6 +78,12 @@ model medicine {
   usage_file_url      String?
   document String?
 
+  insert_file_url    String? 
+  consignment_manufacture String? 
+
+
+
+
 
   image_url           String? //COMMON //이미지
   product_type    String? //COMMON //분류명
