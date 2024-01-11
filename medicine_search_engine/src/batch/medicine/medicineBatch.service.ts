@@ -386,14 +386,14 @@ export class MedicineBatchService {
 
   convertFormatMedicineDetailToDBSchema(medicine: Medicine.Detail): medicine {
     const {
-      english_ingredients,
-      change_date,
-      ingredients,
-      re_examination_date,
-      standard_code,
       cancel_date,
+      change_date,
       permit_date,
+      re_examination_date,
       expiration_date,
+      english_ingredients,
+      ingredients,
+      standard_code,
       ...rest
     } = medicine;
     //yyyymmdd -> yyyy-mm-dd
@@ -412,9 +412,9 @@ export class MedicineBatchService {
       standard_code: this.parseStandardCode(standard_code),
       id: medicine.serial_number,
       cancel_date: _cancel_date ? new Date(_cancel_date) : null,
-      type: medicine.type as medicine['type'],
       change_date: _change_date ? new Date(_change_date) : null,
       permit_date: _permit_date ? new Date(_permit_date) : null,
+      type: medicine.type as medicine['type'],
       classification: medicine.classification as medicine['classification'],
       ingredients: this.parseIngredients(
         ingredients || null,
@@ -422,7 +422,6 @@ export class MedicineBatchService {
       ),
       main_ingredient: this.parseCompound(medicine.main_ingredient),
       additive: this.parseCompound(medicine.additive),
-
       expiration_date: expiration_date || null,
       change_content: this.parseChangeContent(medicine.change_content),
       insurance_code: medicine.insurance_code
@@ -434,13 +433,14 @@ export class MedicineBatchService {
       is_new_drug: medicine.is_new_drug ? true : false,
       storage_method: medicine.storage_method || '',
       packing_unit: medicine.packing_unit || '',
-      company_number: medicine.company_number,
-      register_id: medicine.register_id || '',
-      atc_code: medicine.atc_code,
+      company_number: medicine.company_number || null,
+      register_id: '',
+      atc_code: medicine.atc_code || null,
       re_examination: this.parseReExamination(
         medicine.re_examination,
         re_examination_date,
       ),
+
       image_url: null,
       product_type: null,
       company_serial_number: null,
@@ -448,15 +448,15 @@ export class MedicineBatchService {
     };
   }
 
-  parseStandardCode(standardCode: string | null) {
+  parseStandardCode(standardCode?: string | null) {
     if (!standardCode) return [];
     const code = standardCode.split(',');
     return code;
   }
 
   parseIngredients(
-    ingredients: string | null,
-    english_ingredients: string | null,
+    ingredients?: string | null,
+    english_ingredients?: string | null,
   ): Medicine.Ingredient[] {
     if (!ingredients) return [];
 
@@ -492,7 +492,7 @@ export class MedicineBatchService {
     return _ingredients;
   }
 
-  parseCompound(compoundString: string | null): Medicine.Compound[] {
+  parseCompound(compoundString?: string | null): Medicine.Compound[] {
     if (!compoundString) return [];
 
     // "[M040702]포도당|[M040426]염화나트륨",
@@ -514,7 +514,7 @@ export class MedicineBatchService {
   }
 
   parseChangeContent(
-    changeContentsString: string | null,
+    changeContentsString?: string | null,
   ): Medicine.ChangeContent[] {
     if (!changeContentsString) return [];
     //    변경내용:
@@ -531,8 +531,8 @@ export class MedicineBatchService {
   }
 
   parseReExamination(
-    reExaminationString: string | null,
-    periodString: string | null,
+    reExaminationString?: string | null,
+    periodString?: string | null,
   ) {
     if (!reExaminationString) return [];
     if (!periodString) return [];
@@ -687,7 +687,7 @@ export class MedicineBatchService {
       ),
       delay(1500),
       bufferCount(100),
-      mergeMap((medicines, i) => this.bulkUpdateCommonMedicine(medicines, i)),
+      mergeMap((medicines) => this.bulkUpdateCommonMedicine(medicines)),
       retry({
         count: 3,
         delay: 5000,
@@ -850,7 +850,6 @@ export class MedicineBatchService {
       company_serial_number: string | null;
       image_url: string | null;
     }[],
-    i?: number,
   ) {
     const updateData = medicines
       .map((medicine) => {
