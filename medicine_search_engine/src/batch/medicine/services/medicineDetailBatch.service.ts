@@ -6,22 +6,17 @@ import { DETAIL_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
-import { XMLParser } from 'fast-xml-parser';
+import { Parser } from 'htmlparser2';
 import {
-  EMPTY,
   bufferCount,
   delay,
-  filter,
-  firstValueFrom,
   from,
   map,
   mergeMap,
   of,
-  reduce,
   retry,
   toArray,
 } from 'rxjs';
-
 /**
  * ----------------------
  * MEDICINE DETAILS BATCH
@@ -126,9 +121,9 @@ export class MedicineDetailBatchService {
       ...rest
     } = medicine;
     const id = medicine.serial_number;
-    const _cancel_date = this.fromatDate(cancel_date);
-    const _change_date = this.fromatDate(change_date);
-    const _permit_date = this.fromatDate(permit_date);
+    const _cancel_date = this.formatDate(cancel_date);
+    const _change_date = this.formatDate(change_date);
+    const _permit_date = this.formatDate(permit_date);
     const _ingredients = this.parseIngredients(
       ingredients,
       english_ingredients,
@@ -137,7 +132,7 @@ export class MedicineDetailBatchService {
     const _additive = this.parseCompounds(additive);
     const _main_ingredient = this.parseCompounds(main_ingredient);
     const _change_content = this.parseChangedContents(change_content);
-    const _re_examination = this.parseReExminations(
+    const _re_examination = this.parseReExaminations(
       re_examination,
       re_examination_date,
     );
@@ -167,16 +162,14 @@ export class MedicineDetailBatchService {
   // -------------------------------------------
   // SET MEDICINE DOCUMENT INFO
   // -------------------------------------------
-  async setMedicineDocumentInfo(
+  setMedicineDocumentInfo(
     detail: Prisma.medicineCreateInput,
     documentType: 'effect' | 'usage' | 'caution' | 'document',
-  ): Promise<Prisma.medicineCreateInput> {
+  ): Prisma.medicineCreateInput {
     const documentContent = detail[documentType];
     if (!documentContent) return detail;
 
-    const extractedContent = await firstValueFrom(
-      this.extractContentFromXml$(documentContent),
-    );
+    const extractedContent = this.extractDocFromML(documentContent);
     return {
       ...detail,
       [documentType]: extractedContent,
@@ -185,12 +178,10 @@ export class MedicineDetailBatchService {
 
   setMedicineDetailDocInfo$(medicine: Prisma.medicineCreateInput) {
     return of(medicine).pipe(
-      mergeMap((medicine) => this.setMedicineDocumentInfo(medicine, 'effect')),
-      mergeMap((medicine) => this.setMedicineDocumentInfo(medicine, 'usage')),
-      mergeMap((medicine) => this.setMedicineDocumentInfo(medicine, 'caution')),
-      mergeMap((medicine) =>
-        this.setMedicineDocumentInfo(medicine, 'document'),
-      ),
+      map((medicine) => this.setMedicineDocumentInfo(medicine, 'effect')),
+      map((medicine) => this.setMedicineDocumentInfo(medicine, 'usage')),
+      map((medicine) => this.setMedicineDocumentInfo(medicine, 'caution')),
+      map((medicine) => this.setMedicineDocumentInfo(medicine, 'document')),
     );
   }
 
@@ -274,7 +265,7 @@ export class MedicineDetailBatchService {
   // -------------------------------------------
   // UTILS
   // -------------------------------------------
-  fromatDate(dateString?: string | null) {
+  formatDate(dateString?: string | null) {
     return dateString
       ? new Date(dateString.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
       : null;
@@ -352,16 +343,16 @@ export class MedicineDetailBatchService {
     const changedContents = changedContentsStr.split('/');
     return changedContents
       .map((changedContent) => {
-        const [date, content] = changedContent.split(',');
+        const [content, date] = changedContent.split(',');
         return {
-          date: new Date(date.trim()),
+          date: date && new Date(date.trim()),
           content,
         };
       })
       .filter(({ content, date }) => content && date);
   }
 
-  parseReExminations(
+  parseReExaminations(
     reExaminationsStr?: string | null,
     periodStr?: string | null,
   ): Medicine.ReExamination[] {
@@ -377,6 +368,7 @@ export class MedicineDetailBatchService {
         const preiod = periods[i];
         if (!preiod) return undefined;
         const [start, end] = preiod.split('~');
+        if (!end) return undefined;
         return {
           type,
           re_examination_start_date: start ? new Date(start.trim()) : null,
@@ -387,65 +379,39 @@ export class MedicineDetailBatchService {
   }
 
   // -------------------------------------------
-  // XML PARSER
+  // MARKUP LANGUAGE PARSER
   // -------------------------------------------
-  extractContentFromXml$(xml?: string | null) {
-    if (!xml) return EMPTY;
+  extractDocFromML(text?: string | null) {
+    let depth = 0;
+    let result = '';
+    if (!text) return '';
 
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: '@_',
-    });
-    const parsedXml: Medicine.XML.XML_DATA = parser.parse(xml);
-    if (!parsedXml.DOC) return of('');
-
-    const xmlDocTitle = parsedXml.DOC['@_title']
-      ? `\n${parsedXml.DOC['@_title']}`
-      : '';
-    return this.extractContentFromSection$(parsedXml.DOC.SECTION).pipe(
-      map((sectionContent) => `${xmlDocTitle}\n${sectionContent}`),
+    const handleAttribs = (attribs: any) => {
+      if (attribs.title || attribs['#text']) {
+        result += '\t'.repeat(depth) + (attribs.title || attribs['#text']);
+      }
+    };
+    const parser = new Parser(
+      {
+        onopentag: (name, attribs) => {
+          handleAttribs(attribs);
+          depth++;
+        },
+        ontext: (text) => {
+          if (!text) depth--;
+          if (text)
+            result += '\t'.repeat(depth) + text.replaceAll(/<[^>]*>/g, '');
+        },
+        onclosetag: () => {
+          depth--;
+        },
+      },
+      { decodeEntities: true, xmlMode: true },
     );
-  }
 
-  extractContentFromSection$(
-    section: Medicine.XML.Section | Medicine.XML.Section[],
-  ) {
-    return from(Array.isArray(section) ? section : [section]).pipe(
-      mergeMap((section) => {
-        const sectionTitle = section['@_title']
-          ? `\n${section['@_title']}`
-          : '';
-        return this.extractContentFromArticle$(section.ARTICLE).pipe(
-          map((articleContent) => `${sectionTitle}${articleContent}`),
-        );
-      }),
-      reduce((acc, text) => `${acc}\n${text}`, ''),
-    );
-  }
+    parser.write(text);
+    parser.end();
 
-  extractContentFromArticle$(
-    article: Medicine.XML.Article | Medicine.XML.Article[],
-  ) {
-    return from(Array.isArray(article) ? article : [article]).pipe(
-      mergeMap((article) => {
-        const articleTitle = article['@_title']
-          ? `\n${article['@_title']}`
-          : '';
-        return this.extractTextFromParagraph$(article.PARAGRAPH).pipe(
-          map((paragraphContent) => `${articleTitle}${paragraphContent}`),
-        );
-      }),
-    );
-  }
-
-  extractTextFromParagraph$(
-    paragraph: Medicine.XML.Paragraph | Medicine.XML.Paragraph[],
-  ) {
-    const paragraphs = Array.isArray(paragraph) ? paragraph : [paragraph];
-    return from(paragraphs).pipe(
-      filter((p) => !!(p && typeof p === 'object' && p['#text'])),
-      map((p) => p['#text']?.trim() || ''),
-      reduce((acc, text) => `${acc}\n\t${text}`, ''),
-    );
+    return result;
   }
 }
