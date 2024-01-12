@@ -82,9 +82,7 @@ model medicine {
   consignment_manufacture String? 
 
 
-
-
-
+  industry_type    String? //COMMON //업종
   image_url           String? //COMMON //이미지
   product_type    String? //COMMON //분류명
   ingredients_count Int? //COMMON //성분수 
