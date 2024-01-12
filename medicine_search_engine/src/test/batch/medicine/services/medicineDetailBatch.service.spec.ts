@@ -3,10 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { MedicineDetailBatchService } from '@src/batch/medicine/services/medicineDetailBatch.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
+import * as constants from '@src/constant';
 import { Medicine } from '@src/type/medicine';
 import { mockDeep } from 'jest-mock-extended';
+import { Observable } from 'rxjs';
 import typia from 'typia';
-
 describe('MedicineDetailBatchService', () => {
   let medicineDetailBatchService: MedicineDetailBatchService;
   let httpService: HttpService;
@@ -677,7 +678,53 @@ describe('MedicineDetailBatchService', () => {
   });
 
   // ------------------ FETCH -------------------
-  // 데이터 요청 함수이기에 테스트 생략.
+  // 데이터 요청 함수이기에 자세한 테스트 생략.
+  describe('fetchOpenApiDetailPage$', () => {
+    it('페이지 번호를 입력하면,  DETAIL_API_URL_BUILD(key,pageNo)으로 get를 한번 요청한다', () => {
+      httpService.get = jest.fn().mockReturnValue(new Observable());
+      const page = 1;
+      const expected = 1;
+      jest.spyOn(constants, 'DETAIL_API_URL_BUILD');
+
+      // act
+      medicineDetailBatchService.fetchOpenApiDetailPage$(page).subscribe();
+
+      // assert
+      expect(httpService.get).toHaveBeenCalledTimes(expected);
+      expect(constants.DETAIL_API_URL_BUILD).toHaveBeenCalledWith(
+        expect.anything(),
+        page,
+      );
+    });
+    it('요청에 실패하면, 3번 재시도한다.', (done) => {
+      const retryCount = 3;
+      const callCount = retryCount + 1; // 최초 요청 + 재시도 횟수
+      const pageNo = 1;
+
+      let count = 0;
+      jest.spyOn(httpService, 'get').mockReturnValue(
+        new Observable((subscriber) => {
+          count++;
+          if (count < callCount) {
+            subscriber.error('error');
+          } else {
+            subscriber.next({
+              data: typia.random<Medicine.OpenAPiDetailResponse>(),
+            } as unknown as any);
+          }
+        }),
+      );
+
+      // 서비스 메소드 호출
+      medicineDetailBatchService
+        .fetchOpenApiDetailPage$(pageNo, 0)
+        .subscribe(() => {
+          // assert
+          expect(count).toEqual(callCount);
+          done();
+        });
+    });
+  });
 
   //------------------ CONVERT ------------------
   describe('convert', () => {
@@ -707,7 +754,6 @@ describe('MedicineDetailBatchService', () => {
 
     describe('convertMedicineDetailToPrismaMedicine', () => {
       const medicineDetail = typia.random<Medicine.Detail>();
-      const medicineDetailKeys = Object.keys(medicineDetail);
       const medicineCreateInput = typia.random<Prisma.medicineCreateInput>();
       const medicineCreateInputKeys = Object.keys(medicineCreateInput);
 
@@ -758,6 +804,37 @@ describe('MedicineDetailBatchService', () => {
         true,
       );
       expect(usage).not.toEqual(xmlString);
+    });
+  });
+
+  describe('setMedicineDetailDocumentInfo$', () => {
+    const xmlString =
+      '<DOC title="용법용량" type="UD">\r\n  <SECTION title="">\r\n    <ARTICLE title="">\r\n      <PARAGRAPH tagName="p" textIndent="" marginLeft=""><![CDATA[(주사제)]]></PARAGRAPH>\r\n      <PARAGRAPH tagName="p" textIndent="" marginLeft=""><![CDATA[(5%)]]></PARAGRAPH>\r\n      <PARAGRAPH tagName="p" textIndent="0" marginLeft="2"><![CDATA[○ 성인 : 1회 500∼1000 mL 정맥주사한다.]]></PARAGRAPH>\r\n      <PARAGRAPH tagName="p" textIndent="0" marginLeft="2"><![CDATA[○ 점적정맥주사 속도는 포도당으로서 시간당 0.5 g/kg 이하로 한다.]]></PARAGRAPH>\r\n      <PARAGRAPH tagName="p" textIndent="0" marginLeft="2"><![CDATA[○ 주사제의 용해 희석에는 적당량을 사용한다.]]></PARAGRAPH>\r\n      <PARAGRAPH tagName="p" textIndent="0" marginLeft="2"><![CDATA[연령, 증상에 따라 적절히 증감한다.]]></PARAGRAPH>\r\n    </ARTICLE>\r\n  </SECTION>\r\n</DOC>';
+    const medicineCreateInput: Prisma.medicineCreateInput = {
+      ...typia.random<Prisma.medicineCreateInput>(),
+      usage: xmlString,
+    };
+
+    it('인자에 medicineCreateInput를 입력할시 effect, usage, caution, document를 셋팅한다', () => {
+      // arrange
+      jest.spyOn(medicineDetailBatchService, 'setMedicineDocumentInfo');
+      const callList = ['effect', 'usage', 'caution', 'document'];
+
+      // act
+      medicineDetailBatchService
+        .setMedicineDetailDocumentInfo$(medicineCreateInput)
+        .subscribe();
+
+      // assert
+      expect(
+        medicineDetailBatchService.setMedicineDocumentInfo,
+      ).toHaveBeenCalledTimes(callList.length);
+
+      callList.forEach((v) => {
+        expect(
+          medicineDetailBatchService.setMedicineDocumentInfo,
+        ).toHaveBeenCalledWith(expect.anything(), v);
+      });
     });
   });
 });

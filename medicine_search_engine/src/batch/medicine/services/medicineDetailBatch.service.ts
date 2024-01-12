@@ -42,7 +42,7 @@ export class MedicineDetailBatchService {
         this.convertMedicineDetailToPrismaMedicine(medicineDetail),
       ),
       // 문서 정보 설정
-      mergeMap((medicine) => this.setMedicineDetailDocInfo$(medicine)),
+      mergeMap((medicine) => this.setMedicineDetailDocumentInfo$(medicine)),
       bufferCount(100),
       // 데이터베이스 체크 및 업데이트
       mergeMap((medicineDetails) =>
@@ -55,12 +55,15 @@ export class MedicineDetailBatchService {
   /// --------------------------------
   /// FETCH MEDICINE DETAIL PAGE
   /// --------------------------------
-  fetchOpenApiDetailPage$(pageNo: number) {
+  fetchOpenApiDetailPage$(pageNo: number, delayTime = 5000) {
     return this.httpService
       .get<Medicine.OpenAPiDetailResponse>(
         DETAIL_API_URL_BUILD(process.env.API_KEY!, pageNo),
       )
-      .pipe(map(({ data }) => data.body));
+      .pipe(
+        map(({ data }) => data.body),
+        retry({ count: 3, delay: delayTime }),
+      );
   }
 
   // ---------------------------------
@@ -176,7 +179,7 @@ export class MedicineDetailBatchService {
     };
   }
 
-  setMedicineDetailDocInfo$(medicine: Prisma.medicineCreateInput) {
+  setMedicineDetailDocumentInfo$(medicine: Prisma.medicineCreateInput) {
     return of(medicine).pipe(
       map((medicine) => this.setMedicineDocumentInfo(medicine, 'effect')),
       map((medicine) => this.setMedicineDocumentInfo(medicine, 'usage')),
