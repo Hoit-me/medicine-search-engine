@@ -1,7 +1,8 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { MedicineBatchController } from './medicineBatch.controller';
-import { MedicineBatchService } from './medicineBatch.service';
+import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
+import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
 
 @Module({
   imports: [
@@ -11,6 +12,6 @@ import { MedicineBatchService } from './medicineBatch.service';
     }),
   ],
   controllers: [MedicineBatchController],
-  providers: [MedicineBatchService],
+  providers: [MedicineDetailBatchService, MedicineCommonBatchService],
 })
 export class MedicineBatchModule {}

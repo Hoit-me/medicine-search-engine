@@ -726,7 +726,7 @@ describe('MedicineDetailBatchService', () => {
   });
 
   //------------------ CONVERT ------------------
-  describe('convert', () => {.
+  describe('convert', () => {
     describe('convertOpenApiDetailToMedicineDetail', () => {
       const openApiDetail = typia.random<Medicine.OpenApiDetailDTO>();
       const expected = Object.values(
