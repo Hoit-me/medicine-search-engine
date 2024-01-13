@@ -224,13 +224,13 @@ export namespace Medicine {
       INDUTY_TYPE: 'industry_type',
 
       DOC_TEXT: 'document',
-      EE_DOC_ID: 'effect',
-      UD_DOC_ID: 'usage',
-      NB_DOC_ID: 'caution',
-      EE_DOC_DATA: 'effect_file_url',
-      UD_DOC_DATA: 'usage_file_url',
-      NB_DOC_DATA: 'caution_file_url',
-      PN_DOC_DATA: 'document_file_url',
+      EE_DOC_ID: 'effect_file_url',
+      UD_DOC_ID: 'usage_file_url',
+      NB_DOC_ID: 'caution_file_url',
+      EE_DOC_DATA: 'effect',
+      UD_DOC_DATA: 'usage',
+      NB_DOC_DATA: 'caution',
+      PN_DOC_DATA: 'document',
       INSERT_FILE: 'insert_file_url',
     };
 

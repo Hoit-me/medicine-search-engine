@@ -7,16 +7,7 @@ import { Medicine } from '@src/type/medicine';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
 import { Parser } from 'htmlparser2';
-import {
-  bufferCount,
-  delay,
-  from,
-  map,
-  mergeMap,
-  of,
-  retry,
-  toArray,
-} from 'rxjs';
+import { bufferCount, from, map, mergeMap, of, retry, toArray } from 'rxjs';
 /**
  * ----------------------
  * MEDICINE DETAILS BATCH
@@ -33,7 +24,7 @@ export class MedicineDetailBatchService {
   // --------------------------------
   // BATCH
   // --------------------------------
-  async batch(sort: 'ASC' | 'DESC' = 'ASC') {
+  batch(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.fetchOpenApiDetailList$(1, sort).pipe(
       map((openApiDetail) =>
         this.convertOpenApiDetailToMedicineDetail(openApiDetail),
@@ -41,17 +32,16 @@ export class MedicineDetailBatchService {
       map((medicineDetail) =>
         this.convertMedicineDetailToPrismaMedicine(medicineDetail),
       ),
-      // 문서 정보 설정
-      mergeMap((medicine) => this.setMedicineDetailDocumentInfo$(medicine)),
-      bufferCount(100),
-      // 데이터베이스 체크 및 업데이트
-      mergeMap((medicineDetails) =>
-        this.bulkCheckAndUpsertMedicineDetails(medicineDetails),
+      mergeMap((medicine) => this.setMedicineDetailDocumentInfo$(medicine), 5), // 동시성을 5로 제한
+      bufferCount(20), // 버퍼 크기를 20으로 조정
+      mergeMap(
+        (medicineDetails) =>
+          this.bulkCheckAndUpsertMedicineDetails(medicineDetails),
+        2, // 동시성을 2로 제한
       ),
       retry({ count: 3, delay: 5000 }),
     );
   }
-
   /// --------------------------------
   /// FETCH MEDICINE DETAIL PAGE
   /// --------------------------------
@@ -79,10 +69,7 @@ export class MedicineDetailBatchService {
       }),
       map((pageList) => (sort === 'ASC' ? pageList : pageList.reverse())),
       mergeMap((page) => page),
-      mergeMap(
-        (pageNo) => this.fetchOpenApiDetailPage$(pageNo),
-        batchSize || 1,
-      ),
+      mergeMap((pageNo) => this.fetchOpenApiDetailPage$(pageNo), 1),
       mergeMap(({ items }) => items),
     );
   }
@@ -251,17 +238,18 @@ export class MedicineDetailBatchService {
   ) {
     return from(medicineDetails).pipe(
       bufferCount(100),
-      mergeMap((medicines) =>
-        from(this.bulkCheckMedicineDetailExist(medicines)).pipe(
-          mergeMap((m) => m),
-          map(({ medicine, before }) =>
-            this.processMedicineDetailWithBefore(medicine, before),
+      mergeMap(
+        (medicines) =>
+          from(this.bulkCheckMedicineDetailExist(medicines)).pipe(
+            mergeMap((m) => m),
+            map(({ medicine, before }) =>
+              this.processMedicineDetailWithBefore(medicine, before),
+            ),
+            toArray(),
           ),
-          toArray(),
-          delay(2000),
-        ),
+        1,
       ),
-      mergeMap((medicines) => this.bulkUpsertMedicineDetail(medicines)),
+      mergeMap((medicines) => this.bulkUpsertMedicineDetail(medicines), 1),
     );
   }
 
@@ -385,36 +373,52 @@ export class MedicineDetailBatchService {
   // MARKUP LANGUAGE PARSER
   // -------------------------------------------
   extractDocFromML(text?: string | null) {
-    let depth = 0;
-    let result = '';
-    if (!text) return '';
+    try {
+      let depth = 0;
+      let result = '';
+      if (!text) return '';
 
-    const handleAttribs = (attribs: any) => {
-      if (attribs.title || attribs['#text']) {
-        result += '\t'.repeat(depth) + (attribs.title || attribs['#text']);
-      }
-    };
-    const parser = new Parser(
-      {
-        onopentag: (name, attribs) => {
-          handleAttribs(attribs);
-          depth++;
-        },
-        ontext: (text) => {
-          if (!text) depth--;
-          if (text)
-            result += '\t'.repeat(depth) + text.replaceAll(/<[^>]*>/g, '');
-        },
-        onclosetag: () => {
-          depth--;
-        },
-      },
-      { decodeEntities: true, xmlMode: true },
-    );
+      // 탭 문자열 캐시
+      const tabsCache = [''];
+      const getTabs = (depth) => {
+        if (!tabsCache[depth]) {
+          tabsCache[depth] = '\t'.repeat(depth);
+        }
+        return tabsCache[depth];
+      };
 
-    parser.write(text);
-    parser.end();
+      const handleAttribs = (attribs: any) => {
+        if (attribs.title || attribs['#text']) {
+          result += getTabs(depth) + (attribs.title || attribs['#text']);
+        }
+      };
+      const parser = new Parser(
+        {
+          onopentag: (name, attribs) => {
+            handleAttribs(attribs);
+            depth++;
+          },
+          ontext: (text) => {
+            if (!text) depth--;
+            else result += getTabs(depth) + text.replaceAll(/<[^>]*>/g, '');
 
-    return result;
+            depth = Math.max(0, depth); // 음수 방지
+          },
+          onclosetag: () => {
+            if (depth > 0) {
+              depth--;
+            }
+          },
+        },
+        { decodeEntities: true, xmlMode: true },
+      );
+
+      parser.write(text);
+      parser.end();
+      return result;
+    } catch (e) {
+      console.error('Error processing XML: ', e.message, text);
+      return '';
+    }
   }
 }
