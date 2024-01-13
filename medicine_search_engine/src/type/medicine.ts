@@ -309,7 +309,7 @@ export namespace Medicine {
     INDUTY: string;
     PRDLST_STDR_CODE: string;
     SPCLTY_PBLC: string;
-    PRDUCT_TYPE: string;
+    PRDUCT_TYPE?: string;
     PRDUCT_PRMISN_NO: string;
     ITEM_INGR_NAME: string;
     ITEM_INGR_CNT: string;
@@ -326,7 +326,7 @@ export namespace Medicine {
   export interface Common {
     serial_number: string; // 품목일련번호
     name: string; // 품목명
-    item: string; // 품목
+    product_type?: string; // 품목
     english_name: string; // 영문명
     company_name: string; // 업체명
     company_serial_number: string; // 업체
@@ -337,7 +337,7 @@ export namespace Medicine {
     professional_general_classification: string; // 전문일반구분
     main_ingredient: string; // 주성분
     number_of_main_ingredients: string; // 주성분수
-    large_image: string; // 큰제품이미지
+    image?: string; // 큰제품이미지
     declaration_permission_classification: string; // 신고허가구분
     cancellation_withdrawal_date: string; // 취소취하일자
     cancellation_withdrawal_classification: string; // 취소취하구분
@@ -352,10 +352,7 @@ export namespace Medicine {
   export type OpenApiCommonResponse = OpenApiResponse<OpenApiCommonDto>;
   export type OpenApiCommonKey = keyof OpenApiCommonDto;
   export type CommonKey = keyof Common;
-  export type OpenApiCommonToCommonKeyMap = Record<
-    OpenApiCommonKey,
-    CommonKey | null
-  >;
+  export type OpenApiCommonToCommonKeyMap = Record<OpenApiCommonKey, CommonKey>;
   export const OPEN_API_COMMON_TO_COMMON_KEY_MAP: OpenApiCommonToCommonKeyMap =
     {
       ITEM_SEQ: 'serial_number',
@@ -365,14 +362,14 @@ export namespace Medicine {
       INDUTY: 'business_type',
       PRDLST_STDR_CODE: 'serial_number',
       SPCLTY_PBLC: 'professional_general_classification',
-      PRDUCT_TYPE: 'item',
+      PRDUCT_TYPE: 'product_type',
       PRDUCT_PRMISN_NO: 'item_approval_number',
       ITEM_INGR_NAME: 'main_ingredient',
       ITEM_INGR_CNT: 'number_of_main_ingredients',
       PERMIT_KIND_CODE: 'declaration_permission_classification',
       CANCEL_DATE: 'cancellation_withdrawal_date',
       CANCEL_NAME: 'cancellation_withdrawal_classification',
-      BIG_PRDT_IMG_URL: 'large_image',
+      BIG_PRDT_IMG_URL: 'image',
       ENTP_SEQ: 'company_serial_number',
       ENTP_NO: 'company_number',
       EDI_CODE: 'insurance_code',
