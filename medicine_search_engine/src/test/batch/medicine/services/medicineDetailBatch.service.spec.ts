@@ -11,7 +11,6 @@ import typia from 'typia';
 describe('MedicineDetailBatchService', () => {
   let medicineDetailBatchService: MedicineDetailBatchService;
   let httpService: HttpService;
-  let prismaService: PrismaService;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [HttpModule.register({ timeout: 5000 })],
@@ -31,11 +30,10 @@ describe('MedicineDetailBatchService', () => {
       MedicineDetailBatchService,
     );
     httpService = module.get<HttpService>(HttpService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   /// ------------------ UTILS ------------------
@@ -696,6 +694,7 @@ describe('MedicineDetailBatchService', () => {
         page,
       );
     });
+
     it('요청에 실패하면, 3번 재시도한다.', (done) => {
       const retryCount = 3;
       const callCount = retryCount + 1; // 최초 요청 + 재시도 횟수
@@ -727,7 +726,7 @@ describe('MedicineDetailBatchService', () => {
   });
 
   //------------------ CONVERT ------------------
-  describe('convert', () => {
+  describe('convert', () => {.
     describe('convertOpenApiDetailToMedicineDetail', () => {
       const openApiDetail = typia.random<Medicine.OpenApiDetailDTO>();
       const expected = Object.values(
