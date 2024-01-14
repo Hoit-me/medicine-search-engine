@@ -11,7 +11,7 @@ import { S3Service } from './../../../../common/aws/s3/s3.service';
 
 describe('MedicineCommonBatchService', () => {
   let medicineCommonBatchService: MedicineCommonBatchService;
-  let httpService: HttpService;
+  // let httpService: HttpService;
   let s3Service: S3Service;
   let prismaService: PrismaService;
   beforeEach(async () => {
@@ -33,7 +33,7 @@ describe('MedicineCommonBatchService', () => {
     medicineCommonBatchService = module.get<MedicineCommonBatchService>(
       MedicineCommonBatchService,
     );
-    httpService = module.get<HttpService>(HttpService);
+    // httpService = module.get<HttpService>(HttpService);
     s3Service = module.get<S3Service>(S3Service);
     prismaService = module.get<PrismaService>(PrismaService);
   });
