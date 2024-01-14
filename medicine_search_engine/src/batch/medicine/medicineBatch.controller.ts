@@ -18,7 +18,7 @@ export class MedicineBatchController {
     //     console.log('subNext', value.id, value.name, value.effect),
     // });
 
-    this.medicineDetailBatchService.batch().subscribe({
+    this.medicineDetailBatchService.batch('DESC').subscribe({
       complete: () => console.log('updateMedicine complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });

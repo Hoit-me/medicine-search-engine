@@ -102,8 +102,8 @@ export namespace Medicine {
     english_ingredients: string | null; // 영문성분명
     standard_code: string | null; // 표준코드 // 바코드 string -> string[]으로 변경
 
-    main_ingredient: string | null; // 주성분명
-    additive: string | null; // 첨가제명
+    main_ingredients: string | null; // 주성분명
+    additive_ingredients: string | null; // 첨가제명
 
     atc_code: string | null; // ATC코드
     consignment_manufacture: string | null; // 위탁제조업체
@@ -201,8 +201,8 @@ export namespace Medicine {
       MAIN_INGR_ENG: 'english_ingredients',
       BAR_CODE: 'standard_code',
 
-      MAIN_ITEM_INGR: 'main_ingredient',
-      INGR_NAME: 'additive',
+      MAIN_ITEM_INGR: 'main_ingredients',
+      INGR_NAME: 'additive_ingredients',
 
       ATC_CODE: 'atc_code',
       CNSGN_MANUF: 'consignment_manufacture',
@@ -326,7 +326,7 @@ export namespace Medicine {
   export interface Common {
     serial_number: string; // 품목일련번호
     name: string; // 품목명
-    product_type?: string; // 품목
+    pharmacological_class?: string; // 품목
     english_name: string; // 영문명
     company_name: string; // 업체명
     company_serial_number: string; // 업체
@@ -362,7 +362,7 @@ export namespace Medicine {
       INDUTY: 'business_type',
       PRDLST_STDR_CODE: 'serial_number',
       SPCLTY_PBLC: 'professional_general_classification',
-      PRDUCT_TYPE: 'product_type',
+      PRDUCT_TYPE: 'pharmacological_class',
       PRDUCT_PRMISN_NO: 'item_approval_number',
       ITEM_INGR_NAME: 'main_ingredient',
       ITEM_INGR_CNT: 'number_of_main_ingredients',

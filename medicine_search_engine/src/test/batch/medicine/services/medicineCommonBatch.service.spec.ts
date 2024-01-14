@@ -1,6 +1,6 @@
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
-import { medicine } from '@prisma/client';
+import { Prisma, medicine } from '@prisma/client';
 import { MedicineCommonBatchService } from '@src/batch/medicine/services/medicineCommonBatch.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { Medicine } from '@src/type/medicine';
@@ -299,7 +299,7 @@ describe('MedicineCommonBatchService', () => {
       const expected = [
         'id',
         'company_serial_number',
-        'product_type',
+        'pharmacological_class',
         'image_url',
       ];
       // act
@@ -333,7 +333,7 @@ describe('MedicineCommonBatchService', () => {
     });
 
     describe('업데이트 정보가 있으면 업데이트를 진행한다.', () => {
-      const testCases = testcaseBuilderBulkUpdateMedicineCommon$();
+      const testCases: testCase[] = testcaseBuilderBulkUpdateMedicineCommon$();
 
       it.each(testCases)('$test', (testCase) => {
         // arrange
@@ -357,17 +357,37 @@ describe('MedicineCommonBatchService', () => {
   });
 });
 
-function testcaseBuilderBulkUpdateMedicineCommon$() {
+type testCase = {
+  test: string;
+  input: Prisma.medicineUpdateInput & { id: string };
+  expected: {
+    where: Prisma.medicineWhereUniqueInput;
+    data: Prisma.medicineUpdateInput;
+  };
+};
+function testcaseBuilderBulkUpdateMedicineCommon$(): testCase[] {
   return [
     {
-      test: 'product_type 존재',
+      test: 'pharmacological_class 존재',
       input: {
         id: '1234',
-        product_type: 'product_type',
+        pharmacological_class: [
+          {
+            code: 'code',
+            name: 'name',
+          },
+        ],
       },
       expected: {
         where: { id: '1234' },
-        data: { product_type: 'product_type' },
+        data: {
+          pharmacological_class: [
+            {
+              code: 'code',
+              name: 'name',
+            },
+          ],
+        },
       },
     },
     {
@@ -393,31 +413,51 @@ function testcaseBuilderBulkUpdateMedicineCommon$() {
       },
     },
     {
-      test: 'product_type, company_serial_number 존재',
+      test: 'pharmacological_class, company_serial_number 존재',
       input: {
         id: '1234',
-        product_type: 'product_type',
+        pharmacological_class: [
+          {
+            code: 'code',
+            name: 'name',
+          },
+        ],
         company_serial_number: 'company_serial_number',
       },
       expected: {
         where: { id: '1234' },
         data: {
-          product_type: 'product_type',
+          pharmacological_class: [
+            {
+              code: 'code',
+              name: 'name',
+            },
+          ],
           company_serial_number: 'company_serial_number',
         },
       },
     },
     {
-      test: 'product_type, image_url 존재',
+      test: 'pharmacological_class, image_url 존재',
       input: {
         id: '1234',
-        product_type: 'product_type',
+        pharmacological_class: [
+          {
+            code: 'code',
+            name: 'name',
+          },
+        ],
         image_url: 'image_url',
       },
       expected: {
         where: { id: '1234' },
         data: {
-          product_type: 'product_type',
+          pharmacological_class: [
+            {
+              code: 'code',
+              name: 'name',
+            },
+          ],
           image_url: 'image_url',
         },
       },
@@ -438,17 +478,27 @@ function testcaseBuilderBulkUpdateMedicineCommon$() {
       },
     },
     {
-      test: 'product_type, company_serial_number, image_url 존재',
+      test: 'pharmacological_class, company_serial_number, image_url 존재',
       input: {
         id: '1234',
-        product_type: 'product_type',
+        pharmacological_class: [
+          {
+            code: 'code',
+            name: 'name',
+          },
+        ],
         company_serial_number: 'company_serial_number',
         image_url: 'image_url',
       },
       expected: {
         where: { id: '1234' },
         data: {
-          product_type: 'product_type',
+          pharmacological_class: [
+            {
+              code: 'code',
+              name: 'name',
+            },
+          ],
           company_serial_number: 'company_serial_number',
           image_url: 'image_url',
         },

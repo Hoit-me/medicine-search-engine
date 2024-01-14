@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { Prisma, medicine } from '@prisma/client';
+import { Prisma, medicine, pharmacologicalClass } from '@prisma/client';
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { COMMON_API_URL_BUILD } from '@src/constant';
@@ -126,12 +126,13 @@ export class MedicineCommonBatchService {
   ) {
     return from(updateInput).pipe(
       mergeMap((input) => {
-        const { id, product_type, company_serial_number, image_url } = input;
-        if (!product_type && !company_serial_number && !image_url) {
+        const { id, pharmacological_class, company_serial_number, image_url } =
+          input;
+        if (!pharmacological_class && !company_serial_number && !image_url) {
           return of(null); // 아무 것도 하지 않음
         }
         const data = {
-          ...(product_type ? { product_type } : {}),
+          ...(pharmacological_class ? { pharmacological_class } : {}),
           ...(company_serial_number ? { company_serial_number } : {}),
           ...(image_url ? { image_url } : {}),
         };
@@ -208,16 +209,39 @@ export class MedicineCommonBatchService {
       retry({ count: 3, delay: 5000 }),
     );
   }
+  parsePharmacologicalClass(
+    pharmacologicalClass?: string | null,
+  ): pharmacologicalClass[] {
+    // "[M082720]록시스로마이신/[M104917]록시스로마이신제피세립/[M222840]록시트로마이신/[M222994]록시트로마이신/[M243529]제피된 록시트로마이신,
+    if (!pharmacologicalClass) return [];
 
+    const _pharmacologicalClass = pharmacologicalClass.split('/');
+    const regex = /\[(?<code>[A-Z0-9]+)\](?<name>.+)/;
+    return _pharmacologicalClass
+      .map((compound) => {
+        const { code, name } = compound.match(regex)?.groups ?? {};
+        return {
+          code,
+          name,
+        };
+      })
+      .filter(({ code }) => code);
+  }
   pickMedicineCommonData(
     medicine: Medicine.Common,
   ): Prisma.medicineUpdateInput & { id: string } {
-    const { serial_number, company_serial_number, product_type, image } =
-      medicine;
+    const {
+      serial_number,
+      company_serial_number,
+      pharmacological_class,
+      image,
+    } = medicine;
     return {
       id: serial_number,
       company_serial_number,
-      product_type,
+      pharmacological_class: this.parsePharmacologicalClass(
+        pharmacological_class,
+      ),
       image_url: image,
     };
   }
