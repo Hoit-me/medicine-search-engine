@@ -7,7 +7,16 @@ import { Medicine } from '@src/type/medicine';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
 import { Parser } from 'htmlparser2';
-import { bufferCount, from, map, mergeMap, of, retry, toArray } from 'rxjs';
+import {
+  bufferCount,
+  catchError,
+  from,
+  map,
+  mergeMap,
+  of,
+  retry,
+  toArray,
+} from 'rxjs';
 /**
  * ----------------------
  * MEDICINE DETAILS BATCH
@@ -33,13 +42,12 @@ export class MedicineDetailBatchService {
         this.convertMedicineDetailToPrismaMedicine(medicineDetail),
       ),
       mergeMap((medicine) => this.setMedicineDetailDocumentInfo$(medicine), 5), // 동시성을 5로 제한
-      bufferCount(20), // 버퍼 크기를 20으로 조정
+      bufferCount(100), // 버퍼 크기를 20으로 조정
       mergeMap(
-        (medicineDetails) =>
-          this.bulkCheckAndUpsertMedicineDetails(medicineDetails),
+        (medicineDetails, i) =>
+          this.bulkCheckAndUpsertMedicineDetails(medicineDetails, i),
         2, // 동시성을 2로 제한
       ),
-      retry({ count: 3, delay: 5000 }),
     );
   }
   /// --------------------------------
@@ -53,6 +61,10 @@ export class MedicineDetailBatchService {
       .pipe(
         map(({ data }) => data.body),
         retry({ count: 3, delay: delayTime }),
+        catchError((error) => {
+          console.error('Error fetching page', error.message, error.stack);
+          return []; // 에러 처리
+        }),
       );
   }
 
@@ -99,8 +111,8 @@ export class MedicineDetailBatchService {
       english_ingredients,
       ingredients,
       standard_code,
-      additive,
-      main_ingredient,
+      additive_ingredients,
+      main_ingredients,
       change_content,
       re_examination,
       re_examination_date,
@@ -119,8 +131,8 @@ export class MedicineDetailBatchService {
       english_ingredients,
     );
     const _standard_code = this.parseStandardCode(standard_code);
-    const _additive = this.parseCompounds(additive);
-    const _main_ingredient = this.parseCompounds(main_ingredient);
+    const _additive_ingredients = this.parseCompounds(additive_ingredients);
+    const _main_ingredients = this.parseCompounds(main_ingredients);
     const _change_content = this.parseChangedContents(change_content);
     const _re_examination = this.parseReExaminations(
       re_examination,
@@ -138,8 +150,8 @@ export class MedicineDetailBatchService {
       permit_date: _permit_date,
       ingredients: _ingredients,
       standard_code: _standard_code,
-      additive: _additive,
-      main_ingredient: _main_ingredient,
+      additive_ingredients: _additive_ingredients,
+      main_ingredients: _main_ingredients,
       change_content: _change_content,
       re_examination: _re_examination,
       is_new_drug: _is_new_drug,
@@ -180,12 +192,16 @@ export class MedicineDetailBatchService {
     before?: medicine | null,
   ) {
     if (!before) return medicine;
-    const { image_url, product_type, ingredients, company_serial_number } =
-      before;
+    const {
+      image_url,
+      pharmacological_class,
+      ingredients,
+      company_serial_number,
+    } = before;
     return {
       ...medicine,
       image_url,
-      product_type,
+      pharmacological_class,
       ingredients,
       company_serial_number,
     };
@@ -219,37 +235,56 @@ export class MedicineDetailBatchService {
     });
   }
 
-  bulkUpsertMedicineDetail(medicines: Prisma.medicineCreateInput[]) {
-    const upsertMedicines = medicines.map((medicine) => {
-      const { id, ...rest } = medicine;
-      return this.prisma.medicine.upsert({
-        where: {
-          id,
-        },
-        create: medicine,
-        update: rest,
-      });
-    });
-    return this.prisma.$transaction(upsertMedicines);
+  bulkUpsertMedicineDetail$(medicines: Prisma.medicineCreateInput[]) {
+    return from(medicines).pipe(
+      mergeMap((medicine) => {
+        const { id, ...rest } = medicine;
+        return from(
+          this.prisma.medicine.upsert({
+            where: {
+              id,
+            },
+            create: medicine,
+            update: rest,
+          }),
+        ).pipe(
+          catchError((error) => {
+            console.error('Error updating medicine', error);
+            return of(null); // 에러 처리
+          }),
+        );
+      }),
+      retry({ count: 3, delay: 5000 }),
+      catchError((error) => {
+        console.error('Error in bulk update', error);
+        return of(null); // 전체 작업에 대한 에러 처리
+      }),
+    );
   }
 
   bulkCheckAndUpsertMedicineDetails(
     medicineDetails: Prisma.medicineCreateInput[],
+    i?: number,
   ) {
+    console.log(
+      i,
+      medicineDetails.length,
+      process.memoryUsage().rss / 1024 / 1024,
+      'MB',
+    );
+
     return from(medicineDetails).pipe(
       bufferCount(100),
-      mergeMap(
-        (medicines) =>
-          from(this.bulkCheckMedicineDetailExist(medicines)).pipe(
-            mergeMap((m) => m),
-            map(({ medicine, before }) =>
-              this.processMedicineDetailWithBefore(medicine, before),
-            ),
-            toArray(),
+      mergeMap((medicines) =>
+        from(this.bulkCheckMedicineDetailExist(medicines)).pipe(
+          mergeMap((m) => m),
+          map(({ medicine, before }) =>
+            this.processMedicineDetailWithBefore(medicine, before),
           ),
-        1,
+          toArray(),
+        ),
       ),
-      mergeMap((medicines) => this.bulkUpsertMedicineDetail(medicines), 1),
+      mergeMap((medicines) => this.bulkUpsertMedicineDetail$(medicines), 2),
     );
   }
 

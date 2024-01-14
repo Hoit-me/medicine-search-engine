@@ -7,14 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-type additive {
-  code String
-  name String
-}
+
 
 type changeContent {
   content String
-  date    DateTime
+  date    DateTime 
 }
 
 type ingredients {
@@ -26,7 +23,7 @@ type ingredients {
   unit         String
 }
 
-type mainIngredient {
+type compound {
   code String
   name String
 }
@@ -36,10 +33,14 @@ type reExamination {
   re_examination_start_date DateTime?
   type                      String
 }
+type pharmacologicalClass {
+  code String
+  name String
+}
 
 model medicine {
   id                  String   @id @map("_id")
-  additive            additive[]
+  additive_ingredients     compound[]
   atc_code            String?
   cancel_date         DateTime?
   cancel_status       String
@@ -58,9 +59,9 @@ model medicine {
   english_name        String?
   expiration_date     String?
   ingredients         ingredients[]
-  insurance_code      String[]
+  insurance_code      String[] 
   is_new_drug         Boolean
-  main_ingredient     mainIngredient[]
+  main_ingredients     compound[]
   name                String
   narcotic_type       String?
   packing_unit        String
@@ -84,7 +85,34 @@ model medicine {
 
   industry_type    String? //COMMON //업종
   image_url           String? //COMMON //이미지
-  product_type    String? //COMMON //분류명
+  pharmacological_class    pharmacologicalClass[] //COMMON //약효분류명
   ingredients_count Int? //COMMON //성분수 
   company_serial_number String? //COMMON //업체일련번호
+}
+
+
+
+
+
+model dur_ingredient_combined_taboo{
+  id String @id @map("_id") /// [dur_code]_[contraindication_dur_code]
+  dur_code String 
+  dur_type String // 병용금기
+  mix_type String // 단일/복합
+  ingredient_eng_name String
+  ingredient_kor_name String
+  mix String?
+  related_ingredients compound[]
+  pharmacological_class pharmacologicalClass[]
+  contraindication_mix_type String
+  contraindication_dur_code String
+  contraindication_eng_name String
+  contraindication_kor_name String
+  contraindication_mix String?
+  contraindication_related_ingredients compound[]
+  contraindication_pharmacological_class pharmacologicalClass[]
+  notification_date DateTime?
+  prohibited_content String
+  remarks String?
+  deletion_status String
 }
