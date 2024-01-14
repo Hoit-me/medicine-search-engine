@@ -34,9 +34,9 @@ export class MedicineCommonBatchService {
     return this.fetchOpenApiCommonList$(1, sort).pipe(
       map((common) => this.convertOpenApiCommonToMedicineCommon$(common)),
       bufferCount(100),
-      concatMap((common) => this.bulkCheckExistMedicine$(common)),
+      concatMap((common) => this.bulkCheckExistMedicine(common)),
       mergeMap((c) => c),
-      map((c) => this.checkUpdated$(c)),
+      map((c) => this.checkImageUpdated$(c)),
       mergeMap(
         ({ common, updated }) =>
           updated ? this.uploadAndSetUpdatedImage$(common) : of(common),
@@ -45,7 +45,7 @@ export class MedicineCommonBatchService {
       map((common) => this.pickMedicineCommonData(common)),
       bufferCount(100),
       mergeMap((common) => this.bulkUpdateMedicineCommon$(common), 1),
-    //   map((_, i) => console.log('batch', i)),
+      //   map((_, i) => console.log('batch', i)),
       tap(() => console.log('rss MB', process.memoryUsage().rss / 1024 / 1024)),
     );
   }
@@ -103,7 +103,7 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   /// DB
   /// ---------------------------------
-  async bulkCheckExistMedicine$(medicineCommonList: Medicine.Common[]) {
+  async bulkCheckExistMedicine(medicineCommonList: Medicine.Common[]) {
     const ids = medicineCommonList.map((medicine) => medicine.serial_number);
     const existMedicineList = await this.prisma.medicine.findMany({
       where: { id: { in: ids } },
@@ -121,7 +121,7 @@ export class MedicineCommonBatchService {
       .flat();
   }
 
-  async bulkUpdateMedicineCommon$(
+  bulkUpdateMedicineCommon$(
     updateInput: (Prisma.medicineUpdateInput & { id: string })[],
   ) {
     return from(updateInput).pipe(
@@ -156,7 +156,7 @@ export class MedicineCommonBatchService {
   }
 
   /// ---------------------------------
-  checkUpdated$({
+  checkImageUpdated$({
     before,
     common,
   }: {
@@ -173,10 +173,9 @@ export class MedicineCommonBatchService {
       return { common, updated: true };
     }
 
-    const checkUpdated =
+    const checkImageUpdated =
       !beforeImage?.includes(imageName) || beforeImage.includes('nedrug');
-
-    if (checkUpdated) {
+    if (checkImageUpdated) {
       return { common, updated: true };
     }
 
