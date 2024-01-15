@@ -2,11 +2,22 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { DUR_COMBINED_API_URL_BUILD } from '@src/constant';
 import { Dur } from '@src/type/dur';
+import { renameKeys } from '@src/utils/renameKeys';
+import { typedEntries } from '@src/utils/typedEntries';
 import { catchError, map, mergeMap, range, retry, toArray } from 'rxjs';
 
 @Injectable()
 export class DurCombinedTabooBatchService {
   constructor(private readonly httpService: HttpService) {}
+
+  /// ------------------------------------
+  /// BATCH
+  /// ------------------------------------
+  batch() {
+    return this.fetchOpenApiPages$(1, 100, 'ASC').pipe(
+      map((openApi) => this.convertOpenApiToDto$(openApi)),
+    );
+  }
 
   /// ------------------------------------
   /// FETCH OPEN API
@@ -49,5 +60,17 @@ export class DurCombinedTabooBatchService {
         mergeMap((page) => this.fetchOpenApi$(page, rows), batchSize),
         mergeMap((body) => body.items),
       );
+  }
+
+  /// ------------------------------------
+  /// CONVERT DTO
+  /// ------------------------------------
+  convertOpenApiToDto$(
+    openApi: Dur.Ingredient.Combined.OpenApiDto,
+  ): Dur.Ingredient.Combined.Dto {
+    const args = typedEntries(Dur.Ingredient.Combined.OPEN_API_DTO_KEY_MAP);
+    return renameKeys(openApi, args, {
+      undefinedToNull: true,
+    });
   }
 }
