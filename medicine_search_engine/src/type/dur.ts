@@ -1,3 +1,5 @@
+import { OpenApiResponse } from '.';
+
 export namespace Dur {
   export namespace Ingredient {
     export namespace Combined {
@@ -43,6 +45,8 @@ export namespace Dur {
         REMARK: string; // 비고
         DEL_YN: string; // 상태
       }
+
+      export type OpenApiResponseDto = OpenApiResponse<OpenApiDto>;
 
       export type DtoKeys = keyof Dto;
       export type OpenApiDtoKeys = keyof OpenApiDto;

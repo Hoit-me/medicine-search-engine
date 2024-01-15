@@ -1,17 +1,4 @@
-export interface OpenApiDTO<T> {
-  pageNo: number;
-  numOfRows: number;
-  totalCount: number;
-  items: T[];
-}
-
-export interface OpenApiResponse<T> {
-  body: OpenApiDTO<T>;
-  header: {
-    resultCode: string;
-    resultMsg: string;
-  };
-}
+import { OpenApiResponse } from '.';
 
 export namespace Medicine {
   // --------------------------------------
