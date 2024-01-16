@@ -12,6 +12,7 @@ import {
   mergeMap,
   range,
   retry,
+  tap,
   toArray,
 } from 'rxjs';
 
@@ -62,19 +63,21 @@ export class UtilProvider {
           const pageCount = Math.ceil(totalCount / numOfRows);
           return pageCount;
         }),
-        map((totalCount) => Math.ceil(totalCount / 100)),
         mergeMap((pageCount) => range(1, pageCount)),
         toArray(),
+        // tap((pages) => console.log(pages)),
         map((pages) => (sort === 'ASC' ? pages : pages.reverse())),
         mergeMap((pages) => pages),
       )
       .pipe(
+        tap((page) => console.log(page)),
         mergeMap((page) =>
           this.fetchOpenApi$<OpenApiResponse<T>>(
             urlBuilder(process.env.API_KEY!, page, rows),
             retryOption,
           ),
         ),
+        // tap((a) => console.log(a.numOfRows, a.pageNo, a.totalCount)),
         mergeMap((body) => body.items),
       );
   }
