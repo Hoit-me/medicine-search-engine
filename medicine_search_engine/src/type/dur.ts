@@ -20,7 +20,7 @@ export namespace Dur {
         contraindication_related_ingredient: string; // 병용금기관계성분
         contraindication_pharmacological_class: string; // 병용금기약효분류
         notification_date: string; // 고시일자
-        prohibited_content: string; // 금기내용
+        prohibited_content?: string; // 금기내용
         remarks: string; // 비고
         deletion_status: string; // 상태
       }
@@ -64,12 +64,12 @@ export namespace Dur {
         MIXTURE_ORI: string; // 병용금기관계성분
         MIXTURE_CLASS: string; // 병용금기약효분류
         NOTIFICATION_DATE: string; // 고시일자
-        PROHBT_CONTENT: string; // 금기내용
+        PROHBT_CONTENT?: string; // 금기내용
         REMARK: string; // 비고
         DEL_YN: string; // 상태
       }
 
-      export type OpenApiResponseDto = OpenApiResponse<OpenApiDto>;
+      export type OpenApiResponseDto = OpenApiResponse<{ item: OpenApiDto }>;
 
       export type DtoKeys = keyof Dto;
       export type OpenApiDtoKeys = keyof OpenApiDto;
