@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { DurAgeTabooBatchService } from '../DUR/durAgeTabooBatch.service';
 import { DurCombinedTabooBatchService } from '../DUR/durCombinedTabooBatch.service';
+import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
 
@@ -14,6 +15,7 @@ export class MedicineBatchController {
     private readonly medicineCommonBatchService: MedicineCommonBatchService,
     private readonly durCombinedTabooBatchService: DurCombinedTabooBatchService,
     private readonly durAgeTabooBatchService: DurAgeTabooBatchService,
+    private readonly durPregnantTabooBatchService: DurPregnantTabooBatchService,
   ) {}
 
   @Get('/update')
@@ -58,6 +60,15 @@ export class MedicineBatchController {
     console.log('updateDurAge start');
     this.durAgeTabooBatchService.batch$().subscribe({
       complete: () => console.log('updateDurAge complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/dur/pregnant')
+  async updateDurPregnant() {
+    console.log('updateDurPregnant start');
+    this.durPregnantTabooBatchService.batch$().subscribe({
+      complete: () => console.log('updateDurPregnant complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
   }

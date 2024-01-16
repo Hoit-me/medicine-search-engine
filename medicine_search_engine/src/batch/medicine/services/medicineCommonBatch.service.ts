@@ -209,6 +209,7 @@ export class MedicineCommonBatchService {
       retry({ count: 3, delay: 5000 }),
     );
   }
+
   parsePharmacologicalClass(
     pharmacologicalClass?: string | null,
   ): pharmacologicalClass[] {
@@ -227,6 +228,7 @@ export class MedicineCommonBatchService {
       })
       .filter(({ code }) => code);
   }
+
   pickMedicineCommonData(
     medicine: Medicine.Common,
   ): Prisma.medicineUpdateInput & { id: string } {
