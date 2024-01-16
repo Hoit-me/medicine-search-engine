@@ -1,6 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
+
+/**
+ * # 약품 배치 - 테스트용 컨트롤러
+ */
 @Controller('/batch/medicine')
 export class MedicineBatchController {
   constructor(
