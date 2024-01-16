@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { Prisma, compound } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { DUR_COMBINED_API_URL_BUILD } from '@src/constant';
+import { DUR_AGE_API_URL_BUILD } from '@src/constant';
 import { Dur } from '@src/type/dur';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
@@ -18,7 +18,7 @@ import {
 } from 'rxjs';
 
 @Injectable()
-export class DurCombinedTabooBatchService {
+export class DurAgeTabooBatchService {
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
@@ -36,14 +36,13 @@ export class DurCombinedTabooBatchService {
       mergeMap((data) => this.bulkUpsert$(data, 20)),
     );
   }
-
   /// ------------------------------------
   /// FETCH OPEN API
   /// ------------------------------------
   fetchOpenApi$(pageNum: number, rows = 100) {
     return this.httpService
-      .get<Dur.Ingredient.Combined.OpenApiResponseDto>(
-        DUR_COMBINED_API_URL_BUILD(process.env.API_KEY!, pageNum, rows),
+      .get<Dur.Ingredient.Age.OpenApiResponseDto>(
+        DUR_AGE_API_URL_BUILD(process.env.API_KEY!, pageNum, rows),
       )
       .pipe(
         map((res) => res.data),
@@ -85,13 +84,13 @@ export class DurCombinedTabooBatchService {
   /// DB
   /// ------------------------------------
   bulkUpsert$(
-    data: Prisma.dur_ingredient_combined_tabooCreateInput[],
+    data: Prisma.dur_ingredient_age_tabooCreateInput[],
     batchSize = 20,
   ) {
     return from(data).pipe(
       mergeMap((data) => {
         const { id, ...rest } = data;
-        return this.prisma.dur_ingredient_combined_taboo.upsert({
+        return this.prisma.dur_ingredient_age_taboo.upsert({
           where: { id },
           create: data,
           update: rest,
@@ -105,54 +104,49 @@ export class DurCombinedTabooBatchService {
   /// CONVERT DTO
   /// ------------------------------------
   convertOpenApiToDto(
-    openApi: Dur.Ingredient.Combined.OpenApiDto,
-  ): Dur.Ingredient.Combined.Dto {
-    const args = typedEntries(Dur.Ingredient.Combined.OPEN_API_DTO_KEY_MAP);
+    openApi: Dur.Ingredient.Age.OpenApiDto,
+  ): Dur.Ingredient.Age.Dto {
+    const args = typedEntries(Dur.Ingredient.Age.OPEN_API_DTO_KEY_MAP);
     return renameKeys(openApi, args, {
       undefinedToNull: true,
     });
   }
 
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.Combined.Dto,
-  ): Prisma.dur_ingredient_combined_tabooCreateInput {
+    dto: Dur.Ingredient.Age.Dto,
+  ): Prisma.dur_ingredient_age_tabooCreateInput {
     const {
       dur_code,
-      contraindication_dur_code,
-      contraindication_related_ingredient,
       related_ingredient,
-      contraindication_pharmacological_class,
-      pharmacological_class,
-      notification_date,
+      form,
       prohibited_content,
+      notification_date,
+      age_base,
+      dur_seq: _,
       ...rest
     } = dto;
-    const id = `${dur_code}-${contraindication_dur_code}`;
+
+    const id = dur_code;
     const related_ingredients = this.parseCode(related_ingredient);
-    const contraindication_related_ingredients = this.parseCode(
-      contraindication_related_ingredient,
-    );
-    const _pharmacological_class = this.parseCode(pharmacological_class);
-    const _contraindication_pharmacological_class = this.parseCode(
-      contraindication_pharmacological_class,
-    );
+    const _pharmacological_class = this.parseCode(dto.pharmacological_class);
+    const forms = this.parseString(form, '/');
     const _notification_date = this.formatDate(notification_date);
+    const [_age, base] = this.parseString(age_base, ' ');
+    const age = _age.replace(/세/g, '');
 
     return {
       ...rest,
       id,
       dur_code,
-      contraindication_dur_code,
       related_ingredients,
-      contraindication_related_ingredients,
       pharmacological_class: _pharmacological_class,
-      contraindication_pharmacological_class:
-        _contraindication_pharmacological_class,
-      notification_date: _notification_date,
+      forms,
       prohibited_content: prohibited_content ?? '',
+      notification_date: _notification_date,
+      age,
+      base,
     };
   }
-
   /// ------------------------------------
   /// UTILS
   /// ------------------------------------
@@ -177,5 +171,9 @@ export class DurCombinedTabooBatchService {
     return dateString
       ? new Date(dateString.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
       : null;
+  }
+  parseString(str?: string | null, separator = ',') {
+    if (!str) return [];
+    return str.split(separator);
   }
 }

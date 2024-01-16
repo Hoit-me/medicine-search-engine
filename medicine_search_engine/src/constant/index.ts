@@ -27,3 +27,12 @@ export const DUR_COMBINED_API_URL_BUILD = (
 ) =>
   DUR_COMBINED_API_URL +
   `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+export const DUR_AGE_API_URL =
+  'https://apis.data.go.kr/1471000/DURIrdntInfoService03/getSpcifyAgrdeTabooInfoList02?typeName=특정연령대금기&type=json';
+export const DUR_AGE_API_URL_BUILD = (
+  API_KEY: string,
+  pageNo: number,
+  rows = 100,
+) =>
+  DUR_AGE_API_URL + `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;

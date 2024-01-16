@@ -88,15 +88,19 @@ model medicine {
   pharmacological_class    pharmacologicalClass[] //COMMON //약효분류명
   ingredients_count Int? //COMMON //성분수 
   company_serial_number String? //COMMON //업체일련번호
+
+  @@index([main_ingredients])
+  @@index([main_ingredients.code])
+  @@index([additive_ingredients])
+  @@index([additive_ingredients.code])
+  @@index([insurance_code])
 }
-
-
 
 
 
 model dur_ingredient_combined_taboo{
   id String @id @map("_id") /// [dur_code]_[contraindication_dur_code]
-  dur_code String 
+  dur_code String  
   dur_type String // 병용금기
   mix_type String // 단일/복합
   ingredient_eng_name String
@@ -115,4 +119,38 @@ model dur_ingredient_combined_taboo{
   prohibited_content String
   remarks String?
   deletion_status String
+
+  @@index([dur_code]) 
+  @@index([related_ingredients])
+  @@index([related_ingredients.code])
+  @@index([related_ingredients.name])
+  @@index([related_ingredients.name, related_ingredients.code])
+  @@index([contraindication_related_ingredients])
+  @@index([contraindication_related_ingredients.code])
+  @@index([contraindication_related_ingredients.name])
+  @@index([contraindication_related_ingredients.name, contraindication_related_ingredients.code])
+}
+
+model dur_ingredient_age_taboo{
+  id String @id @map("_id") /// [dur_code]
+  dur_type String // 연령금기
+  mix_type String // 단일/복합
+  dur_code String
+  ingredient_eng_name String
+  ingredient_kor_name String
+  mix String?
+  related_ingredients compound[]
+  pharmacological_class pharmacologicalClass[]
+  forms String[]
+  age String
+  base String // 이하,미만 등...
+  notification_date DateTime?
+  prohibited_content String
+  remarks String?
+  deletion_status String
+
+  @@index([dur_code])
+  @@index([related_ingredients])
+  @@index([related_ingredients.code])
+  @@index([forms])
 }
