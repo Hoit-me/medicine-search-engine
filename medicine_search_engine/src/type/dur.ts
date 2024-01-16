@@ -243,5 +243,83 @@ export namespace Dur {
         DEL_YN: 'deletion_status',
       };
     }
+
+    export namespace Volume {
+      export interface Dto {
+        dur_seq: string; // DUR_SEQ
+        dur_type: string; // DUR유형
+        mix_type: string; // 단일/복합
+        dur_code: string; // DUR성분코드
+        ingredient_eng_name: string; // DUR성분(영문)
+        ingredient_kor_name: string; // DUR성분
+        mix?: string; // 복합제
+        related_ingredient: string; // 관계성분
+        pharmacological_class: string; // 약효분류
+        notification_date: string; // 고시일자
+        prohibited_content?: string; // 금기내용
+        remarks?: string; // 비고
+        deletion_status: string; // 상태
+        form: string; // 제형
+        max_quantity: string; // 용량
+      }
+
+      /**
+       * ## EXAMPLE
+       * <DUR_SEQ>809</DUR_SEQ>
+       * <TYPE_NAME>용량주의</TYPE_NAME>
+       * <MIX_TYPE>단일</MIX_TYPE>
+       * <INGR_CODE>D000456</INGR_CODE>
+       * <INGR_ENG_NAME>Alacepril</INGR_ENG_NAME>
+       * <INGR_NAME>알라세프릴</INGR_NAME>
+       * <MIX_INGR/>
+       * <ORI_INGR>[M091774]알라세프릴</ORI_INGR>
+       * <CLASS_NAME>[02140]혈압강하제</CLASS_NAME>
+       * <FORM_NAME>정제</FORM_NAME>
+       * <MAX_QTY>알라세프릴 100밀리그램</MAX_QTY>
+       * <NOTIFICATION_DATE>20130703</NOTIFICATION_DATE>
+       * <PROHBT_CONTENT/>
+       * <REMARK/>
+       * <DEL_YN>정상</DEL_YN>
+       */
+      export interface OpenApiDto {
+        DUR_SEQ: string; // DUR_SEQ
+        TYPE_NAME: string; // DUR유형
+        MIX_TYPE: string; // 단일/복합
+        INGR_CODE: string; // DUR성분코드
+        INGR_ENG_NAME: string; // DUR성분(영문)
+        INGR_NAME: string; // DUR성분
+        MIX_INGR?: string; // 복합제
+        ORI_INGR: string; // 관계성분
+        CLASS_NAME: string; // 약효분류
+        FORM_NAME: string; // 제형
+        MAX_QTY: string; // 용량
+        NOTIFICATION_DATE: string; // 고시일자
+        PROHBT_CONTENT?: string; // 금기내용
+        REMARK?: string; // 비고
+        DEL_YN: string; // 상태
+      }
+
+      export type OpenApiResponseDto = OpenApiResponse<{ item: OpenApiDto }>;
+      export type DtoKeys = keyof Dto;
+      export type OpenApiDtoKeys = keyof OpenApiDto;
+      export type KeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+      export const OPEN_API_DTO_KEY_MAP: KeyMap = {
+        DUR_SEQ: 'dur_seq',
+        TYPE_NAME: 'dur_type',
+        MIX_TYPE: 'mix_type',
+        INGR_CODE: 'dur_code',
+        INGR_ENG_NAME: 'ingredient_eng_name',
+        INGR_NAME: 'ingredient_kor_name',
+        MIX_INGR: 'mix',
+        ORI_INGR: 'related_ingredient',
+        CLASS_NAME: 'pharmacological_class',
+        FORM_NAME: 'form',
+        MAX_QTY: 'max_quantity',
+        NOTIFICATION_DATE: 'notification_date',
+        PROHBT_CONTENT: 'prohibited_content',
+        REMARK: 'remarks',
+        DEL_YN: 'deletion_status',
+      };
+    }
   }
 }

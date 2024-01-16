@@ -178,3 +178,26 @@ model dur_ingredient_pregnant_taboo{
   @@index([forms])
   @@index([grade])
 }
+
+model dur_ingredient_volume_taboo{
+id String @id @map("_id") /// [dur_code]
+  dur_type String // 임부금기
+  mix_type String // 단일/복합
+  dur_code String
+  ingredient_eng_name String
+  ingredient_kor_name String
+  mix String?
+  related_ingredients compound[]
+  pharmacological_class pharmacologicalClass[]
+  forms String[]
+  max_quantity String
+  notification_date DateTime?
+  prohibited_content String
+  remarks String?
+  deletion_status String
+
+  @@index([dur_code])
+  @@index([related_ingredients])
+  @@index([related_ingredients.code])
+  @@index([forms])
+}
