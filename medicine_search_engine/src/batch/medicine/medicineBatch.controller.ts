@@ -47,7 +47,7 @@ export class MedicineBatchController {
   @Get('/update/dur/combined')
   async updateDurCombined() {
     console.log('updateDurCombined start');
-    this.durCombinedTabooBatchService.batch().subscribe({
+    this.durCombinedTabooBatchService.batch$().subscribe({
       complete: () => console.log('updateDurCombined complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
@@ -56,7 +56,7 @@ export class MedicineBatchController {
   @Get('/update/dur/age')
   async updateDurAge() {
     console.log('updateDurAge start');
-    this.durAgeTabooBatchService.batch().subscribe({
+    this.durAgeTabooBatchService.batch$().subscribe({
       complete: () => console.log('updateDurAge complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });

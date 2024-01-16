@@ -1,11 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { Prisma, compound } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUR_AGE_API_URL_BUILD } from '@src/constant';
 import { Dur } from '@src/type/dur';
-import { renameKeys } from '@src/utils/renameKeys';
-import { typedEntries } from '@src/utils/typedEntries';
 import {
   catchError,
   filter,
@@ -16,25 +14,39 @@ import {
   retry,
   toArray,
 } from 'rxjs';
+import { UtilProvider } from '../util.provider';
 
 @Injectable()
 export class DurAgeTabooBatchService {
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
+    private readonly util: UtilProvider,
   ) {}
 
   /// ------------------------------------
   /// BATCH
   /// ------------------------------------
-  batch() {
-    return this.fetchOpenApiPages$(1, 100, 'ASC').pipe(
-      map((openApi) => this.convertOpenApiToDto(openApi)),
-      filter((dto) => dto.deletion_status !== '삭제'),
-      map((dto) => this.convertDtoToPrismaSchema(dto)),
-      toArray(),
-      mergeMap((data) => this.bulkUpsert$(data, 20)),
-    );
+  batch$() {
+    return this.util
+      .fetchOpenApiPages$<{ item: Dur.Ingredient.Age.OpenApiDto }>(
+        DUR_AGE_API_URL_BUILD,
+        100,
+        'ASC',
+      )
+      .pipe(
+        map(({ item }) => item),
+        map((openApi) =>
+          this.util.convertOpenApiToDto<
+            Dur.Ingredient.Age.OpenApiDto,
+            Dur.Ingredient.Age.Dto
+          >(openApi, Dur.Ingredient.Age.OPEN_API_DTO_KEY_MAP),
+        ),
+        filter((dto) => dto.deletion_status !== '삭제'),
+        map((dto) => this.convertDtoToPrismaSchema(dto)),
+        toArray(),
+        mergeMap((data) => this.bulkUpsert$(data, 20)),
+      );
   }
   /// ------------------------------------
   /// FETCH OPEN API
@@ -103,15 +115,6 @@ export class DurAgeTabooBatchService {
   /// ------------------------------------
   /// CONVERT DTO
   /// ------------------------------------
-  convertOpenApiToDto(
-    openApi: Dur.Ingredient.Age.OpenApiDto,
-  ): Dur.Ingredient.Age.Dto {
-    const args = typedEntries(Dur.Ingredient.Age.OPEN_API_DTO_KEY_MAP);
-    return renameKeys(openApi, args, {
-      undefinedToNull: true,
-    });
-  }
-
   convertDtoToPrismaSchema(
     dto: Dur.Ingredient.Age.Dto,
   ): Prisma.dur_ingredient_age_tabooCreateInput {
@@ -127,11 +130,14 @@ export class DurAgeTabooBatchService {
     } = dto;
 
     const id = dur_code;
-    const related_ingredients = this.parseCode(related_ingredient);
-    const _pharmacological_class = this.parseCode(dto.pharmacological_class);
-    const forms = this.parseString(form, '/');
-    const _notification_date = this.formatDate(notification_date);
-    const [_age, base] = this.parseString(age_base, ' ');
+    const related_ingredients =
+      this.util.parseCodeNamePairs(related_ingredient);
+    const _pharmacological_class = this.util.parseCodeNamePairs(
+      dto.pharmacological_class,
+    );
+    const forms = this.util.splitStringToArray(form, '/');
+    const _notification_date = this.util.formatDate(notification_date);
+    const [_age, base] = this.util.splitStringToArray(age_base, ' ');
     const age = _age.replace(/세/g, '');
 
     return {
@@ -146,34 +152,5 @@ export class DurAgeTabooBatchService {
       age,
       base,
     };
-  }
-  /// ------------------------------------
-  /// UTILS
-  /// ------------------------------------
-  parseCode(compoundsStr?: string | null, separator = '/'): compound[] {
-    // "[M040702]포도당/[M040426]염화나트륨",
-    if (!compoundsStr) return [];
-
-    const compounds = compoundsStr.split(separator);
-    const compoundRegex = /\[(?<code>[A-Z0-9]+)\](?<name>.+)/;
-    return compounds
-      .map((compound) => {
-        const { code, name } = compound.match(compoundRegex)?.groups ?? {};
-        return {
-          code,
-          name,
-        };
-      })
-      .filter(({ code }) => code);
-  }
-
-  formatDate(dateString?: string | null) {
-    return dateString
-      ? new Date(dateString.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-      : null;
-  }
-  parseString(str?: string | null, separator = ',') {
-    if (!str) return [];
-    return str.split(separator);
   }
 }
