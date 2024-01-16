@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { DurAgeTabooBatchService } from '../DUR/durAgeTabooBatch.service';
 import { DurCombinedTabooBatchService } from '../DUR/durCombinedTabooBatch.service';
 import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
+import { DurVolumeTabooBatchService } from '../DUR/durVolumeTabooBatch.service';
 import { UtilProvider } from '../util.provider';
 import { MedicineBatchController } from './medicineBatch.controller';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
@@ -22,6 +23,7 @@ import { MedicineDetailBatchService } from './services/medicineDetailBatch.servi
     DurCombinedTabooBatchService,
     DurAgeTabooBatchService,
     DurPregnantTabooBatchService,
+    DurVolumeTabooBatchService,
     UtilProvider,
   ],
 })

@@ -44,3 +44,13 @@ export const DUR_PREGNAT_API_URL_BUILD = (
 ) =>
   DUR_PREGNAT_API_URL +
   `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+export const DUR_VOLUME_API_URL =
+  'https://apis.data.go.kr/1471000/DURIrdntInfoService03/getCpctyAtentInfoList02?typeName=용량주의&type=json';
+export const DUR_VOLUME_API_URL_BUILD = (
+  API_KEY: string,
+  pageNo: number,
+  rows = 100,
+) =>
+  DUR_VOLUME_API_URL +
+  `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
