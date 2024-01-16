@@ -65,3 +65,25 @@ export const DUR_PERIOD_API_URL_BUILD = (
 ) =>
   DUR_PERIOD_API_URL +
   `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+// 노인주의
+
+export const DUR_OLD_API_URL =
+  'https://apis.data.go.kr/1471000/DURIrdntInfoService03/getOdsnAtentInfoList02?typeName=노인주의&type=json';
+
+export const DUR_OLD_API_URL_BUILD = (
+  API_KEY: string,
+  pageNo: number,
+  rows = 100,
+) =>
+  DUR_OLD_API_URL + `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+export const DUPLICATE_EFFECT_API_URL =
+  'https://apis.data.go.kr/1471000/DURIrdntInfoService03/getEfcyDplctInfoList02?typeName=효능군중복&type=json';
+export const DUPLICATE_EFFECT_API_URL_BUILD = (
+  API_KEY: string,
+  pageNo: number,
+  rows = 100,
+) =>
+  DUPLICATE_EFFECT_API_URL +
+  `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;

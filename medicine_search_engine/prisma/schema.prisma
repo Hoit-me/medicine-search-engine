@@ -223,3 +223,46 @@ model dur_ingredient_period_taboo{
   @@index([related_ingredients.code])
   @@index([forms])
 }
+model dur_ingredient_old_taboo{
+  id String @id @map("_id") /// [dur_code]
+  dur_type String // 임부금기
+  mix_type String // 단일/복합
+  dur_code String
+  ingredient_eng_name String
+  ingredient_kor_name String
+  mix String?
+  related_ingredients compound[]
+  pharmacological_class pharmacologicalClass[]
+  forms String[]
+  notification_date DateTime?
+  prohibited_content String
+  remarks String?
+  deletion_status String
+
+  @@index([dur_code])
+  @@index([related_ingredients])
+  @@index([related_ingredients.code])
+  @@index([forms])
+}
+model dur_ingredient_duplicate_effect_taboo{
+  id String @id @map("_id") /// [dur_code]
+  dur_type String // 임부금기
+  mix_type String // 단일/복합
+  dur_code String
+  ingredient_eng_name String
+  ingredient_kor_name String
+  mix String?
+  related_ingredients compound[]
+  pharmacological_class pharmacologicalClass[]
+  notification_date DateTime?
+  prohibited_content String
+  remarks String?
+  deletion_status String
+  effect_code String
+  category String?
+  @@index([dur_code])
+  @@index([related_ingredients])
+  @@index([related_ingredients.code])
+  @@index([effect_code])
+  @@index([category])
+}

@@ -398,5 +398,151 @@ export namespace Dur {
         DEL_YN: 'deletion_status',
       };
     }
+
+    export namespace Old {
+      export interface Dto {
+        dur_seq: string; // DUR_SEQ
+        dur_type: string; // DUR유형
+        mix_type: string; // 단일/복합
+        dur_code: string; // DUR성분코드
+        ingredient_eng_name: string; // DUR성분(영문)
+        ingredient_kor_name: string; // DUR성분
+        mix?: string; // 복합제
+        related_ingredient: string; // 관계성분
+        form?: string; // 제형
+        notification_date: string; // 고시일자
+        prohibited_content?: string; // 금기내용
+        remarks?: string; // 비고
+        deletion_status: string; // 상태
+      }
+
+      /**
+       * <DUR_SEQ>1</DUR_SEQ>
+       * <TYPE_NAME>노인주의</TYPE_NAME>
+       * <MIX_TYPE>단일</MIX_TYPE>
+       * <INGR_CODE>D000056</INGR_CODE>
+       * <INGR_ENG_NAME>Chlordiazepoxide</INGR_ENG_NAME>
+       * <INGR_NAME>클로르디아제폭시드</INGR_NAME>
+       * <MIX_INGR/>
+       * <ORI_INGR>[M088403]클로르디아제폭시드/[M223206]클로르디아제폭시드염산염</ORI_INGR>
+       * <FORM_NAME/>
+       * <NOTIFICATION_DATE>20150728</NOTIFICATION_DATE>
+       * <PROHBT_CONTENT>노인에서의 장기지속형 벤조다이아제핀 사용은 운동실조, 과진정 등이 나타나기 쉬움으로 소량부터 신중투여 </PROHBT_CONTENT>
+       * <REMARK/>
+       * <DEL_YN>정상</DEL_YN>
+       */
+      export interface OpenApiDto {
+        DUR_SEQ: string; // DUR_SEQ
+        TYPE_NAME: string; // DUR유형
+        MIX_TYPE: string; // 단일/복합
+        INGR_CODE: string; // DUR성분코드
+        INGR_ENG_NAME: string; // DUR성분(영문)
+        INGR_NAME: string; // DUR성분
+        MIX_INGR?: string; // 복합제
+        ORI_INGR: string; // 관계성분
+        FORM_NAME?: string; // 제형
+        NOTIFICATION_DATE: string; // 고시일자
+        PROHBT_CONTENT?: string; // 금기내용
+        REMARK?: string; // 비고
+        DEL_YN: string; // 상태
+      }
+
+      export type OpenApiResponseDto = OpenApiResponse<{ item: OpenApiDto }>;
+      export type DtoKeys = keyof Dto;
+      export type OpenApiDtoKeys = keyof OpenApiDto;
+      export type KeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+      export const OPEN_API_DTO_KEY_MAP: KeyMap = {
+        DUR_SEQ: 'dur_seq',
+        TYPE_NAME: 'dur_type',
+        MIX_TYPE: 'mix_type',
+        INGR_CODE: 'dur_code',
+        INGR_ENG_NAME: 'ingredient_eng_name',
+        INGR_NAME: 'ingredient_kor_name',
+        MIX_INGR: 'mix',
+        ORI_INGR: 'related_ingredient',
+        FORM_NAME: 'form',
+        NOTIFICATION_DATE: 'notification_date',
+        PROHBT_CONTENT: 'prohibited_content',
+        REMARK: 'remarks',
+        DEL_YN: 'deletion_status',
+      };
+    }
+    export namespace DuplicateEffect {
+      export interface Dto {
+        dur_seq: string; // DUR_SEQ
+        dur_type: string; // DUR유형
+        mix_type: string; // 단일/복합
+        dur_code: string; // DUR성분코드
+        ingredient_eng_name: string; // DUR성분(영문)
+        ingredient_kor_name: string; // DUR성분
+        mix?: string; // 복합제
+        effect_code: string; // 효능군
+        related_ingredient: string; // 관계성분
+        pharmacological_class: string; // 약효분류
+        notification_date: string; // 고시일자
+        prohibited_content?: string; // 금기내용
+        remarks?: string; // 비고
+        deletion_status: string; // 상태
+        category?: string;
+      }
+
+      /**
+       * ## EXAMPLE
+       * <DUR_SEQ>2463</DUR_SEQ>
+       * <TYPE_NAME>효능군중복</TYPE_NAME>
+       * <MIX_TYPE>단일</MIX_TYPE>
+       * <INGR_CODE>D000739</INGR_CODE>
+       * <INGR_ENG_NAME>Aceclofenac</INGR_ENG_NAME>
+       * <INGR_NAME>아세클로페낙</INGR_NAME>
+       * <MIX_INGR/>
+       * <ORI_INGR>[M040359]아세클로페낙</ORI_INGR>
+       * <CLASS_NAME>[01140]해열.진통.소염제</CLASS_NAME>
+       * <EFFECT_CODE>해열진통소염제</EFFECT_CODE>
+       * <NOTIFICATION_DATE>20120831</NOTIFICATION_DATE>
+       * <PROHBT_CONTENT/>
+       * <REMARK/>
+       * <DEL_YN>정상</DEL_YN>
+       * <SERS_NAME>비스테로이드성 소염제</SERS_NAME>
+       */
+      export interface OpenApiDto {
+        DUR_SEQ: string; // DUR_SEQ
+        TYPE_NAME: string; // DUR유형
+        MIX_TYPE: string; // 단일/복합
+        INGR_CODE: string; // DUR성분코드
+        INGR_ENG_NAME: string; // DUR성분(영문)
+        INGR_NAME: string; // DUR성분
+        MIX_INGR?: string; // 복합제
+        ORI_INGR: string; // 관계성분
+        CLASS_NAME: string; // 약효분류
+        EFFECT_CODE: string; // 효능군
+        NOTIFICATION_DATE: string; // 고시일자
+        PROHBT_CONTENT?: string; // 금기내용
+        REMARK?: string; // 비고
+        DEL_YN: string; // 상태
+        SERS_NAME?: string; // SERS_NAME
+      }
+
+      export type OpenApiResponseDto = OpenApiResponse<{ item: OpenApiDto }>;
+      export type DtoKeys = keyof Dto;
+      export type OpenApiDtoKeys = keyof OpenApiDto;
+      export type KeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+      export const OPEN_API_DTO_KEY_MAP: KeyMap = {
+        DUR_SEQ: 'dur_seq',
+        TYPE_NAME: 'dur_type',
+        MIX_TYPE: 'mix_type',
+        INGR_CODE: 'dur_code',
+        INGR_ENG_NAME: 'ingredient_eng_name',
+        INGR_NAME: 'ingredient_kor_name',
+        MIX_INGR: 'mix',
+        ORI_INGR: 'related_ingredient',
+        CLASS_NAME: 'pharmacological_class',
+        EFFECT_CODE: 'effect_code',
+        NOTIFICATION_DATE: 'notification_date',
+        PROHBT_CONTENT: 'prohibited_content',
+        REMARK: 'remarks',
+        DEL_YN: 'deletion_status',
+        SERS_NAME: 'category',
+      };
+    }
   }
 }

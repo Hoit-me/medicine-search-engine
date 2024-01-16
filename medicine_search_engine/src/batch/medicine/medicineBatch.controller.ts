@@ -2,6 +2,8 @@ import { Controller, Get } from '@nestjs/common';
 import { DurAgeTabooBatchService } from '../DUR/durAgeTabooBatch.service';
 import { DurCombinedTabooBatchService } from '../DUR/durCombinedTabooBatch.service';
 import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
+import { DurDuplicateEffectTabooBatchService } from './../DUR/durDuplicateEffectTabooBatch.service';
+import { DurOldTabooBatchService } from './../DUR/durOldTabooBatch.service';
 import { DurPeriodTabooBatchService } from './../DUR/durPeriodTabooBatch.service';
 import { DurVolumeTabooBatchService } from './../DUR/durVolumeTabooBatch.service';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
@@ -20,6 +22,8 @@ export class MedicineBatchController {
     private readonly durPregnantTabooBatchService: DurPregnantTabooBatchService,
     private readonly durVolumeTabooBatchService: DurVolumeTabooBatchService,
     private readonly durPeriodTabooBatchService: DurPeriodTabooBatchService,
+    private readonly durOldTabooBatchService: DurOldTabooBatchService,
+    private readonly durDuplicateEffectTabooBatchService: DurDuplicateEffectTabooBatchService,
   ) {}
 
   @Get('/update')
@@ -91,6 +95,24 @@ export class MedicineBatchController {
     console.log('updateDurPeriod start');
     this.durPeriodTabooBatchService.batch$().subscribe({
       complete: () => console.log('updateDurPeriod complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/dur/old')
+  async updateDurOld() {
+    console.log('updateDurOld start');
+    this.durOldTabooBatchService.batch$().subscribe({
+      complete: () => console.log('updateDurOld complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/dur/duplicate-effect')
+  async updateDurDuplicateEffect() {
+    console.log('updateDurDuplicateEffect start');
+    this.durDuplicateEffectTabooBatchService.batch$().subscribe({
+      complete: () => console.log('updateDurDuplicateEffect complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
   }
