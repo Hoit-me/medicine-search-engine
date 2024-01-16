@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { DurAgeTabooBatchService } from '../DUR/durAgeTabooBatch.service';
 import { DurCombinedTabooBatchService } from '../DUR/durCombinedTabooBatch.service';
+import { DurPeriodTabooBatchService } from '../DUR/durPeriodTabooBatch.service';
 import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
 import { DurVolumeTabooBatchService } from '../DUR/durVolumeTabooBatch.service';
 import { UtilProvider } from '../util.provider';
@@ -24,6 +25,7 @@ import { MedicineDetailBatchService } from './services/medicineDetailBatch.servi
     DurAgeTabooBatchService,
     DurPregnantTabooBatchService,
     DurVolumeTabooBatchService,
+    DurPeriodTabooBatchService,
     UtilProvider,
   ],
 })

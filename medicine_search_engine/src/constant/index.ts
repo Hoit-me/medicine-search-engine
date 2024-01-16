@@ -54,3 +54,14 @@ export const DUR_VOLUME_API_URL_BUILD = (
 ) =>
   DUR_VOLUME_API_URL +
   `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+// 기간
+export const DUR_PERIOD_API_URL =
+  'https://apis.data.go.kr/1471000/DURIrdntInfoService03/getMdctnPdAtentInfoList02?typeName=투여기간주의&type=json';
+export const DUR_PERIOD_API_URL_BUILD = (
+  API_KEY: string,
+  pageNo: number,
+  rows = 100,
+) =>
+  DUR_PERIOD_API_URL +
+  `&serviceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${rows}`;

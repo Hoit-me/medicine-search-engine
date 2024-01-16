@@ -321,5 +321,82 @@ export namespace Dur {
         DEL_YN: 'deletion_status',
       };
     }
+
+    export namespace Period {
+      export interface Dto {
+        dur_seq: string; // DUR_SEQ
+        dur_type: string; // DUR유형
+        mix_type: string; // 단일/복합
+        dur_code: string; // DUR성분코드
+        ingredient_eng_name: string; // DUR성분(영문)
+        ingredient_kor_name: string; // DUR성분
+        mix?: string; // 복합제
+        related_ingredient: string; // 관계성분
+        pharmacological_class: string; // 약효분류
+        notification_date: string; // 고시일자
+        prohibited_content?: string; // 금기내용
+        remarks?: string; // 비고
+        deletion_status: string; // 상태
+        form: string; // 제형
+        max_period: string; // 기간
+      }
+
+      /**
+       * ## EXAMPLE
+       * <DUR_SEQ>460</DUR_SEQ>
+       * <TYPE_NAME>투여기간주의</TYPE_NAME>
+       * <MIX_TYPE>단일</MIX_TYPE>
+       * <INGR_CODE>D000271</INGR_CODE>
+       * <INGR_ENG_NAME>Zolpidem tartrate</INGR_ENG_NAME>
+       * <INGR_NAME>졸피뎀타르타르산염</INGR_NAME>
+       * <MIX_INGR/>
+       * <ORI_INGR>[M088392]주석산졸피뎀/[M222883]졸피뎀타르타르산/[M239566]졸피뎀타르타르산염/[M261178]졸피뎀타르타르산염</ORI_INGR>
+       * <CLASS_NAME>[01120]최면진정제</CLASS_NAME>
+       * <FORM_NAME>정제/서방성필름코팅정</FORM_NAME>
+       * <MAX_DOSAGE_TERM>28일</MAX_DOSAGE_TERM>
+       * <NOTIFICATION_DATE>20141230</NOTIFICATION_DATE>
+       * <PROHBT_CONTENT/>
+       * <REMARK/>
+       * <DEL_YN>정상</DEL_YN>
+       */
+      export interface OpenApiDto {
+        DUR_SEQ: string; // DUR_SEQ
+        TYPE_NAME: string; // DUR유형
+        MIX_TYPE: string; // 단일/복합
+        INGR_CODE: string; // DUR성분코드
+        INGR_ENG_NAME: string; // DUR성분(영문)
+        INGR_NAME: string; // DUR성분
+        MIX_INGR?: string; // 복합제
+        ORI_INGR: string; // 관계성분
+        CLASS_NAME: string; // 약효분류
+        FORM_NAME: string; // 제형
+        MAX_DOSAGE_TERM: string; // 용량
+        NOTIFICATION_DATE: string; // 고시일자
+        PROHBT_CONTENT?: string; // 금기내용
+        REMARK?: string; // 비고
+        DEL_YN: string; // 상태
+      }
+      export type OpenApiResponseDto = OpenApiResponse<{ item: OpenApiDto }>;
+      export type DtoKeys = keyof Dto;
+      export type OpenApiDtoKeys = keyof OpenApiDto;
+      export type KeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+      export const OPEN_API_DTO_KEY_MAP: KeyMap = {
+        DUR_SEQ: 'dur_seq',
+        TYPE_NAME: 'dur_type',
+        MIX_TYPE: 'mix_type',
+        INGR_CODE: 'dur_code',
+        INGR_ENG_NAME: 'ingredient_eng_name',
+        INGR_NAME: 'ingredient_kor_name',
+        MIX_INGR: 'mix',
+        ORI_INGR: 'related_ingredient',
+        CLASS_NAME: 'pharmacological_class',
+        FORM_NAME: 'form',
+        MAX_DOSAGE_TERM: 'max_period',
+        NOTIFICATION_DATE: 'notification_date',
+        PROHBT_CONTENT: 'prohibited_content',
+        REMARK: 'remarks',
+        DEL_YN: 'deletion_status',
+      };
+    }
   }
 }
