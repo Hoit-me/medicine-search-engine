@@ -1,5 +1,6 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { DurCombinedTabooBatchService } from '../DUR/durCombinedTabooBatch.service';
 import { MedicineBatchController } from './medicineBatch.controller';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
@@ -12,6 +13,10 @@ import { MedicineDetailBatchService } from './services/medicineDetailBatch.servi
     }),
   ],
   controllers: [MedicineBatchController],
-  providers: [MedicineDetailBatchService, MedicineCommonBatchService],
+  providers: [
+    MedicineDetailBatchService,
+    MedicineCommonBatchService,
+    DurCombinedTabooBatchService,
+  ],
 })
 export class MedicineBatchModule {}

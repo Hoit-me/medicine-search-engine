@@ -6,7 +6,16 @@ import { DUR_COMBINED_API_URL_BUILD } from '@src/constant';
 import { Dur } from '@src/type/dur';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
-import { catchError, from, map, mergeMap, range, retry, toArray } from 'rxjs';
+import {
+  catchError,
+  filter,
+  from,
+  map,
+  mergeMap,
+  range,
+  retry,
+  toArray,
+} from 'rxjs';
 
 @Injectable()
 export class DurCombinedTabooBatchService {
@@ -21,6 +30,7 @@ export class DurCombinedTabooBatchService {
   batch() {
     return this.fetchOpenApiPages$(1, 100, 'ASC').pipe(
       map((openApi) => this.convertOpenApiToDto$(openApi)),
+      filter((dto) => dto.deletion_status !== '삭제'),
       map((dto) => this.convertDtoToPrismaSchema$(dto)),
       toArray(),
       mergeMap((data) => this.bulkUpsert$(data, 20)),
@@ -67,6 +77,7 @@ export class DurCombinedTabooBatchService {
         // 페이지 순회 및 가공
         mergeMap((page) => this.fetchOpenApi$(page, rows), batchSize),
         mergeMap((body) => body.items),
+        map(({ item }) => item),
       );
   }
 
@@ -113,6 +124,8 @@ export class DurCombinedTabooBatchService {
       contraindication_pharmacological_class,
       pharmacological_class,
       notification_date,
+      prohibited_content,
+      ...rest
     } = dto;
     const id = `${dur_code}-${contraindication_dur_code}`;
     const related_ingredients = this.parseCode(related_ingredient);
@@ -126,14 +139,17 @@ export class DurCombinedTabooBatchService {
     const _notification_date = this.formatDate(notification_date);
 
     return {
-      ...dto,
+      ...rest,
       id,
+      dur_code,
+      contraindication_dur_code,
       related_ingredients,
       contraindication_related_ingredients,
       pharmacological_class: _pharmacological_class,
       contraindication_pharmacological_class:
         _contraindication_pharmacological_class,
       notification_date: _notification_date,
+      prohibited_content: prohibited_content ?? '',
     };
   }
 
