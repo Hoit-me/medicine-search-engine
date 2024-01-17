@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { OpenApiResponse } from '@src/type';
+import { OpenApiResponse, OpenApiResponse2 } from '@src/type';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
 import {
@@ -20,7 +20,7 @@ export class UtilProvider {
   constructor(private readonly httpService: HttpService) {}
 
   /// ------------------------------------
-  /// fetch OPEN API
+  /// fetch OPEN API DUR, Medicine
   /// ------------------------------------
   fetchOpenApi$<T extends OpenApiResponse<any>>(
     url: string,
@@ -41,7 +41,7 @@ export class UtilProvider {
   }
 
   fetchOpenApiPages$<T>(
-    urlBuilder: (apyKey: string, page: number, rows: number) => string,
+    urlBuilder: (page: number, rows: number) => string,
     rows = 100,
     sort: 'ASC' | 'DESC' = 'ASC',
     retryOption: RetryConfig = {
@@ -50,7 +50,7 @@ export class UtilProvider {
     },
   ): Observable<T> {
     return this.fetchOpenApi$<OpenApiResponse<T>>(
-      urlBuilder(process.env.API_KEY!, 1, rows),
+      urlBuilder(1, rows),
       retryOption,
     )
       .pipe(
@@ -69,12 +69,70 @@ export class UtilProvider {
         tap((page) => console.log(page)),
         mergeMap((page) =>
           this.fetchOpenApi$<OpenApiResponse<T>>(
-            urlBuilder(process.env.API_KEY!, page, rows),
+            urlBuilder(page, rows),
             retryOption,
           ),
         ),
         // tap((a) => console.log(a.numOfRows, a.pageNo, a.totalCount)),
         mergeMap((body) => body.items),
+      );
+  }
+
+  /// ------------------------------------
+  /// FETCH Insurance
+  /// ------------------------------------
+  fetchOpenApiType2$<T extends OpenApiResponse2<any>>(
+    url: string,
+    retryOption: RetryConfig = {
+      count: 3,
+      delay: 3000,
+    },
+  ) {
+    return this.httpService.get<T>(url).pipe(
+      map((res) => res.data),
+      retry(retryOption),
+      catchError((err) => {
+        console.log(err.message);
+        return [];
+      }),
+    );
+  }
+
+  fetchOpenApiPagesType2$<T>(
+    urlBuilder: (page: number, rows: number) => string,
+    rows = 100,
+    batchSize = 2,
+    sort: 'ASC' | 'DESC' = 'ASC',
+    retryOption: RetryConfig = {
+      count: 3,
+      delay: 3000,
+    },
+  ): Observable<T> {
+    return this.fetchOpenApiType2$<OpenApiResponse2<T>>(
+      urlBuilder(1, rows),
+      retryOption,
+    )
+      .pipe(
+        map((res) => {
+          const { perPage, totalCount } = res;
+          const pageCount = Math.ceil(totalCount / perPage);
+          return pageCount;
+        }),
+        mergeMap((pageCount) => range(1, pageCount)),
+        toArray(),
+        map((pages) => (sort === 'ASC' ? pages : pages.reverse())),
+        mergeMap((pages) => pages),
+      )
+      .pipe(
+        mergeMap(
+          (page) =>
+            this.fetchOpenApiType2$<OpenApiResponse2<T>>(
+              urlBuilder(page, rows),
+              retryOption,
+            ),
+          batchSize,
+        ),
+        mergeMap((body) => body.data),
       );
   }
 

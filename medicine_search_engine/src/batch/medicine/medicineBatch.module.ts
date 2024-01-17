@@ -7,6 +7,7 @@ import { DurOldTabooBatchService } from '../DUR/durOldTabooBatch.service';
 import { DurPeriodTabooBatchService } from '../DUR/durPeriodTabooBatch.service';
 import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
 import { DurVolumeTabooBatchService } from '../DUR/durVolumeTabooBatch.service';
+import { InsuranceBatchService } from '../insurance/insuranceBatch.Service';
 import { UtilProvider } from '../util.provider';
 import { MedicineBatchController } from './medicineBatch.controller';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
@@ -30,6 +31,7 @@ import { MedicineDetailBatchService } from './services/medicineDetailBatch.servi
     DurPeriodTabooBatchService,
     DurOldTabooBatchService,
     DurDuplicateEffectTabooBatchService,
+    InsuranceBatchService,
     UtilProvider,
   ],
 })
