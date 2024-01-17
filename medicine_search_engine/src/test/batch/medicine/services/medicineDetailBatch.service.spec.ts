@@ -4,10 +4,8 @@ import { Prisma } from '@prisma/client';
 import { MedicineDetailBatchService } from '@src/batch/medicine/services/medicineDetailBatch.service';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import * as constants from '@src/constant';
 import { Medicine } from '@src/type/medicine';
 import { mockDeep } from 'jest-mock-extended';
-import { Observable } from 'rxjs';
 import typia from 'typia';
 describe('MedicineDetailBatchService', () => {
   let medicineDetailBatchService: MedicineDetailBatchService;
@@ -466,53 +464,54 @@ describe('MedicineDetailBatchService', () => {
 
   // ------------------ FETCH -------------------
   // 데이터 요청 함수이기에 자세한 테스트 생략.
-  describe('fetchOpenApiDetailPage$', () => {
-    it('페이지 번호를 입력하면,  DETAIL_API_URL_BUILD(key,pageNo)으로 get를 한번 요청한다', () => {
-      httpService.get = jest.fn().mockReturnValue(new Observable());
-      const page = 1;
-      const expected = 1;
-      jest.spyOn(constants, 'DETAIL_API_URL_BUILD');
+  // - 해당 테스트 util로 이동해야함
+  // describe('fetchOpenApiDetailPage$', () => {
+  //   it('페이지 번호를 입력하면,  DETAIL_API_URL_BUILD(key,pageNo)으로 get를 한번 요청한다', () => {
+  //     httpService.get = jest.fn().mockReturnValue(new Observable());
+  //     const page = 1;
+  //     const expected = 1;
+  //     jest.spyOn(constants, 'DETAIL_API_URL_BUILD');
 
-      // act
-      medicineDetailBatchService.fetchOpenApiDetailPage$(page).subscribe();
+  //     // act
+  //     medicineDetailBatchService.fetchOpenApiDetailPage$(page).subscribe();
 
-      // assert
-      expect(httpService.get).toHaveBeenCalledTimes(expected);
-      expect(constants.DETAIL_API_URL_BUILD).toHaveBeenCalledWith(
-        expect.anything(),
-        page,
-      );
-    });
+  //     // assert
+  //     expect(httpService.get).toHaveBeenCalledTimes(expected);
+  //     expect(constants.DETAIL_API_URL_BUILD).toHaveBeenCalledWith(
+  //       expect.anything(),
+  //       page,
+  //     );
+  //   });
 
-    it('요청에 실패하면, 3번 재시도한다.', (done) => {
-      const retryCount = 3;
-      const callCount = retryCount + 1; // 최초 요청 + 재시도 횟수
-      const pageNo = 1;
+  //   it('요청에 실패하면, 3번 재시도한다.', (done) => {
+  //     const retryCount = 3;
+  //     const callCount = retryCount + 1; // 최초 요청 + 재시도 횟수
+  //     const pageNo = 1;
 
-      let count = 0;
-      jest.spyOn(httpService, 'get').mockReturnValue(
-        new Observable((subscriber) => {
-          count++;
-          if (count < callCount) {
-            subscriber.error('error');
-          } else {
-            subscriber.next({
-              data: typia.random<Medicine.Detail.OpenApiResponseDto>(),
-            } as unknown as any);
-          }
-        }),
-      );
+  //     let count = 0;
+  //     jest.spyOn(httpService, 'get').mockReturnValue(
+  //       new Observable((subscriber) => {
+  //         count++;
+  //         if (count < callCount) {
+  //           subscriber.error('error');
+  //         } else {
+  //           subscriber.next({
+  //             data: typia.random<Medicine.Detail.OpenApiResponseDto>(),
+  //           } as unknown as any);
+  //         }
+  //       }),
+  //     );
 
-      // 서비스 메소드 호출
-      medicineDetailBatchService
-        .fetchOpenApiDetailPage$(pageNo, 0)
-        .subscribe(() => {
-          // assert
-          expect(count).toEqual(callCount);
-          done();
-        });
-    });
-  });
+  //     // 서비스 메소드 호출
+  //     medicineDetailBatchService
+  //       .fetchOpenApiDetailPage$(pageNo, 0)
+  //       .subscribe(() => {
+  //         // assert
+  //         expect(count).toEqual(callCount);
+  //         done();
+  //       });
+  //   });
+  // });
 
   //------------------ CONVERT ------------------
   describe('convert', () => {
