@@ -55,7 +55,7 @@ export class MedicineDetailBatchService {
   /// --------------------------------
   fetchOpenApiDetailPage$(pageNo: number, delayTime = 5000) {
     return this.httpService
-      .get<Medicine.OpenAPiDetailResponse>(
+      .get<Medicine.Detail.OpenApiResponseDto>(
         DETAIL_API_URL_BUILD(process.env.API_KEY!, pageNo),
       )
       .pipe(
@@ -91,9 +91,9 @@ export class MedicineDetailBatchService {
   // -------------------------------------------
   // OPEN API DETAIL TO DETAIL
   convertOpenApiDetailToMedicineDetail(
-    medicine: Medicine.OpenApiDetailDTO,
-  ): Medicine.Detail {
-    const args = typedEntries(Medicine.OPEN_API_DETAIL_TO_DETAIL_KEY_MAP);
+    medicine: Medicine.Detail.OpenApiDto,
+  ): Medicine.Detail.Dto {
+    const args = typedEntries(Medicine.Detail.OPEN_API_DTO_KEY_MAP);
     const converted = renameKeys(medicine, args, {
       undefinedToNull: true,
     });
@@ -102,7 +102,7 @@ export class MedicineDetailBatchService {
 
   // DETAIL TO Prisma.medcine
   convertMedicineDetailToPrismaMedicine(
-    medicine: Medicine.Detail,
+    medicine: Medicine.Detail.Dto,
   ): Prisma.medicineCreateInput {
     const {
       cancel_date,

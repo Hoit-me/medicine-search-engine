@@ -1,129 +1,6 @@
 import { OpenApiResponse } from '.';
 
 export namespace Medicine {
-  // --------------------------------------
-  // 1. 대한민국 의약품 제품허가 상세정보
-  // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=12
-  // - 매일 4시 업데이트
-  // - 특이사항:
-  //   - 효능효과, 용법용량, 주의사항, 첨부문서를 PDF 링크로 제공
-  //   - 이미지가 없음
-  //   - 사업자번호가 없음 - 해달 컬럼은 존재하나, 모든 값이 null
-  // <download>
-  // fileFormat: xls
-  // url: https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail
-  //
-  export interface OpenApiDetailDTO {
-    ITEM_NAME?: string; // 품목명
-    ITEM_ENG_NAME?: string; // 품목 영문명
-    ITEM_SEQ?: string; // 품목일련번호
-    PERMIT_KIND_NAME?: string; // 허가/신고구분
-    CANCEL_DATE?: string; // 취소 일자
-    CANCEL_NAME?: string; // 상태
-    CHANGE_DATE?: string; // 변경일자
-    GBN_NAME?: string; // 변경이력
-
-    ENTP_NAME?: string; // 업체명
-    ENTP_ENG_NAME?: string; // 업체 영문명
-    BIZRNO?: string; // 사업자번호
-    ITEM_PERMIT_DATE?: string; // 허가일자
-    ETC_OTC_CODE?: string; // 전문/일반구분 [전문의약품,일반의약품]
-
-    CHART?: string; // 성상
-
-    MATERIAL_NAME?: string; // 원료성분 // 총량 : 1000밀리리터|성분명 : 포도당|분량 : 50|단위 : 그램|규격 : USP|성분정보 : |비고 : ;총량 : 1000밀리리터|성분명 : 염화나트륨|분량 : 9|단위 : 그램|규격 : KP|성분정보 : |비고 :
-    MAIN_INGR_ENG?: string; // 주성분 영문명  "Glucose/Sodium Chloride"
-    BAR_CODE?: string; // 표준코드
-
-    MAIN_ITEM_INGR?: string; // 주성분명  "[M040426]염화나트륨|[M040702]포도당"
-    INGR_NAME?: string; // 첨가제  "[M040534]주사용수",
-
-    ATC_CODE?: string; // ATC코드
-    CNSGN_MANUF?: string; // 위탁제조업체
-
-    STORAGE_METHOD?: string; // 저장방법
-    VALID_TERM?: string; // 유효기간
-    REEXAM_TARGET?: string; // 재심사대상
-    REEXAM_DATE?: string; // 재심사기간
-
-    PACK_UNIT?: string; // 포장단위
-    EDI_CODE?: string; // 보험코드
-
-    NARCOTIC_KIND_CODE?: string; // 마약종류코드
-    NEWDRUG_CLASS_NAME?: string; //신약
-    TOTAL_CONTENT?: string; // 총량
-
-    MAKE_MATERIAL_FLAG?: string; //완제/원료구분
-    ENTP_NO?: string; // 업체허가번호
-    INDUTY_TYPE?: string; // 업종 구분
-
-    DOC_TEXT?: string; // 첨부문서(전문)
-    EE_DOC_ID?: string; // 효능효과 문서ID
-    UD_DOC_ID?: string; // 용법용량 문서ID
-    NB_DOC_ID?: string; // 주의사항(일반) 문서ID
-    EE_DOC_DATA?: string; // 효능효과 문서 데이터
-    UD_DOC_DATA?: string; // 용법용량 문서 데이터
-    NB_DOC_DATA?: string; // 주의사항(일반) 문서 데이터
-    PN_DOC_DATA?: string; // 첨부문서(전문) 문서 데이터
-    INSERT_FILE?: string; // 첨부문서(전문) 문서ID
-  }
-  export interface Detail {
-    name: string; // 품목명
-    english_name: string | null; // "품목 영문명"
-    serial_number: string; // 품목일련번호
-    type: string; // "허가/신고구분"
-    cancel_status: string; // 취소상태
-    cancel_date: string | null; // 취소일자
-    change_date: string | null; // 변경일자
-    change_content: string | null; // 변경내용
-
-    company: string; // 업체명
-    english_company: string | null; // "업체 영문명"
-    company_number: string | null; // 사업자번호
-    permit_date: string | null; // 허가일자
-    classification: string | null; // 전문일반
-
-    state: string | null; // 성상
-
-    ingredients: string | null; // 원료성분
-    english_ingredients: string | null; // 영문성분명
-    standard_code: string | null; // 표준코드 // 바코드 string -> string[]으로 변경
-
-    main_ingredients: string | null; // 주성분명
-    additive_ingredients: string | null; // 첨가제명
-
-    atc_code: string | null; // ATC코드
-    consignment_manufacture: string | null; // 위탁제조업체
-
-    storage_method: string | null; // 저장방법
-    expiration_date: string | null; // 유효기간
-    re_examination: string | null; // 재심사대상
-    re_examination_date: string | null; // 재심사기간
-
-    packing_unit: string | null; // 포장단위
-    insurance_code: string | null; // 보험코드
-
-    narcotic_type: string | null; // 마약류분류
-    is_new_drug: string | null; // 신약여부
-    total_amount: string | null; // 총량
-
-    raw_material: string; // 완제원료구분
-    register_id: string; // 등록자ID
-    industry_type: string | null; // 업종 구분
-
-    document: string | null; // 첨부문서
-    effect: string | null; // 효능효과
-    usage: string | null; // 용법용량
-    caution: string | null; // 주의사항
-    effect_file_url: string | null; // 효능효과
-    usage_file_url: string | null; // 용법용량
-    caution_file_url: string | null; // 주의사항
-    document_file_url: string | null; // 첨부문서
-    insert_file_url: string | null; // 첨부문서
-  }
-
-  export type DetailKey = keyof Detail;
-
   export type Pharmacopoeia =
     | 'KP'
     | 'KCP'
@@ -161,12 +38,132 @@ export namespace Medicine {
     re_examination_start_date: Date | null;
     re_examination_end_date: Date;
   }
-  export type OpenAPiDetailResponse = OpenApiResponse<OpenApiDetailDTO>;
+  export namespace Detail {
+    // --------------------------------------
+    // 1. 대한민국 의약품 제품허가 상세정보
+    // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=12
+    // - 매일 4시 업데이트
+    // - 특이사항:
+    //   - 효능효과, 용법용량, 주의사항, 첨부문서를 PDF 링크로 제공
+    //   - 이미지가 없음
+    //   - 사업자번호가 없음 - 해달 컬럼은 존재하나, 모든 값이 null
+    // <download>
+    // fileFormat: xls
+    // url: https://nedrug.mfds.go.kr/cmn/xls/down/OpenData_ItemPermitDetail
+    //
+    export interface Dto {
+      name: string; // 품목명
+      english_name: string | null; // "품목 영문명"
+      serial_number: string; // 품목일련번호
+      type: string; // "허가/신고구분"
+      cancel_status: string; // 취소상태
+      cancel_date: string | null; // 취소일자
+      change_date: string | null; // 변경일자
+      change_content: string | null; // 변경내용
 
-  export type OpenApiDetailKey = keyof OpenApiDetailDTO;
-  export type OpenApiDetailToDetailKeyMap = Record<OpenApiDetailKey, DetailKey>;
-  export const OPEN_API_DETAIL_TO_DETAIL_KEY_MAP: OpenApiDetailToDetailKeyMap =
-    {
+      company: string; // 업체명
+      english_company: string | null; // "업체 영문명"
+      company_number: string | null; // 사업자번호
+      permit_date: string | null; // 허가일자
+      classification: string | null; // 전문일반
+
+      state: string | null; // 성상
+
+      ingredients: string | null; // 원료성분
+      english_ingredients: string | null; // 영문성분명
+      standard_code: string | null; // 표준코드 // 바코드 string -> string[]으로 변경
+
+      main_ingredients: string | null; // 주성분명
+      additive_ingredients: string | null; // 첨가제명
+
+      atc_code: string | null; // ATC코드
+      consignment_manufacture: string | null; // 위탁제조업체
+
+      storage_method: string | null; // 저장방법
+      expiration_date: string | null; // 유효기간
+      re_examination: string | null; // 재심사대상
+      re_examination_date: string | null; // 재심사기간
+
+      packing_unit: string | null; // 포장단위
+      insurance_code: string | null; // 보험코드
+
+      narcotic_type: string | null; // 마약류분류
+      is_new_drug: string | null; // 신약여부
+      total_amount: string | null; // 총량
+
+      raw_material: string; // 완제원료구분
+      register_id: string; // 등록자ID
+      industry_type: string | null; // 업종 구분
+
+      document: string | null; // 첨부문서
+      effect: string | null; // 효능효과
+      usage: string | null; // 용법용량
+      caution: string | null; // 주의사항
+      effect_file_url: string | null; // 효능효과
+      usage_file_url: string | null; // 용법용량
+      caution_file_url: string | null; // 주의사항
+      document_file_url: string | null; // 첨부문서
+      insert_file_url: string | null; // 첨부문서
+    }
+    export interface OpenApiDto {
+      ITEM_NAME?: string; // 품목명
+      ITEM_ENG_NAME?: string; // 품목 영문명
+      ITEM_SEQ?: string; // 품목일련번호
+      PERMIT_KIND_NAME?: string; // 허가/신고구분
+      CANCEL_DATE?: string; // 취소 일자
+      CANCEL_NAME?: string; // 상태
+      CHANGE_DATE?: string; // 변경일자
+      GBN_NAME?: string; // 변경이력
+
+      ENTP_NAME?: string; // 업체명
+      ENTP_ENG_NAME?: string; // 업체 영문명
+      BIZRNO?: string; // 사업자번호
+      ITEM_PERMIT_DATE?: string; // 허가일자
+      ETC_OTC_CODE?: string; // 전문/일반구분 [전문의약품,일반의약품]
+
+      CHART?: string; // 성상
+
+      MATERIAL_NAME?: string; // 원료성분 // 총량 : 1000밀리리터|성분명 : 포도당|분량 : 50|단위 : 그램|규격 : USP|성분정보 : |비고 : ;총량 : 1000밀리리터|성분명 : 염화나트륨|분량 : 9|단위 : 그램|규격 : KP|성분정보 : |비고 :
+      MAIN_INGR_ENG?: string; // 주성분 영문명  "Glucose/Sodium Chloride"
+      BAR_CODE?: string; // 표준코드
+
+      MAIN_ITEM_INGR?: string; // 주성분명  "[M040426]염화나트륨|[M040702]포도당"
+      INGR_NAME?: string; // 첨가제  "[M040534]주사용수",
+
+      ATC_CODE?: string; // ATC코드
+      CNSGN_MANUF?: string; // 위탁제조업체
+
+      STORAGE_METHOD?: string; // 저장방법
+      VALID_TERM?: string; // 유효기간
+      REEXAM_TARGET?: string; // 재심사대상
+      REEXAM_DATE?: string; // 재심사기간
+
+      PACK_UNIT?: string; // 포장단위
+      EDI_CODE?: string; // 보험코드
+
+      NARCOTIC_KIND_CODE?: string; // 마약종류코드
+      NEWDRUG_CLASS_NAME?: string; //신약
+      TOTAL_CONTENT?: string; // 총량
+
+      MAKE_MATERIAL_FLAG?: string; //완제/원료구분
+      ENTP_NO?: string; // 업체허가번호
+      INDUTY_TYPE?: string; // 업종 구분
+
+      DOC_TEXT?: string; // 첨부문서(전문)
+      EE_DOC_ID?: string; // 효능효과 문서ID
+      UD_DOC_ID?: string; // 용법용량 문서ID
+      NB_DOC_ID?: string; // 주의사항(일반) 문서ID
+      EE_DOC_DATA?: string; // 효능효과 문서 데이터
+      UD_DOC_DATA?: string; // 용법용량 문서 데이터
+      NB_DOC_DATA?: string; // 주의사항(일반) 문서 데이터
+      PN_DOC_DATA?: string; // 첨부문서(전문) 문서 데이터
+      INSERT_FILE?: string; // 첨부문서(전문) 문서ID
+    }
+    export type OpenApiResponseDto = OpenApiResponse<OpenApiDto>;
+    export type DtoKeys = keyof Dto;
+    export type OpenApiDtoKeys = keyof OpenApiDto;
+    export type OpenApiDtoToDtoKeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+    export const OPEN_API_DTO_KEY_MAP: OpenApiDtoToDtoKeyMap = {
       ITEM_NAME: 'name',
       ITEM_ENG_NAME: 'english_name',
       ITEM_SEQ: 'serial_number',
@@ -220,28 +217,6 @@ export namespace Medicine {
       PN_DOC_DATA: 'document',
       INSERT_FILE: 'insert_file_url',
     };
-
-  export namespace XML {
-    export type Paragraph = {
-      '#text'?: string;
-    };
-
-    export type Article = {
-      '@_title'?: string;
-      PARAGRAPH: Paragraph[] | Paragraph;
-    };
-
-    export type Section = {
-      ARTICLE: Article[] | Article;
-      '@_title'?: string;
-    };
-
-    export type XML_DATA = {
-      DOC: {
-        SECTION: Section[] | Section;
-        '@_title'?: string;
-      };
-    };
   }
 
   // --------------------------------------
@@ -288,60 +263,60 @@ export namespace Medicine {
    */
   // --------------------------------------
 
-  export interface OpenApiCommonDto {
-    ITEM_SEQ: string;
-    ITEM_NAME: string;
-    ENTP_NAME: string;
-    ITEM_PERMIT_DATE: string;
-    INDUTY: string;
-    PRDLST_STDR_CODE: string;
-    SPCLTY_PBLC: string;
-    PRDUCT_TYPE?: string;
-    PRDUCT_PRMISN_NO: string;
-    ITEM_INGR_NAME: string;
-    ITEM_INGR_CNT: string;
-    PERMIT_KIND_CODE: string;
-    CANCEL_DATE: string;
-    CANCEL_NAME: string;
-    BIG_PRDT_IMG_URL: string;
-    ENTP_SEQ: string;
-    ENTP_NO: string;
-    EDI_CODE: string;
-    ITEM_ENG_NAME: string;
-    ENTP_ENG_NAME: string;
-  }
-  export interface Common {
-    serial_number: string; // 품목일련번호
-    name: string; // 품목명
-    pharmacological_class?: string; // 품목
-    english_name: string; // 영문명
-    company_name: string; // 업체명
-    company_serial_number: string; // 업체
-    company_english_name: string; // 업체영문명
-    business_license_number: string; // 업허가번호
-    business_serial_number: string; // 업일련번호
-    business_type: string; // 업종
-    professional_general_classification: string; // 전문일반구분
-    main_ingredient: string; // 주성분
-    number_of_main_ingredients: string; // 주성분수
-    image?: string; // 큰제품이미지
-    declaration_permission_classification: string; // 신고허가구분
-    cancellation_withdrawal_date: string; // 취소취하일자
-    cancellation_withdrawal_classification: string; // 취소취하구분
-    classification_name: string; // 분류명
-    item_approval_number: string; // 품목허가번호
-    insurance_code: string; // 보험코드
-    company_number: string; // 사업자번호
-    permit_date: string; // 허가일자
-    standard_code: string; // 표준코드
-  }
+  export namespace Common {
+    export interface Dto {
+      serial_number: string; // 품목일련번호
+      name: string; // 품목명
+      pharmacological_class?: string; // 품목
+      english_name: string; // 영문명
+      company_name: string; // 업체명
+      company_serial_number: string; // 업체
+      company_english_name: string; // 업체영문명
+      business_license_number: string; // 업허가번호
+      business_serial_number: string; // 업일련번호
+      business_type: string; // 업종
+      professional_general_classification: string; // 전문일반구분
+      main_ingredient: string; // 주성분
+      number_of_main_ingredients: string; // 주성분수
+      image?: string; // 큰제품이미지
+      declaration_permission_classification: string; // 신고허가구분
+      cancellation_withdrawal_date: string; // 취소취하일자
+      cancellation_withdrawal_classification: string; // 취소취하구분
+      classification_name: string; // 분류명
+      item_approval_number: string; // 품목허가번호
+      insurance_code: string; // 보험코드
+      company_number: string; // 사업자번호
+      permit_date: string; // 허가일자
+      standard_code: string; // 표준코드
+    }
+    export interface OpenApiDto {
+      ITEM_SEQ: string;
+      ITEM_NAME: string;
+      ENTP_NAME: string;
+      ITEM_PERMIT_DATE: string;
+      INDUTY: string;
+      PRDLST_STDR_CODE: string;
+      SPCLTY_PBLC: string;
+      PRDUCT_TYPE?: string;
+      PRDUCT_PRMISN_NO: string;
+      ITEM_INGR_NAME: string;
+      ITEM_INGR_CNT: string;
+      PERMIT_KIND_CODE: string;
+      CANCEL_DATE: string;
+      CANCEL_NAME: string;
+      BIG_PRDT_IMG_URL: string;
+      ENTP_SEQ: string;
+      ENTP_NO: string;
+      EDI_CODE: string;
+      ITEM_ENG_NAME: string;
+      ENTP_ENG_NAME: string;
+    }
 
-  export type OpenApiCommonResponse = OpenApiResponse<OpenApiCommonDto>;
-  export type OpenApiCommonKey = keyof OpenApiCommonDto;
-  export type CommonKey = keyof Common;
-  export type OpenApiCommonToCommonKeyMap = Record<OpenApiCommonKey, CommonKey>;
-  export const OPEN_API_COMMON_TO_COMMON_KEY_MAP: OpenApiCommonToCommonKeyMap =
-    {
+    export type OpenApiResponseDto = OpenApiResponse<OpenApiDto>;
+    export type DtoKeys = keyof Dto;
+    export type OpenApiDtoKeys = keyof OpenApiDto;
+    export type OpenApiDtoToDtoKeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+    export const OPEN_API_DTO_KEY_MAP: OpenApiDtoToDtoKeyMap = {
       ITEM_SEQ: 'serial_number',
       ITEM_NAME: 'name',
       ENTP_NAME: 'company_name',
@@ -363,6 +338,7 @@ export namespace Medicine {
       ITEM_ENG_NAME: 'english_name',
       ENTP_ENG_NAME: 'company_english_name',
     };
+  }
 
   // --------------------------------------
   // 3. 의약품 낱알 식별 정보

@@ -55,7 +55,7 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   fetchOpenApiCommonPage$(pageNo: number, delayTime = 5000) {
     return this.httpService
-      .get<Medicine.OpenApiCommonResponse>(
+      .get<Medicine.Common.OpenApiResponseDto>(
         COMMON_API_URL_BUILD(process.env.API_KEY!, pageNo),
       )
       .pipe(
@@ -92,8 +92,8 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   /// CONVERT MEDICINE COMMON
   /// ---------------------------------
-  convertOpenApiCommonToMedicineCommon$(medicine: Medicine.OpenApiCommonDto) {
-    const args = typedEntries(Medicine.OPEN_API_COMMON_TO_COMMON_KEY_MAP);
+  convertOpenApiCommonToMedicineCommon$(medicine: Medicine.Common.OpenApiDto) {
+    const args = typedEntries(Medicine.Common.OPEN_API_DTO_KEY_MAP);
     const converted = renameKeys(medicine, args, {
       undefinedToNull: true,
     });
@@ -103,7 +103,7 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   /// DB
   /// ---------------------------------
-  async bulkCheckExistMedicine(medicineCommonList: Medicine.Common[]) {
+  async bulkCheckExistMedicine(medicineCommonList: Medicine.Common.Dto[]) {
     const ids = medicineCommonList.map((medicine) => medicine.serial_number);
     const existMedicineList = await this.prisma.medicine.findMany({
       where: { id: { in: ids } },
@@ -162,7 +162,7 @@ export class MedicineCommonBatchService {
     common,
   }: {
     before: medicine;
-    common: Medicine.Common;
+    common: Medicine.Common.Dto;
   }) {
     const image = common.image;
     const beforeImage = before.image_url;
@@ -186,7 +186,7 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   /// SET MEDICINE COMMON INFO
   /// ---------------------------------
-  uploadAndSetUpdatedImage$(medicine: Medicine.Common) {
+  uploadAndSetUpdatedImage$(medicine: Medicine.Common.Dto) {
     const { image } = medicine;
     if (!image) return of(medicine);
     const imageName = image.split('/').pop();
@@ -230,7 +230,7 @@ export class MedicineCommonBatchService {
   }
 
   pickMedicineCommonData(
-    medicine: Medicine.Common,
+    medicine: Medicine.Common.Dto,
   ): Prisma.medicineUpdateInput & { id: string } {
     const {
       serial_number,
