@@ -65,3 +65,12 @@ export interface OpenApiResponse<T> {
     resultMsg: string;
   };
 }
+
+export interface OpenApiResponse2<T> {
+  page: number;
+  perPage: number;
+  totalCount: number;
+  currentCount: number;
+  matchCount: number;
+  data: T[];
+}

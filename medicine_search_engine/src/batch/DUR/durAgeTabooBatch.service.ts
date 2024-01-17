@@ -54,7 +54,7 @@ export class DurAgeTabooBatchService {
   fetchOpenApi$(pageNum: number, rows = 100) {
     return this.httpService
       .get<Dur.Ingredient.Age.OpenApiResponseDto>(
-        DUR_AGE_API_URL_BUILD(process.env.API_KEY!, pageNum, rows),
+        DUR_AGE_API_URL_BUILD(pageNum, rows),
       )
       .pipe(
         map((res) => res.data),

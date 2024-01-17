@@ -60,9 +60,7 @@ export class MedicineCommonBatchService {
   /// ---------------------------------
   fetchOpenApiCommonPage$(pageNo: number, delayTime = 5000) {
     return this.httpService
-      .get<Medicine.Common.OpenApiResponseDto>(
-        COMMON_API_URL_BUILD(process.env.API_KEY!, pageNo),
-      )
+      .get<Medicine.Common.OpenApiResponseDto>(COMMON_API_URL_BUILD(pageNo))
       .pipe(
         map(({ data }) => data.body),
         retry({ count: 3, delay: delayTime }),

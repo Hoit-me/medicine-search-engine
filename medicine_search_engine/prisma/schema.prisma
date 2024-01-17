@@ -266,3 +266,21 @@ model dur_ingredient_duplicate_effect_taboo{
   @@index([effect_code])
   @@index([category])
 }
+
+
+model medicine_insurance {
+    insurance_code String @id @map("_id")
+    name String
+    main_ingredient_code String
+    type String
+    company String
+    standard String
+    unit String
+    max_price String
+    is_special String
+    note String?
+    list_code String?
+    administration String
+
+    @@index([main_ingredient_code])
+}

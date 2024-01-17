@@ -6,6 +6,7 @@ import { DurDuplicateEffectTabooBatchService } from './../DUR/durDuplicateEffect
 import { DurOldTabooBatchService } from './../DUR/durOldTabooBatch.service';
 import { DurPeriodTabooBatchService } from './../DUR/durPeriodTabooBatch.service';
 import { DurVolumeTabooBatchService } from './../DUR/durVolumeTabooBatch.service';
+import { InsuranceBatchService } from './../insurance/insuranceBatch.Service';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
 
@@ -24,6 +25,7 @@ export class MedicineBatchController {
     private readonly durPeriodTabooBatchService: DurPeriodTabooBatchService,
     private readonly durOldTabooBatchService: DurOldTabooBatchService,
     private readonly durDuplicateEffectTabooBatchService: DurDuplicateEffectTabooBatchService,
+    private readonly insuranceBatchService: InsuranceBatchService,
   ) {}
 
   @Get('/update')
@@ -113,6 +115,15 @@ export class MedicineBatchController {
     console.log('updateDurDuplicateEffect start');
     this.durDuplicateEffectTabooBatchService.batch$().subscribe({
       complete: () => console.log('updateDurDuplicateEffect complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/insurance')
+  async updateInsurance() {
+    console.log('updateInsurance start');
+    this.insuranceBatchService.batch$().subscribe({
+      complete: () => console.log('updateInsurance complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
   }
