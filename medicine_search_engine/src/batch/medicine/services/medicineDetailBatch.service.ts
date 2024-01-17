@@ -117,16 +117,22 @@ export class MedicineDetailBatchService {
       ...rest
     } = medicine;
     const id = medicine.serial_number;
-    const _cancel_date = this.formatDate(cancel_date);
-    const _change_date = this.formatDate(change_date);
-    const _permit_date = this.formatDate(permit_date);
+    const _cancel_date = this.util.formatDate(cancel_date);
+    const _change_date = this.util.formatDate(change_date);
+    const _permit_date = this.util.formatDate(permit_date);
     const _ingredients = this.parseIngredients(
       ingredients,
       english_ingredients,
     );
-    const _standard_code = this.parseStandardCode(standard_code);
-    const _additive_ingredients = this.parseCompounds(additive_ingredients);
-    const _main_ingredients = this.parseCompounds(main_ingredients);
+    const _standard_code = this.util.splitStringToArray(standard_code, ',');
+    const _additive_ingredients = this.util.parseCodeNamePairs(
+      additive_ingredients,
+      '|',
+    );
+    const _main_ingredients = this.util.parseCodeNamePairs(
+      main_ingredients,
+      '|',
+    );
     const _change_content = this.parseChangedContents(change_content);
     const _re_examination = this.parseReExaminations(
       re_examination,
@@ -285,15 +291,6 @@ export class MedicineDetailBatchService {
   // -------------------------------------------
   // UTILS
   // -------------------------------------------
-  formatDate(dateString?: string | null) {
-    return dateString
-      ? new Date(dateString.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
-      : null;
-  }
-
-  parseStandardCode(code?: string | null) {
-    return code ? code.split(',').map((code) => code.trim()) : [];
-  }
 
   parseIngredients(
     ingredientsStr?: string | null,
@@ -333,23 +330,6 @@ export class MedicineDetailBatchService {
         };
       })
       .filter(({ ko }) => ko);
-  }
-
-  parseCompounds(compoundsStr?: string | null): Medicine.Compound[] {
-    // "[M040702]포도당|[M040426]염화나트륨",
-    if (!compoundsStr) return [];
-
-    const compounds = compoundsStr.split('|');
-    const compoundRegex = /\[(?<code>[A-Z0-9]+)\](?<name>.+)/;
-    return compounds
-      .map((compound) => {
-        const { code, name } = compound.match(compoundRegex)?.groups ?? {};
-        return {
-          code,
-          name,
-        };
-      })
-      .filter(({ code }) => code);
   }
 
   parseChangedContents(changedContentsStr?: string | null) {
