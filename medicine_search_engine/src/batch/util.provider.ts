@@ -1,6 +1,5 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@src/common/prisma/prisma.service';
 import { OpenApiResponse } from '@src/type';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
@@ -18,10 +17,7 @@ import {
 
 @Injectable()
 export class UtilProvider {
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly httpService: HttpService) {}
 
   /// ------------------------------------
   /// fetch OPEN API

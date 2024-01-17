@@ -708,7 +708,7 @@ describe('MedicineDetailBatchService', () => {
             subscriber.error('error');
           } else {
             subscriber.next({
-              data: typia.random<Medicine.OpenAPiDetailResponse>(),
+              data: typia.random<Medicine.Detail.OpenApiResponseDto>(),
             } as unknown as any);
           }
         }),
@@ -728,10 +728,8 @@ describe('MedicineDetailBatchService', () => {
   //------------------ CONVERT ------------------
   describe('convert', () => {
     describe('convertOpenApiDetailToMedicineDetail', () => {
-      const openApiDetail = typia.random<Medicine.OpenApiDetailDTO>();
-      const expected = Object.values(
-        Medicine.OPEN_API_DETAIL_TO_DETAIL_KEY_MAP,
-      );
+      const openApiDetail = typia.random<Medicine.Detail.OpenApiDto>();
+      const expected = Object.values(Medicine.Detail.OPEN_API_DTO_KEY_MAP);
 
       it('OpenApiDetailDTO를 입력하면 MedicineDetailDTO를 반환한다.', () => {
         // act
@@ -752,7 +750,7 @@ describe('MedicineDetailBatchService', () => {
     });
 
     describe('convertMedicineDetailToPrismaMedicine', () => {
-      const medicineDetail = typia.random<Medicine.Detail>();
+      const medicineDetail = typia.random<Medicine.Detail.Dto>();
       const medicineCreateInput = typia.random<Prisma.medicineCreateInput>();
       const medicineCreateInputKeys = Object.keys(medicineCreateInput);
 

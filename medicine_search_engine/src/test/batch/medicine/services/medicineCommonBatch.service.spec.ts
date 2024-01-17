@@ -48,11 +48,9 @@ describe('MedicineCommonBatchService', () => {
   describe('convertOpenApiCommonToMedicineCommon$', () => {
     it('OpenApiCommonDto를 입력하면, MedicineCommonDto를 반환한다.', () => {
       // arrange
-      const medicine = typia.random<Medicine.OpenApiCommonDto>();
+      const medicine = typia.random<Medicine.Common.OpenApiDto>();
 
-      const expected = Object.values(
-        Medicine.OPEN_API_COMMON_TO_COMMON_KEY_MAP,
-      );
+      const expected = Object.values(Medicine.Common.OPEN_API_DTO_KEY_MAP);
       // act
       const result =
         medicineCommonBatchService.convertOpenApiCommonToMedicineCommon$(
@@ -68,7 +66,7 @@ describe('MedicineCommonBatchService', () => {
   describe('bulkCechExistMedicine', () => {
     // arrange
     const medicineCommonList = typia.random<
-      Medicine.Common[] & tags.MaxItems<10> & tags.MinItems<10>
+      Medicine.Common.Dto[] & tags.MaxItems<10> & tags.MinItems<10>
     >();
 
     const findManyOutput = medicineCommonList.map((medicine) => {
@@ -159,13 +157,13 @@ describe('MedicineCommonBatchService', () => {
       ...typia.random<medicine>(),
       image_url: 'before',
     };
-    const updatedCommon: Medicine.Common = {
-      ...typia.random<Medicine.Common>(),
+    const updatedCommon: Medicine.Common.Dto = {
+      ...typia.random<Medicine.Common.Dto>(),
       serial_number: before.id,
       image: 'updated',
     };
-    const noneUpdatedCommon: Medicine.Common = {
-      ...typia.random<Medicine.Common>(),
+    const noneUpdatedCommon: Medicine.Common.Dto = {
+      ...typia.random<Medicine.Common.Dto>(),
       serial_number: before.id,
       image: 'before',
     };
@@ -209,7 +207,7 @@ describe('MedicineCommonBatchService', () => {
         image_url: image,
       };
       const common = {
-        ...typia.random<Medicine.Common>(),
+        ...typia.random<Medicine.Common.Dto>(),
         serial_number: before.id,
         image,
       };
@@ -228,18 +226,18 @@ describe('MedicineCommonBatchService', () => {
 
   describe('uploadAndSetUpdatedImage$', () => {
     // arrange
-    const medicineCommon: Medicine.Common = {
-      ...typia.random<Medicine.Common>(),
+    const medicineCommon: Medicine.Common.Dto = {
+      ...typia.random<Medicine.Common.Dto>(),
       serial_number: '1234',
       image: 'image',
     };
-    const medicineCommonNoneImage: Medicine.Common = {
-      ...typia.random<Medicine.Common>(),
+    const medicineCommonNoneImage: Medicine.Common.Dto = {
+      ...typia.random<Medicine.Common.Dto>(),
       serial_number: '1234',
       image: '',
     };
-    const medicineCommonNoneImageName: Medicine.Common = {
-      ...typia.random<Medicine.Common>(),
+    const medicineCommonNoneImageName: Medicine.Common.Dto = {
+      ...typia.random<Medicine.Common.Dto>(),
       serial_number: '1234',
       image: 'image/',
     };
@@ -293,7 +291,8 @@ describe('MedicineCommonBatchService', () => {
   });
 
   describe('pickMedicineCommonData', () => {
-    const medicineCommon: Medicine.Common = typia.random<Medicine.Common>();
+    const medicineCommon: Medicine.Common.Dto =
+      typia.random<Medicine.Common.Dto>();
     it('MedicineCommon을 입력하면, 필요한 데이터 및 키 변경한다.', () => {
       // arrange
       const expected = [
