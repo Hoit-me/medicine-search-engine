@@ -1,11 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { Prisma, medicine } from '@prisma/client';
+import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DETAIL_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
-import { renameKeys } from '@src/utils/renameKeys';
-import { typedEntries } from '@src/utils/typedEntries';
 import { Parser } from 'htmlparser2';
 import {
   bufferCount,
@@ -28,6 +27,7 @@ export class MedicineDetailBatchService {
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
+    private readonly util: UtilProvider,
   ) {}
 
   // --------------------------------
@@ -36,8 +36,12 @@ export class MedicineDetailBatchService {
   batch(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.fetchOpenApiDetailList$(1, sort).pipe(
       map((openApiDetail) =>
-        this.convertOpenApiDetailToMedicineDetail(openApiDetail),
+        this.util.convertOpenApiToDto<
+          Medicine.Detail.OpenApiDto,
+          Medicine.Detail.Dto
+        >(openApiDetail, Medicine.Detail.OPEN_API_DTO_KEY_MAP),
       ),
+
       map((medicineDetail) =>
         this.convertMedicineDetailToPrismaMedicine(medicineDetail),
       ),
@@ -89,16 +93,6 @@ export class MedicineDetailBatchService {
   // -------------------------------------------
   // CONVERT MEDICINE
   // -------------------------------------------
-  // OPEN API DETAIL TO DETAIL
-  convertOpenApiDetailToMedicineDetail(
-    medicine: Medicine.Detail.OpenApiDto,
-  ): Medicine.Detail.Dto {
-    const args = typedEntries(Medicine.Detail.OPEN_API_DTO_KEY_MAP);
-    const converted = renameKeys(medicine, args, {
-      undefinedToNull: true,
-    });
-    return converted;
-  }
 
   // DETAIL TO Prisma.medcine
   convertMedicineDetailToPrismaMedicine(

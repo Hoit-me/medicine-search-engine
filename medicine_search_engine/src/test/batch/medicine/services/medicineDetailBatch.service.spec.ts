@@ -2,6 +2,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { MedicineDetailBatchService } from '@src/batch/medicine/services/medicineDetailBatch.service';
+import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import * as constants from '@src/constant';
 import { Medicine } from '@src/type/medicine';
@@ -18,6 +19,7 @@ describe('MedicineDetailBatchService', () => {
         MedicineDetailBatchService,
         PrismaService,
         { provide: HttpService, useValue: new HttpService() },
+        UtilProvider,
       ],
     })
       .overrideProvider(HttpService)
@@ -727,28 +729,6 @@ describe('MedicineDetailBatchService', () => {
 
   //------------------ CONVERT ------------------
   describe('convert', () => {
-    describe('convertOpenApiDetailToMedicineDetail', () => {
-      const openApiDetail = typia.random<Medicine.Detail.OpenApiDto>();
-      const expected = Object.values(Medicine.Detail.OPEN_API_DTO_KEY_MAP);
-
-      it('OpenApiDetailDTO를 입력하면 MedicineDetailDTO를 반환한다.', () => {
-        // act
-        const result =
-          medicineDetailBatchService.convertOpenApiDetailToMedicineDetail(
-            openApiDetail,
-          );
-
-        // assert
-        // 이렇게하면 순서에 의존적이라서 안됨.
-        // expect(Object.keys(result)).toEqual(expected);
-
-        // 순서의존성 제거
-        expect(expected.every((v) => Object.keys(result).includes(v))).toBe(
-          true,
-        );
-      });
-    });
-
     describe('convertMedicineDetailToPrismaMedicine', () => {
       const medicineDetail = typia.random<Medicine.Detail.Dto>();
       const medicineCreateInput = typia.random<Prisma.medicineCreateInput>();

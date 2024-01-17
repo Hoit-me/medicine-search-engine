@@ -2,6 +2,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, medicine } from '@prisma/client';
 import { MedicineCommonBatchService } from '@src/batch/medicine/services/medicineCommonBatch.service';
+import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { Medicine } from '@src/type/medicine';
 import { mockDeep } from 'jest-mock-extended';
@@ -22,6 +23,7 @@ describe('MedicineCommonBatchService', () => {
         PrismaService,
         { provide: HttpService, useValue: new HttpService() },
         S3Service,
+        UtilProvider,
       ],
     })
       .overrideProvider(HttpService)
@@ -40,27 +42,6 @@ describe('MedicineCommonBatchService', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  // -------------------------------------------
-  // CONVERT OPEN API COMMON TO MEDICINE COMMON
-  // -------------------------------------------
-  describe('convertOpenApiCommonToMedicineCommon$', () => {
-    it('OpenApiCommonDto를 입력하면, MedicineCommonDto를 반환한다.', () => {
-      // arrange
-      const medicine = typia.random<Medicine.Common.OpenApiDto>();
-
-      const expected = Object.values(Medicine.Common.OPEN_API_DTO_KEY_MAP);
-      // act
-      const result =
-        medicineCommonBatchService.convertOpenApiCommonToMedicineCommon$(
-          medicine,
-        );
-      const resultKeys = Object.keys(result);
-
-      // assert
-      expect(expected.every((e) => resultKeys.includes(e))).toBe(true);
-    });
   });
 
   describe('bulkCechExistMedicine', () => {

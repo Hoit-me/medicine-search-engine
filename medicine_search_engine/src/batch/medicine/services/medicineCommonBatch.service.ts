@@ -1,12 +1,11 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { Prisma, medicine, pharmacologicalClass } from '@prisma/client';
+import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { COMMON_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
-import { renameKeys } from '@src/utils/renameKeys';
-import { typedEntries } from '@src/utils/typedEntries';
 import {
   bufferCount,
   catchError,
@@ -25,6 +24,7 @@ export class MedicineCommonBatchService {
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
+    private readonly util: UtilProvider,
   ) {}
 
   // ---------------------------------
@@ -32,7 +32,12 @@ export class MedicineCommonBatchService {
   // ---------------------------------
   batch(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.fetchOpenApiCommonList$(1, sort).pipe(
-      map((common) => this.convertOpenApiCommonToMedicineCommon$(common)),
+      map((common) =>
+        this.util.convertOpenApiToDto<
+          Medicine.Common.OpenApiDto,
+          Medicine.Common.Dto
+        >(common, Medicine.Common.OPEN_API_DTO_KEY_MAP),
+      ),
       bufferCount(100),
       concatMap((common) => this.bulkCheckExistMedicine(common)),
       mergeMap((c) => c),
@@ -87,17 +92,6 @@ export class MedicineCommonBatchService {
       map(({ data }) => data),
       retry({ count: 3, delay: 5000 }),
     );
-  }
-
-  /// ---------------------------------
-  /// CONVERT MEDICINE COMMON
-  /// ---------------------------------
-  convertOpenApiCommonToMedicineCommon$(medicine: Medicine.Common.OpenApiDto) {
-    const args = typedEntries(Medicine.Common.OPEN_API_DTO_KEY_MAP);
-    const converted = renameKeys(medicine, args, {
-      undefinedToNull: true,
-    });
-    return converted;
   }
 
   /// ---------------------------------
