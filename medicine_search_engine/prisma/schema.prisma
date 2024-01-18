@@ -284,3 +284,59 @@ model medicine_insurance {
 
     @@index([main_ingredient_code])
 }
+
+model medicine_identification {
+  id String @id @map("_id")
+  serial_number String
+  name String
+  company_name String
+  company_serial_number String
+  state String
+  image String
+  print_front String?
+  print_back String?
+  drug_shape String
+  color_front String
+  color_back String?
+  line_front String?
+  line_back String?
+  length_long String
+  length_short String
+  thick String
+  image_created_date String
+  classification_number String
+  classification_name String[]
+  professional_general_classification String
+  item_approval_date String
+  form_code_name String[]
+  mark_code_front_content String?
+  mark_code_back_content String?
+  mark_code_front_image String?
+  mark_code_back_image String?
+  item_english_name String?
+  change_date String
+  mark_code_front String?
+  mark_code_back String?
+  insurance_code String?
+  company_number String?
+  @@index([serial_number])
+  @@index([name])
+  @@index([company_name])
+  @@index([company_serial_number])
+  @@index([state])
+  @@index([drug_shape])
+  @@index([classification_number])
+  @@index([classification_name])
+  @@index([professional_general_classification])
+  @@index([item_approval_date])
+  @@index([form_code_name])
+  @@index([mark_code_front_content])
+  @@index([mark_code_back_content])
+  @@index([mark_code_front_image])
+  @@index([mark_code_back_image])
+  @@index([item_english_name])
+  @@index([mark_code_front])
+  @@index([mark_code_back])
+  @@index([insurance_code])
+  @@index([company_number])
+}
