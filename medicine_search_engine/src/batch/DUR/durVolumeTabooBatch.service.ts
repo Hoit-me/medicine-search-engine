@@ -18,6 +18,7 @@ export class DurVolumeTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Volume.OpenApiDto }>(
         DUR_VOLUME_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(

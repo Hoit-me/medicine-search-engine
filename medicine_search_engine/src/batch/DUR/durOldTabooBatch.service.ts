@@ -18,6 +18,7 @@ export class DurOldTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Old.OpenApiDto }>(
         DUR_OLD_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(

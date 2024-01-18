@@ -18,6 +18,7 @@ export class DurPeriodTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Period.OpenApiDto }>(
         DUR_PERIOD_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(

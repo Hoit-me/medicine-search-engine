@@ -34,60 +34,36 @@ export class MedicineDetailBatchService {
   // BATCH
   // --------------------------------
   batch(sort: 'ASC' | 'DESC' = 'ASC') {
-    return this.fetchOpenApiDetailList$(1, sort).pipe(
-      map((openApiDetail) =>
-        this.util.convertOpenApiToDto<
-          Medicine.Detail.OpenApiDto,
-          Medicine.Detail.Dto
-        >(openApiDetail, Medicine.Detail.OPEN_API_DTO_KEY_MAP),
-      ),
-
-      map((medicineDetail) =>
-        this.convertMedicineDetailToPrismaMedicine(medicineDetail),
-      ),
-      mergeMap((medicine) => this.setMedicineDetailDocumentInfo$(medicine), 5), // 동시성을 5로 제한
-      bufferCount(100), // 버퍼 크기를 20으로 조정
-      mergeMap(
-        (medicineDetails, i) =>
-          this.bulkCheckAndUpsertMedicineDetails(medicineDetails, i),
-        2, // 동시성을 2로 제한
-      ),
-    );
-  }
-  /// --------------------------------
-  /// FETCH MEDICINE DETAIL PAGE
-  /// --------------------------------
-  fetchOpenApiDetailPage$(pageNo: number, delayTime = 5000) {
-    return this.httpService
-      .get<Medicine.Detail.OpenApiResponseDto>(DETAIL_API_URL_BUILD(pageNo))
+    return this.util
+      .fetchOpenApiPages$<Medicine.Detail.OpenApiDto>(
+        DETAIL_API_URL_BUILD,
+        100,
+        1,
+        sort,
+      )
       .pipe(
-        map(({ data }) => data.body),
-        retry({ count: 3, delay: delayTime }),
-        catchError((error) => {
-          console.error('Error fetching page', error.message, error.stack);
-          return []; // 에러 처리
-        }),
+        map((openApiDetail) =>
+          this.util.convertOpenApiToDto<
+            Medicine.Detail.OpenApiDto,
+            Medicine.Detail.Dto
+          >(openApiDetail, Medicine.Detail.OPEN_API_DTO_KEY_MAP),
+        ),
+
+        map((medicineDetail) =>
+          this.convertMedicineDetailToPrismaMedicine(medicineDetail),
+        ),
+        mergeMap(
+          (medicine) => this.setMedicineDetailDocumentInfo$(medicine),
+          5,
+        ), // 동시성을 5로 제한
+        bufferCount(100), // 버퍼 크기를 20으로 조정
+        mergeMap(
+          (medicineDetails, i) =>
+            this.bulkCheckAndUpsertMedicineDetails(medicineDetails, i),
+          2, // 동시성을 2로 제한
+        ),
       );
   }
-
-  // ---------------------------------
-  // FETCH MEDICINE DETAILS
-  // ---------------------------------
-  fetchOpenApiDetailList$(batchSize?: number, sort: 'ASC' | 'DESC' = 'ASC') {
-    return this.fetchOpenApiDetailPage$(1).pipe(
-      map((body) => {
-        const totalCount = body.totalCount;
-        const totalPage = Math.ceil(totalCount / 100);
-        const pageList = Array.from({ length: totalPage }, (_, i) => i + 1);
-        return pageList;
-      }),
-      map((pageList) => (sort === 'ASC' ? pageList : pageList.reverse())),
-      mergeMap((page) => page),
-      mergeMap((pageNo) => this.fetchOpenApiDetailPage$(pageNo), 1),
-      mergeMap(({ items }) => items),
-    );
-  }
-
   // -------------------------------------------
   // CONVERT MEDICINE
   // -------------------------------------------

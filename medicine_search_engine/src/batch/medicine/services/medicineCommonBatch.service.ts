@@ -15,7 +15,6 @@ import {
   mergeMap,
   of,
   retry,
-  tap,
 } from 'rxjs';
 
 @Injectable()
@@ -31,60 +30,39 @@ export class MedicineCommonBatchService {
   // BATCH
   // ---------------------------------
   batch(sort: 'ASC' | 'DESC' = 'ASC') {
-    return this.fetchOpenApiCommonList$(1, sort).pipe(
-      map((common) =>
-        this.util.convertOpenApiToDto<
-          Medicine.Common.OpenApiDto,
-          Medicine.Common.Dto
-        >(common, Medicine.Common.OPEN_API_DTO_KEY_MAP),
-      ),
-      bufferCount(100),
-      concatMap((common) => this.bulkCheckExistMedicine(common)),
-      mergeMap((c) => c),
-      map((c) => this.checkImageUpdated$(c)),
-      mergeMap(
-        ({ common, updated }) =>
-          updated ? this.uploadAndSetUpdatedImage$(common) : of(common),
-        50,
-      ),
-      map((common) => this.pickMedicineCommonData(common)),
-      bufferCount(100),
-      mergeMap((common) => this.bulkUpdateMedicineCommon$(common), 1),
-      //   map((_, i) => console.log('batch', i)),
-      tap(() => console.log('rss MB', process.memoryUsage().rss / 1024 / 1024)),
-    );
+    return this.util
+      .fetchOpenApiPages$<Medicine.Common.OpenApiDto>(
+        COMMON_API_URL_BUILD,
+        100,
+        1,
+        sort,
+      )
+      .pipe(
+        map((openApi) =>
+          this.util.convertOpenApiToDto<
+            Medicine.Common.OpenApiDto,
+            Medicine.Common.Dto
+          >(openApi, Medicine.Common.OPEN_API_DTO_KEY_MAP),
+        ),
+        bufferCount(100),
+        concatMap((common) => this.bulkCheckExistMedicine(common)),
+        mergeMap((c) => c),
+        map((c) => this.checkImageUpdated$(c)),
+        mergeMap(
+          ({ common, updated }) =>
+            updated ? this.uploadAndSetUpdatedImage$(common) : of(common),
+          5,
+        ),
+        map((common) => this.pickMedicineCommonData(common)),
+        bufferCount(100),
+        mergeMap((common) => this.bulkUpdateMedicineCommon$(common), 2),
+        //   map((_, i) => console.log('batch', i)),
+      );
   }
 
   /// ---------------------------------
   /// FETCH MEDICINE COMMON PAGE
   /// ---------------------------------
-  fetchOpenApiCommonPage$(pageNo: number, delayTime = 5000) {
-    return this.httpService
-      .get<Medicine.Common.OpenApiResponseDto>(COMMON_API_URL_BUILD(pageNo))
-      .pipe(
-        map(({ data }) => data.body),
-        retry({ count: 3, delay: delayTime }),
-      );
-  }
-
-  fetchOpenApiCommonList$(batchSize?: number, sort: 'ASC' | 'DESC' = 'ASC') {
-    return this.fetchOpenApiCommonPage$(1).pipe(
-      map((body) => {
-        const totalCount = body.totalCount;
-        const totalPage = Math.ceil(totalCount / 100);
-        const pageList = Array.from({ length: totalPage }, (_, i) => i + 1);
-        return pageList;
-      }),
-      map((pageList) => (sort === 'ASC' ? pageList : pageList.reverse())),
-      mergeMap((page) => page),
-      mergeMap(
-        (pageNo) => this.fetchOpenApiCommonPage$(pageNo),
-        batchSize || 1,
-      ),
-      mergeMap(({ items }) => items),
-    );
-  }
-
   fetchImageBuffer$(imageUrl: string) {
     return this.httpService.get(imageUrl, { responseType: 'arraybuffer' }).pipe(
       map(({ data }) => data),
@@ -123,6 +101,7 @@ export class MedicineCommonBatchService {
         if (!pharmacological_class && !company_serial_number && !image_url) {
           return of(null); // 아무 것도 하지 않음
         }
+
         const data = {
           ...(pharmacological_class ? { pharmacological_class } : {}),
           ...(company_serial_number ? { company_serial_number } : {}),

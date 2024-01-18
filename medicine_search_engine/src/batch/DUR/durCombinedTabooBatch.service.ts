@@ -21,6 +21,7 @@ export class DurCombinedTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Combined.OpenApiDto }>(
         DUR_COMBINED_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(
