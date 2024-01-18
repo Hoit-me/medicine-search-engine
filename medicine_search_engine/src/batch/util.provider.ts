@@ -9,9 +9,9 @@ import {
   catchError,
   map,
   mergeMap,
+  of,
   range,
   retry,
-  tap,
   toArray,
 } from 'rxjs';
 
@@ -34,8 +34,8 @@ export class UtilProvider {
       map(({ body }) => body),
       retry(retryOption),
       catchError((err) => {
-        console.log(err.message);
-        return [];
+        console.log(err.message, 'fetchOpenApi$', url);
+        return of({ items: [], numOfRows: 0, pageNo: 0, totalCount: 0 });
       }),
     );
   }
@@ -43,6 +43,7 @@ export class UtilProvider {
   fetchOpenApiPages$<T>(
     urlBuilder: (page: number, rows: number) => string,
     rows = 100,
+    batchSize = 2,
     sort: 'ASC' | 'DESC' = 'ASC',
     retryOption: RetryConfig = {
       count: 3,
@@ -66,15 +67,19 @@ export class UtilProvider {
         mergeMap((pages) => pages),
       )
       .pipe(
-        tap((page) => console.log(page)),
-        mergeMap((page) =>
-          this.fetchOpenApi$<OpenApiResponse<T>>(
-            urlBuilder(page, rows),
-            retryOption,
-          ),
+        mergeMap(
+          (page) =>
+            this.fetchOpenApi$<OpenApiResponse<T>>(
+              urlBuilder(page, rows),
+              retryOption,
+            ),
+          batchSize,
         ),
-        // tap((a) => console.log(a.numOfRows, a.pageNo, a.totalCount)),
         mergeMap((body) => body.items),
+        catchError((err) => {
+          console.log(err.message, 'fetchOpenApiPages$');
+          return [];
+        }),
       );
   }
 

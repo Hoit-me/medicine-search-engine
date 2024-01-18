@@ -15,7 +15,7 @@ export class DurPregnantTabooBatchService {
 
   batch$() {
     return this.util
-      .fetchOpenApiPages$(DUR_PREGNAT_API_URL_BUILD, 100, 'ASC')
+      .fetchOpenApiPages$(DUR_PREGNAT_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>

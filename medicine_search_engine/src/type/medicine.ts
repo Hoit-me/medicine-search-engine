@@ -219,51 +219,50 @@ export namespace Medicine {
     };
   }
 
-  // --------------------------------------
-  // 2. 대한민국 의약품 제품허가목록
-  // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=7
-  // - 매일 4시 업데이트
-  // - 특이사항:
-  //   - 이미지를 다운링크로 제공
-  //      - 이미지가 변경될시, 다운로드 링크가 변경됨
-  //      - 예시, 이소졸정
-  //      - 201606230001604 (변경된 이미지)
-  //      - 201606230001602 (변경전 이미지)
-  //   - 품목허가번호 존재
-  //   - 분류명 존재
-  //   - 사업자번호 존재
-  //   - 주성분수 존재
-  //
-  // 1에서 겹치는정보가 있기때문에, 이미지,사업자,분류명,주성분수 만 사용
-  //
-  // <download>
-  // fileFormat: csv
-  /**feilds
-   * 품목일련번호
-   * 품목명
-   * 품목
-   * 영문명
-   * 업체명
-   * 업체
-   * 영문명
-   * 업허가번호
-   * 업일련번호
-   * 업종
-   * 전문일반구분
-   * 주성분
-   * 주성분수
-   * 큰제품이미지
-   * 신고허가구분
-   * 취소/취하일자
-   * 취소/취하구분
-   * 분류명
-   * 품목허가번호
-   * 보험코드
-   * 사업자번호
-   */
-  // --------------------------------------
-
   export namespace Common {
+    // --------------------------------------
+    // 2. 대한민국 의약품 제품허가목록
+    // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=7
+    // - 매일 4시 업데이트
+    // - 특이사항:
+    //   - 이미지를 다운링크로 제공
+    //      - 이미지가 변경될시, 다운로드 링크가 변경됨
+    //      - 예시, 이소졸정
+    //      - 201606230001604 (변경된 이미지)
+    //      - 201606230001602 (변경전 이미지)
+    //   - 품목허가번호 존재
+    //   - 분류명 존재
+    //   - 사업자번호 존재
+    //   - 주성분수 존재
+    //
+    // 1에서 겹치는정보가 있기때문에, 이미지,사업자,분류명,주성분수 만 사용
+    //
+    // <download>
+    // fileFormat: csv
+    /**feilds
+     * 품목일련번호
+     * 품목명
+     * 품목
+     * 영문명
+     * 업체명
+     * 업체
+     * 영문명
+     * 업허가번호
+     * 업일련번호
+     * 업종
+     * 전문일반구분
+     * 주성분
+     * 주성분수
+     * 큰제품이미지
+     * 신고허가구분
+     * 취소/취하일자
+     * 취소/취하구분
+     * 분류명
+     * 품목허가번호
+     * 보험코드
+     * 사업자번호
+     */
+    // --------------------------------------
     export interface Dto {
       serial_number: string; // 품목일련번호
       name: string; // 품목명
@@ -340,44 +339,192 @@ export namespace Medicine {
     };
   }
 
-  // --------------------------------------
-  // 3. 의약품 낱알 식별 정보
-  // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=11
-  // - 매일 4시 업데이트
-  // - 특이사항:
-  /** feilds
-   * 품목일련번호
-   * 품목명
-   * 업소일련번호
-   * 업소명
-   * 성상
-   * 큰제품이미지
-   * 표시앞
-   * 표시뒤
-   * 의약품제형
-   * 색상앞
-   * 색상뒤
-   * 분할선앞
-   * 분할선뒤
-   * 크기장축
-   * 크기단축
-   * 크기두께
-   * 이미지생성일자(약학정보원)
-   * 분류번호
-   * 분류명
-   * 전문일반구분
-   * 품목허가일자
-   * 제형코드명
-   * 표기내용앞
-   * 표기내용뒤
-   * 표기이미지앞
-   * 표기이미지뒤
-   * 표기코드앞
-   * 표기코드뒤
-   * 변경일자
-   * 사업자번호
-   */
-  // --------------------------------------
+  export namespace Indentification {
+    // --------------------------------------
+    // 3. 의약품 낱알 식별 정보
+    // - url: https://nedrug.mfds.go.kr/pbp/CCBGA01/getItem?infoName=%EC%9D%98%EC%95%BD%ED%92%88&totalPages=4&limit=10&page=1&&openDataInfoSeq=11
+    // - 매일 4시 업데이트
+    // - 특이사항:
+    // --------------------------------------
+    export interface Dto {
+      serial_number: string; // 품목일련번호
+      name: string; // 품목명
+      company_name: string; // 업체명
+      company_serial_number: string; // 업체일련번호
+      state: string; // 성상
+      image: string; // 큰제품이미지
+      print_front?: string; // 표시(앞)
+      print_back?: string; // 표시(뒤)
+      drug_shape: string; // 의약품모양
+      color_front: string; // 색깔(앞)
+      color_back?: string; // 색깔(뒤)
+      line_front?: string; // 분할선(앞)
+      line_back?: string; // 분할선(뒤)
+      length_long: string; // 크기(장축)
+      length_short: string; // 크기(단축)
+      thick: string; // 크기(두께)
+      image_created_date: string; // 약학정보원 이미지 생성일
+      classification_number: string; // 분류번호
+      classification_name: string; // 분류명
+      professional_general_classification: string; // 전문/일반
+      item_approval_date: string; // 품목허가일자
+      form_code_name?: string; // 제형코드이름
+      mark_code_front_content?: string; // 마크내용(앞)
+      mark_code_back_content?: string; // 마크내용(뒤)
+      mark_code_front_image?: string; // 마크이미지(앞)
+      mark_code_back_image?: string; // 마크이미지(뒤)
+      item_english_name?: string; // 제품영문명
+      change_date: string; // 변경일자
+      mark_code_front?: string; // 마크코드(앞)
+      mark_code_back?: string; // 마크코드(뒤)
+      insurance_code?: string; // 보험코드
+      company_number?: string; // 사업자번호
+    }
+
+    /**
+     * ## EXAMPLE
+     * item>
+     *  <ITEM_SEQ>200810338</ITEM_SEQ>
+     *  <ITEM_NAME>가스리드정5mg(모사프리드시트르산염수화물)</ITEM_NAME>
+     *  <ENTP_SEQ>19560004</ENTP_SEQ>
+     *  <ENTP_NAME>(주)유한양행</ENTP_NAME>
+     *  <CHART>분할선을 가진 흰색의 장방형 필름코팅정</CHART>
+     *  <ITEM_IMAGE>https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147426407360700025</ITEM_IMAGE>
+     *  <PRINT_FRONT>YH</PRINT_FRONT>
+     *  <PRINT_BACK>G분할선5</PRINT_BACK>
+     *  <DRUG_SHAPE>장방형</DRUG_SHAPE>
+     *  <COLOR_CLASS1>하양</COLOR_CLASS1>
+     *  <COLOR_CLASS2/>
+     *  <LINE_FRONT/>
+     *  <LINE_BACK>-</LINE_BACK>
+     *  <LENG_LONG>9.1</LENG_LONG>
+     *  <LENG_SHORT>4.6</LENG_SHORT>
+     *  <THICK>3.1</THICK>
+     *  <IMG_REGIST_TS>20110223</IMG_REGIST_TS>
+     *  <CLASS_NO>02390</CLASS_NO>
+     *  <CLASS_NAME>기타의 소화기관용약</CLASS_NAME>
+     *  <ETC_OTC_NAME>전문의약품</ETC_OTC_NAME>
+     *  <ITEM_PERMIT_DATE>20081010</ITEM_PERMIT_DATE>
+     *  <FORM_CODE_NAME>필름코팅정</FORM_CODE_NAME>
+     *  <MARK_CODE_FRONT_ANAL/>
+     *  <MARK_CODE_BACK_ANAL/>
+     *  <MARK_CODE_FRONT_IMG/>
+     *  <MARK_CODE_BACK_IMG/>
+     *  <ITEM_ENG_NAME>Gasrid Tablet 5mg</ITEM_ENG_NAME>
+     *  <CHANGE_DATE>20230209</CHANGE_DATE>
+     *  <MARK_CODE_FRONT/>
+     *  <MARK_CODE_BACK/>
+     *  <EDI_CODE>642103680</EDI_CODE>
+     *  <BIZRNO>1188100601</BIZRNO>
+     * </item>
+     */
+    export interface OpenApiDto {
+      // 품목일련번호
+      ITEM_SEQ: string;
+      // 품목명
+      ITEM_NAME: string;
+      // 업체일련번호
+      ENTP_SEQ: string;
+      // 업체명
+      ENTP_NAME: string;
+      // 성상
+      CHART: string;
+      // 큰제품이미지
+      ITEM_IMAGE: string;
+      // 표시(앞)
+      PRINT_FRONT?: string;
+      // 표시(뒤)
+      PRINT_BACK?: string;
+      // 의약품모양
+      DRUG_SHAPE: string;
+      // 색깔(앞)
+      COLOR_CLASS1: string;
+      // 색깔(뒤)
+      COLOR_CLASS2?: string;
+      // 분할선(앞)
+      LINE_FRONT?: string;
+      // 분할선(뒤)
+      LINE_BACK?: string;
+      // 크기(장축)
+      LENG_LONG: string;
+      // 크기(단축)
+      LENG_SHORT: string;
+      // 크기(두께)
+      THICK: string;
+      // 약학정보원 이미지 생성일
+      IMG_REGIST_TS: string;
+      // 분류번호
+      CLASS_NO: string;
+      // 분류명
+      CLASS_NAME: string;
+      // 전문/일반
+      ETC_OTC_NAME: string;
+      // 품목허가일자
+      ITEM_PERMIT_DATE: string;
+      // 제형코드이름
+      FORM_CODE_NAME?: string;
+      // 마크내용(앞)
+      MARK_CODE_FRONT_ANAL?: string;
+      // 마크내용(뒤)
+      MARK_CODE_BACK_ANAL?: string;
+      // 마크이미지(앞)
+      MARK_CODE_FRONT_IMG?: string;
+      // 마크이미지(뒤)
+      MARK_CODE_BACK_IMG?: string;
+      // 제품영문명
+      ITEM_ENG_NAME?: string;
+      // 변경일자
+      CHANGE_DATE: string;
+      // 마크코드(앞)
+      MARK_CODE_FRONT?: string;
+      // 마크코드(뒤)
+      MARK_CODE_BACK?: string;
+      // 보험코드
+      EDI_CODE?: string;
+      // 사업자번호
+      BIZRNO?: string;
+    }
+    export type OpenApiResponseDto = OpenApiResponse<OpenApiDto>;
+    export type DtoKeys = keyof Dto;
+    export type OpenApiDtoKeys = keyof OpenApiDto;
+    export type OpenApiDtoToDtoKeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+
+    export const OPEN_API_DTO_KEY_MAP: OpenApiDtoToDtoKeyMap = {
+      ITEM_SEQ: 'serial_number',
+      ITEM_NAME: 'name',
+      ENTP_SEQ: 'company_serial_number',
+      ENTP_NAME: 'company_name',
+      CHART: 'state',
+      ITEM_IMAGE: 'image',
+      PRINT_FRONT: 'print_front',
+      PRINT_BACK: 'print_back',
+      DRUG_SHAPE: 'drug_shape',
+      COLOR_CLASS1: 'color_front',
+      COLOR_CLASS2: 'color_back',
+      LINE_FRONT: 'line_front',
+      LINE_BACK: 'line_back',
+      LENG_LONG: 'length_long',
+      LENG_SHORT: 'length_short',
+      THICK: 'thick',
+      IMG_REGIST_TS: 'image_created_date',
+      CLASS_NO: 'classification_number',
+      CLASS_NAME: 'classification_name',
+      ETC_OTC_NAME: 'professional_general_classification',
+      ITEM_PERMIT_DATE: 'item_approval_date',
+      FORM_CODE_NAME: 'form_code_name',
+      MARK_CODE_FRONT_ANAL: 'mark_code_front_content',
+      MARK_CODE_BACK_ANAL: 'mark_code_back_content',
+      MARK_CODE_FRONT_IMG: 'mark_code_front_image',
+      MARK_CODE_BACK_IMG: 'mark_code_back_image',
+      ITEM_ENG_NAME: 'item_english_name',
+      CHANGE_DATE: 'change_date',
+      MARK_CODE_FRONT: 'mark_code_front',
+      MARK_CODE_BACK: 'mark_code_back',
+      EDI_CODE: 'insurance_code',
+      BIZRNO: 'company_number',
+    };
+  }
+
   export interface PillJson_Kr {
     품목일련번호: string;
     품목명: string;

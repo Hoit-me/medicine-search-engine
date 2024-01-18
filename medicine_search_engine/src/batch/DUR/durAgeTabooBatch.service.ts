@@ -32,6 +32,7 @@ export class DurAgeTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Age.OpenApiDto }>(
         DUR_AGE_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(

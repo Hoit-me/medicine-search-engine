@@ -18,6 +18,7 @@ export class DurDuplicateEffectTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.DuplicateEffect.OpenApiDto }>(
         DUPLICATE_EFFECT_API_URL_BUILD,
         100,
+        2,
         'ASC',
       )
       .pipe(
