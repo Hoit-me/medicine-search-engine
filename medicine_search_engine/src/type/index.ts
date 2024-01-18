@@ -74,3 +74,13 @@ export interface OpenApiResponse2<T> {
   matchCount: number;
   data: T[];
 }
+
+export type HasImage = {
+  image_url?: string;
+};
+
+export type HasKey<T extends string> = {
+  [key in T]?: string | null;
+};
+
+export type HasImage2 = HasKey<'image_url'>;

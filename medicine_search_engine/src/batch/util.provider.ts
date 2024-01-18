@@ -1,12 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { OpenApiResponse, OpenApiResponse2 } from '@src/type';
+import { S3Service } from '@src/common/aws/s3/s3.service';
+import { HasKey, OpenApiResponse, OpenApiResponse2 } from '@src/type';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
 import {
   Observable,
   RetryConfig,
   catchError,
+  filter,
   map,
   mergeMap,
   of,
@@ -17,7 +19,10 @@ import {
 
 @Injectable()
 export class UtilProvider {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   /// ------------------------------------
   /// fetch OPEN API DUR, Medicine
@@ -67,6 +72,7 @@ export class UtilProvider {
         mergeMap((pages) => pages),
       )
       .pipe(
+        filter((page) => page === 3),
         mergeMap(
           (page) =>
             this.fetchOpenApi$<OpenApiResponse<T>>(
@@ -75,12 +81,25 @@ export class UtilProvider {
             ),
           batchSize,
         ),
+
         mergeMap((body) => body.items),
         catchError((err) => {
           console.log(err.message, 'fetchOpenApiPages$');
           return [];
         }),
       );
+  }
+
+  fetchBuffer(url: string) {
+    return this.httpService.get(url, { responseType: 'arraybuffer' }).pipe(
+      map(({ data }) => data),
+      map((buffer) => Buffer.from(buffer)),
+      retry({ count: 3, delay: 5000 }),
+      catchError((err) => {
+        console.log(err.message, 'fetchBuffer');
+        return of(Buffer.from([]));
+      }),
+    );
   }
 
   /// ------------------------------------
@@ -186,5 +205,61 @@ export class UtilProvider {
     return renameKeys(openApi, args as [keyof T, string][], {
       undefinedToNull: true,
     }) as U;
+  }
+
+  checkImageUpdatedKey<
+    K extends string,
+    T extends HasKey<K>,
+    U extends HasKey<K>,
+  >(
+    key: K,
+    { now, before }: { now: T; before?: U | null },
+    source: string = 'nedrug',
+  ) {
+    if (!before) return { now, updated: true, key };
+    const now_image_url = now[key];
+    const before_image_url = before[key];
+
+    if (!now_image_url) return { now, updated: false, key };
+
+    const imageName = now_image_url.split('/').pop();
+    if (!imageName) return { now, updated: true, key };
+
+    const checkImageUpdated =
+      !before_image_url?.includes(imageName) ||
+      (before_image_url.includes(source) &&
+        !now_image_url.includes('amazonaws'));
+
+    if (checkImageUpdated) {
+      return { now, updated: true, key };
+    }
+
+    return { now: { ...now, [key]: before_image_url }, updated: false, key };
+  }
+
+  uploadAndSetUpdatedImageKey$<K extends string, T extends HasKey<K>>(
+    data: T,
+    objkey: K,
+    key: string,
+  ) {
+    const { [objkey]: image_url } = data;
+    if (!image_url) return of(data);
+
+    const imageName = image_url?.split('/').pop();
+    if (!imageName) return of(data);
+
+    const imageKey = `${key}/${imageName}.jpg`;
+    const new_image_url = `https://${process.env.AWS_S3_BUCKET}.s3.ap-northeast-2.amazonaws.com/${imageKey}`;
+    return this.fetchBuffer(image_url).pipe(
+      mergeMap((buffer) =>
+        this.s3Service.upload({
+          bucket: process.env.AWS_S3_BUCKET!,
+          key: imageKey,
+          file: buffer,
+        }),
+      ),
+      map(() => ({ ...data, [objkey]: new_image_url })),
+      retry({ count: 3, delay: 5000 }),
+    );
   }
 }
