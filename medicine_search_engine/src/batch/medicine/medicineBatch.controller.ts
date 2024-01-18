@@ -9,6 +9,7 @@ import { DurVolumeTabooBatchService } from './../DUR/durVolumeTabooBatch.service
 import { InsuranceBatchService } from './../insurance/insuranceBatch.Service';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
+import { MedicineIdentificationBatchService } from './services/medicineIdentificationBatch.service';
 
 /**
  * # 약품 배치 - 테스트용 컨트롤러
@@ -26,6 +27,7 @@ export class MedicineBatchController {
     private readonly durOldTabooBatchService: DurOldTabooBatchService,
     private readonly durDuplicateEffectTabooBatchService: DurDuplicateEffectTabooBatchService,
     private readonly insuranceBatchService: InsuranceBatchService,
+    private readonly medicineIdentificationBatchService: MedicineIdentificationBatchService,
   ) {}
 
   @Get('/update')
@@ -124,6 +126,15 @@ export class MedicineBatchController {
     console.log('updateInsurance start');
     this.insuranceBatchService.batch$().subscribe({
       complete: () => console.log('updateInsurance complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/identification')
+  async updateIdentification() {
+    console.log('updateIdentification start');
+    this.medicineIdentificationBatchService.batch().subscribe({
+      complete: () => console.log('updateIdentification complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
   }

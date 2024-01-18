@@ -352,7 +352,7 @@ export namespace Medicine {
       company_name: string; // 업체명
       company_serial_number: string; // 업체일련번호
       state: string; // 성상
-      image: string; // 큰제품이미지
+      image_url: string; // 큰제품이미지
       print_front?: string; // 표시(앞)
       print_back?: string; // 표시(뒤)
       drug_shape: string; // 의약품모양
@@ -364,15 +364,15 @@ export namespace Medicine {
       length_short: string; // 크기(단축)
       thick: string; // 크기(두께)
       image_created_date: string; // 약학정보원 이미지 생성일
-      classification_number: string; // 분류번호
+      classification_number?: string; // 분류번호
       classification_name: string; // 분류명
       professional_general_classification: string; // 전문/일반
       item_approval_date: string; // 품목허가일자
       form_code_name?: string; // 제형코드이름
       mark_code_front_content?: string; // 마크내용(앞)
       mark_code_back_content?: string; // 마크내용(뒤)
-      mark_code_front_image?: string; // 마크이미지(앞)
-      mark_code_back_image?: string; // 마크이미지(뒤)
+      mark_code_front_image_url?: string; // 마크이미지(앞)
+      mark_code_back_image_url?: string; // 마크이미지(뒤)
       item_english_name?: string; // 제품영문명
       change_date: string; // 변경일자
       mark_code_front?: string; // 마크코드(앞)
@@ -454,7 +454,7 @@ export namespace Medicine {
       // 약학정보원 이미지 생성일
       IMG_REGIST_TS: string;
       // 분류번호
-      CLASS_NO: string;
+      CLASS_NO?: string;
       // 분류명
       CLASS_NAME: string;
       // 전문/일반
@@ -495,7 +495,7 @@ export namespace Medicine {
       ENTP_SEQ: 'company_serial_number',
       ENTP_NAME: 'company_name',
       CHART: 'state',
-      ITEM_IMAGE: 'image',
+      ITEM_IMAGE: 'image_url',
       PRINT_FRONT: 'print_front',
       PRINT_BACK: 'print_back',
       DRUG_SHAPE: 'drug_shape',
@@ -514,8 +514,8 @@ export namespace Medicine {
       FORM_CODE_NAME: 'form_code_name',
       MARK_CODE_FRONT_ANAL: 'mark_code_front_content',
       MARK_CODE_BACK_ANAL: 'mark_code_back_content',
-      MARK_CODE_FRONT_IMG: 'mark_code_front_image',
-      MARK_CODE_BACK_IMG: 'mark_code_back_image',
+      MARK_CODE_FRONT_IMG: 'mark_code_front_image_url',
+      MARK_CODE_BACK_IMG: 'mark_code_back_image_url',
       ITEM_ENG_NAME: 'item_english_name',
       CHANGE_DATE: 'change_date',
       MARK_CODE_FRONT: 'mark_code_front',

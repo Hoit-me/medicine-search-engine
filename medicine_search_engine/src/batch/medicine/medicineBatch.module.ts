@@ -12,6 +12,7 @@ import { UtilProvider } from '../util.provider';
 import { MedicineBatchController } from './medicineBatch.controller';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
+import { MedicineIdentificationBatchService } from './services/medicineIdentificationBatch.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MedicineDetailBatchService } from './services/medicineDetailBatch.servi
     DurOldTabooBatchService,
     DurDuplicateEffectTabooBatchService,
     InsuranceBatchService,
+    MedicineIdentificationBatchService,
     UtilProvider,
   ],
 })

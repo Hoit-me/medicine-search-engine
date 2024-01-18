@@ -62,3 +62,9 @@ export const INSURANCE_API_URL =
 export const INSURANCE_API_URL_BUILD = (pageNo: number, rows = 100) =>
   INSURANCE_API_URL +
   `&page=${pageNo}&perPage=${rows}&serviceKey=${process.env.API_KEY_DECODED}`;
+
+export const IDENTIFICATION_API_URL =
+  'https://apis.data.go.kr/1471000/MdcinGrnIdntfcInfoService01/getMdcinGrnIdntfcInfoList01?type=json';
+export const IDENTIFICATION_API_URL_BUILD = (pageNo: number, rows = 100) =>
+  IDENTIFICATION_API_URL +
+  `&serviceKey=${process.env.API_KEY_DECODED}&pageNo=${pageNo}&numOfRows=${rows}`;

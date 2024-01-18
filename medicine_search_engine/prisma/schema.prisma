@@ -292,7 +292,7 @@ model medicine_identification {
   company_name String
   company_serial_number String
   state String
-  image String
+  image_url String
   print_front String?
   print_back String?
   drug_shape String
@@ -303,18 +303,18 @@ model medicine_identification {
   length_long String
   length_short String
   thick String
-  image_created_date String
-  classification_number String
+  image_created_date DateTime?
+  classification_number String?
   classification_name String[]
   professional_general_classification String
-  item_approval_date String
+  item_approval_date DateTime?
   form_code_name String[]
   mark_code_front_content String?
   mark_code_back_content String?
-  mark_code_front_image String?
-  mark_code_back_image String?
+  mark_code_front_image_url String?
+  mark_code_back_image_url String?
   item_english_name String?
-  change_date String
+  change_date DateTime?
   mark_code_front String?
   mark_code_back String?
   insurance_code String?
@@ -332,8 +332,6 @@ model medicine_identification {
   @@index([form_code_name])
   @@index([mark_code_front_content])
   @@index([mark_code_back_content])
-  @@index([mark_code_front_image])
-  @@index([mark_code_back_image])
   @@index([item_english_name])
   @@index([mark_code_front])
   @@index([mark_code_back])
