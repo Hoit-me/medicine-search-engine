@@ -74,3 +74,9 @@ export const INGREDIENT_API_URL =
 export const INGREDIENT_API_URL_BUILD = (pageNo: number, rows = 100) =>
   INGREDIENT_API_URL +
   `&page=${pageNo}&perPage=${rows}&serviceKey=${process.env.API_KEY_DECODED}`;
+
+export const DISEASE_API_URL =
+  'https://api.odcloud.kr/api/15067467/v1/uddi:242b4301-d660-495d-b409-a3fe8fd3a03a?returnType=json';
+export const DISEASE_API_URL_BUILD = (pageNo: number, rows = 100) =>
+  DISEASE_API_URL +
+  `&page=${pageNo}&perPage=${rows}&serviceKey=${process.env.API_KEY_DECODED}`;

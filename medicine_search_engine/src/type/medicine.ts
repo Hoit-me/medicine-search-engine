@@ -535,7 +535,7 @@ export namespace Medicine {
       state_code: string; // 제형구분코드
       state: string; // 제형
       name: string; // 주성분명
-      classification_number: string; // 분류번호
+      type: string; // 분류번호
       usage: string; // 투여
       amount: string; // 함량
       unit: string; // 단위
@@ -545,7 +545,7 @@ export namespace Medicine {
      * ## EXAMPLE
      * {
      *   "단위": "g",
-     *   "분류번호": 421,
+     *   "분류번호": 421, // 식약처 분류번호 - 효능
      *   "일반명": "상황균사체엑스",
      *   "일반명코드": "100101AGN",
      *   "제형": "과립제,세립",
@@ -574,7 +574,7 @@ export namespace Medicine {
       제형구분코드: 'state_code',
       제형: 'state',
       일반명: 'name',
-      분류번호: 'classification_number',
+      분류번호: 'type',
       투여: 'usage',
       함량: 'amount',
       단위: 'unit',
