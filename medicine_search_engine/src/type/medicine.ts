@@ -1,4 +1,4 @@
-import { OpenApiResponse } from '.';
+import { OpenApiResponse, OpenApiResponse2 } from '.';
 
 export namespace Medicine {
   export type Pharmacopoeia =
@@ -355,14 +355,14 @@ export namespace Medicine {
       image_url: string; // 큰제품이미지
       print_front?: string; // 표시(앞)
       print_back?: string; // 표시(뒤)
-      drug_shape: string; // 의약품모양
+      drug_shape?: string; // 의약품모양
       color_front: string; // 색깔(앞)
       color_back?: string; // 색깔(뒤)
       line_front?: string; // 분할선(앞)
       line_back?: string; // 분할선(뒤)
-      length_long: string; // 크기(장축)
-      length_short: string; // 크기(단축)
-      thick: string; // 크기(두께)
+      length_long?: string; // 크기(장축)
+      length_short?: string; // 크기(단축)
+      thick?: string; // 크기(두께)
       image_created_date: string; // 약학정보원 이미지 생성일
       classification_number?: string; // 분류번호
       classification_name: string; // 분류명
@@ -436,7 +436,7 @@ export namespace Medicine {
       // 표시(뒤)
       PRINT_BACK?: string;
       // 의약품모양
-      DRUG_SHAPE: string;
+      DRUG_SHAPE?: string;
       // 색깔(앞)
       COLOR_CLASS1: string;
       // 색깔(뒤)
@@ -446,11 +446,11 @@ export namespace Medicine {
       // 분할선(뒤)
       LINE_BACK?: string;
       // 크기(장축)
-      LENG_LONG: string;
+      LENG_LONG?: string;
       // 크기(단축)
-      LENG_SHORT: string;
+      LENG_SHORT?: string;
       // 크기(두께)
-      THICK: string;
+      THICK?: string;
       // 약학정보원 이미지 생성일
       IMG_REGIST_TS: string;
       // 분류번호
@@ -525,37 +525,60 @@ export namespace Medicine {
     };
   }
 
-  export interface PillJson_Kr {
-    품목일련번호: string;
-    품목명: string;
-    업소일련번호: string;
-    업소명: string;
-    성상: string;
-    큰제품이미지: string;
-    표시앞: string;
-    표시뒤: string;
-    의약품제형: string;
-    색상앞: string;
-    색상뒤: string;
-    분할선앞: string;
-    분할선뒤: string;
-    크기장축: string;
-    크기단축: string;
-    크기두께: string;
-    이미지생성일자: string;
-    분류번호: string;
-    분류명: string;
-    전문일반구분: string;
-    품목허가일자: string;
-    제형코드명: string;
-    표기내용앞: string;
-    표기내용뒤: string;
-    표기이미지앞: string;
-    표기이미지뒤: string;
-    표기코드앞: string;
-    표기코드뒤: string;
-    변경일자: string;
-    사업자번호: string;
+  export namespace Ingredient {
+    /**
+     * ## 건강보험심사평가원_약가마스터_의약품주성분
+     * https://www.data.go.kr/iim/api/selectAPIAcountView.do#/API%20%EB%AA%A9%EB%A1%9D/getuddi%3A0885e8ce-ef4d-45ee-8301-861fd4d886bc
+     */
+    export interface Dto {
+      code: string; // 주성분코드
+      state_code: string; // 제형구분코드
+      state: string; // 제형
+      name: string; // 주성분명
+      classification_number: string; // 분류번호
+      usage: string; // 투여
+      amount: string; // 함량
+      unit: string; // 단위
+    }
+
+    /**
+     * ## EXAMPLE
+     * {
+     *   "단위": "g",
+     *   "분류번호": 421,
+     *   "일반명": "상황균사체엑스",
+     *   "일반명코드": "100101AGN",
+     *   "제형": "과립제,세립",
+     *   "제형구분코드": "GN",
+     *   "투여": "내복",
+     *   "함량": "1.100000"
+     * },
+     */
+    export interface OpenApiDto {
+      일반명코드: string; // 주성분코드
+      제형구분코드: string;
+      제형: string;
+      일반명: string;
+      분류번호: number;
+      투여: string;
+      함량: string;
+      단위: string;
+    }
+
+    export type OpenApiResponseDto = OpenApiResponse2<OpenApiDto>;
+    export type DtoKeys = keyof Dto;
+    export type OpenApiDtoKeys = keyof OpenApiDto;
+    export type OpenApiDtoToDtoKeyMap = Record<OpenApiDtoKeys, DtoKeys>;
+    export const OPEN_API_DTO_KEY_MAP: OpenApiDtoToDtoKeyMap = {
+      일반명코드: 'code',
+      제형구분코드: 'state_code',
+      제형: 'state',
+      일반명: 'name',
+      분류번호: 'classification_number',
+      투여: 'usage',
+      함량: 'amount',
+      단위: 'unit',
+    };
   }
 
   // --------------------------------------

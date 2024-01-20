@@ -295,14 +295,14 @@ model medicine_identification {
   image_url String
   print_front String?
   print_back String?
-  drug_shape String
+  drug_shape String?
   color_front String
   color_back String?
   line_front String?
   line_back String?
-  length_long String
-  length_short String
-  thick String
+  length_long String?
+  length_short String?
+  thick String?
   image_created_date DateTime?
   classification_number String?
   classification_name String[]
