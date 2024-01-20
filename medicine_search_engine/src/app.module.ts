@@ -5,11 +5,13 @@ import { AppService } from './app.service';
 import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { AwsModule } from './common/aws/aws.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { MedicineModule } from './modules/medicine.module';
 
 @Module({
   imports: [
     PrismaModule,
     MedicineBatchModule,
+    MedicineModule,
     {
       ...HttpModule.register({
         timeout: 100000,
