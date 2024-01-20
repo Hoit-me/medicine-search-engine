@@ -6,10 +6,12 @@ import { DurDuplicateEffectTabooBatchService } from './../DUR/durDuplicateEffect
 import { DurOldTabooBatchService } from './../DUR/durOldTabooBatch.service';
 import { DurPeriodTabooBatchService } from './../DUR/durPeriodTabooBatch.service';
 import { DurVolumeTabooBatchService } from './../DUR/durVolumeTabooBatch.service';
+import { DiseaseBatchService } from './../disease/diseaseBatch.service';
 import { InsuranceBatchService } from './../insurance/insuranceBatch.Service';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
 import { MedicineIdentificationBatchService } from './services/medicineIdentificationBatch.service';
+import { MedicineIngredientBatchService } from './services/medicineIngredient.service';
 
 /**
  * # 약품 배치 - 테스트용 컨트롤러
@@ -28,6 +30,8 @@ export class MedicineBatchController {
     private readonly durDuplicateEffectTabooBatchService: DurDuplicateEffectTabooBatchService,
     private readonly insuranceBatchService: InsuranceBatchService,
     private readonly medicineIdentificationBatchService: MedicineIdentificationBatchService,
+    private readonly medicineIngredientBatchService: MedicineIngredientBatchService,
+    private readonly diseaseBatchService: DiseaseBatchService,
   ) {}
 
   @Get('/update')
@@ -133,8 +137,26 @@ export class MedicineBatchController {
   @Get('/update/identification')
   async updateIdentification() {
     console.log('updateIdentification start');
-    this.medicineIdentificationBatchService.batch().subscribe({
+    this.medicineIdentificationBatchService.batch$().subscribe({
       complete: () => console.log('updateIdentification complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/medicine/ingredient')
+  async updateMedicineIngredient() {
+    console.log('updateMedicineIngredient start');
+    this.medicineIngredientBatchService.batch$().subscribe({
+      complete: () => console.log('updateMedicineIngredient complete'),
+      error: (error) => console.log('subErro', error.message, error.stack),
+    });
+  }
+
+  @Get('/update/disease')
+  async updateDisease() {
+    console.log('updateDisease start');
+    this.diseaseBatchService.batch$().subscribe({
+      complete: () => console.log('updateDisease complete'),
       error: (error) => console.log('subErro', error.message, error.stack),
     });
   }

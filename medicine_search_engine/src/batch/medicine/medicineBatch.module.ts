@@ -7,12 +7,14 @@ import { DurOldTabooBatchService } from '../DUR/durOldTabooBatch.service';
 import { DurPeriodTabooBatchService } from '../DUR/durPeriodTabooBatch.service';
 import { DurPregnantTabooBatchService } from '../DUR/durPregnantTabooBatch.service';
 import { DurVolumeTabooBatchService } from '../DUR/durVolumeTabooBatch.service';
+import { DiseaseBatchService } from '../disease/diseaseBatch.service';
 import { InsuranceBatchService } from '../insurance/insuranceBatch.Service';
 import { UtilProvider } from '../util.provider';
 import { MedicineBatchController } from './medicineBatch.controller';
 import { MedicineCommonBatchService } from './services/medicineCommonBatch.service';
 import { MedicineDetailBatchService } from './services/medicineDetailBatch.service';
 import { MedicineIdentificationBatchService } from './services/medicineIdentificationBatch.service';
+import { MedicineIngredientBatchService } from './services/medicineIngredient.service';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { MedicineIdentificationBatchService } from './services/medicineIdentific
     DurDuplicateEffectTabooBatchService,
     InsuranceBatchService,
     MedicineIdentificationBatchService,
+    MedicineIngredientBatchService,
+    DiseaseBatchService,
     UtilProvider,
   ],
 })

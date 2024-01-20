@@ -338,3 +338,38 @@ model medicine_identification {
   @@index([insurance_code])
   @@index([company_number])
 }
+
+model medicine_ingredient{
+  id String @id @map("_id")
+  code String
+  state_code String
+  state  String
+  name String
+  type String /// 식약처 분류명
+  usage String // 투여
+  amount String
+  unit String
+  @@index([name])
+  @@index([type])
+  @@index([usage])
+}
+
+
+model disease {
+  id String @id @map("_id")
+  kor_name String
+  eng_name String
+  code String
+  complete_code_type String
+  type String
+  gender_type String?
+  oriental_type String
+  main_disease_type String?
+  min_age Int?
+  max_age Int?
+
+  @@index([kor_name])
+  @@index([eng_name])
+  @@index([code])
+  @@index([complete_code_type])
+}

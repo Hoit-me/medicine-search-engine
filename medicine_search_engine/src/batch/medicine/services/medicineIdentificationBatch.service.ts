@@ -22,7 +22,7 @@ export class MedicineIdentificationBatchService {
     private readonly prisma: PrismaService,
   ) {}
 
-  batch(sort: 'ASC' | 'DESC' = 'ASC') {
+  batch$(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.util
       .fetchOpenApiPages$<Medicine.Indentification.OpenApiDto>(
         IDENTIFICATION_API_URL_BUILD,
