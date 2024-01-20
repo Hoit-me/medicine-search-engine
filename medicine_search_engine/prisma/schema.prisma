@@ -94,6 +94,8 @@ model medicine {
   @@index([additive_ingredients])
   @@index([additive_ingredients.code])
   @@index([insurance_code])
+  @@index([name])
+  @@index([english_name])
 }
 
 
