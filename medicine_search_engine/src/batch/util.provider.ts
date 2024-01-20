@@ -8,7 +8,6 @@ import {
   Observable,
   RetryConfig,
   catchError,
-  filter,
   map,
   mergeMap,
   of,
@@ -72,7 +71,6 @@ export class UtilProvider {
         mergeMap((pages) => pages),
       )
       .pipe(
-        filter((page) => page === 3),
         mergeMap(
           (page) =>
             this.fetchOpenApi$<OpenApiResponse<T>>(

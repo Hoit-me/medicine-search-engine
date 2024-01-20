@@ -68,3 +68,9 @@ export const IDENTIFICATION_API_URL =
 export const IDENTIFICATION_API_URL_BUILD = (pageNo: number, rows = 100) =>
   IDENTIFICATION_API_URL +
   `&serviceKey=${process.env.API_KEY_DECODED}&pageNo=${pageNo}&numOfRows=${rows}`;
+
+export const INGREDIENT_API_URL =
+  'https://api.odcloud.kr/api/15067461/v1/uddi:0885e8ce-ef4d-45ee-8301-861fd4d886bc?returnType=json';
+export const INGREDIENT_API_URL_BUILD = (pageNo: number, rows = 100) =>
+  INGREDIENT_API_URL +
+  `&page=${pageNo}&perPage=${rows}&serviceKey=${process.env.API_KEY_DECODED}`;
