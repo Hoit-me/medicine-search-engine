@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextIndex","fullTextSearch"]
 }
 
 datasource db {
@@ -62,7 +63,7 @@ model medicine {
   insurance_code      String[] 
   is_new_drug         Boolean
   main_ingredients     compound[]
-  name                String
+  name                String 
   narcotic_type       String?
   packing_unit        String
   permit_date         DateTime?
@@ -94,8 +95,8 @@ model medicine {
   @@index([additive_ingredients])
   @@index([additive_ingredients.code])
   @@index([insurance_code])
-  @@index([name])
   @@index([english_name])
+  @@fulltext([name])
 }
 
 

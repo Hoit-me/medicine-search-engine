@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DISEASE_API_URL_BUILD } from '@src/constant';
 import { Disease } from '@src/type/disease';
-import { from, map, mergeMap, toArray } from 'rxjs';
+import { bufferCount, from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from './../util.provider';
 
 @Injectable()
@@ -29,8 +29,8 @@ export class DiseaseBatchService {
           ),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
-        toArray(),
-        mergeMap((data) => this.bulkUpsert$(data, 20)),
+        bufferCount(100),
+        mergeMap((data) => this.bulkUpsert$(data), 1),
       );
   }
 
@@ -44,7 +44,7 @@ export class DiseaseBatchService {
     };
   }
 
-  bulkUpsert$(data: Prisma.diseaseCreateInput[], batchSize = 20) {
+  bulkUpsert$(data: Prisma.diseaseCreateInput[], batchSize = 10) {
     return from(data).pipe(
       mergeMap((data) => {
         const { id, ...rest } = data;

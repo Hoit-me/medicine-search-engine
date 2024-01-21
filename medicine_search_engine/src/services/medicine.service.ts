@@ -50,10 +50,10 @@ export class MedicineService {
    * - 검색어 O
    *   - 검색어 : '졸정'
    *   - 600ms ~ 800ms
-   * 
+   *
    * ### index [name]
    * - 검색어 X
-   * 
+   *
    */
   async getMedicineList({
     page,
@@ -76,6 +76,17 @@ export class MedicineService {
         },
       }),
     });
+
+    const a = await this.prisma.$runCommandRaw({
+      find: 'medicine',
+      filter: {
+        $text: {
+          $search: '포도당',
+        },
+      },
+    });
+    console.log(a);
+
     const totalCount = await this.prisma.medicine.count({
       ...(search && {
         where: {
