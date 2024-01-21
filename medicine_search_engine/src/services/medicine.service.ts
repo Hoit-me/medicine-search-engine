@@ -25,7 +25,7 @@ export class MedicineService {
   selectPage() {
     return {
       select: {
-        ...typia.random<SelectAll<medicine>>(),
+        ...typia.random<SelectAll<medicine, true>>(),
         document: false,
         usage: false,
         effect: false,
@@ -43,6 +43,10 @@ export class MedicineService {
    * - 환경
    *  - 16GB RAM
    *  - mac M1 Pro
+   *
+   * - DB
+   *  - mongodb altas
+   *
    * ### no index [name]
    * - 검색어 X
    *  - 100ms ~ 400ms
@@ -77,16 +81,6 @@ export class MedicineService {
       }),
     });
 
-    const a = await this.prisma.$runCommandRaw({
-      find: 'medicine',
-      filter: {
-        $text: {
-          $search: '포도당',
-        },
-      },
-    });
-    console.log(a);
-
     const totalCount = await this.prisma.medicine.count({
       ...(search && {
         where: {
@@ -112,5 +106,75 @@ export class MedicineService {
       },
     });
     return medicineList;
+  }
+
+  /**
+   * 성능 기록
+   *
+   * - 환경
+   *
+   */
+  async searchMedicine({
+    page = 1,
+    limit,
+    search = '',
+    path = ['name'],
+  }: {
+    search: string;
+    page: number;
+    limit: number;
+    path: ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[];
+  }) {
+    const medicine_list = (await this.prisma.medicine.aggregateRaw({
+      pipeline: [
+        {
+          $search: {
+            index: 'medicine_kor',
+            text: {
+              query: search,
+              path,
+              fuzzy: {
+                maxEdits: 1,
+              },
+            },
+            count: {
+              type: 'total',
+            },
+          },
+        },
+        { $skip: (page - 1) * limit },
+        {
+          $limit: limit,
+        },
+      ],
+    })) as unknown as Omit<
+      medicine,
+      'document' | 'usage' | 'effect' | 'change_content' | 'caution'
+    >[];
+
+    const total = (await this.prisma.medicine.aggregateRaw({
+      pipeline: [
+        {
+          $searchMeta: {
+            index: 'medicine_kor',
+            text: {
+              query: search,
+              path,
+              fuzzy: {
+                maxEdits: 1,
+              },
+            },
+            count: {
+              type: 'total',
+            },
+          },
+        },
+      ],
+    })) as unknown as [{ count: { total: number } }];
+
+    return {
+      medicineList: medicine_list,
+      totalCount: total[0]?.count.total || 0,
+    };
   }
 }
