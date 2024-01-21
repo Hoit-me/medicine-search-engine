@@ -13,4 +13,18 @@ export class MedicineController {
     const result = await this.medicineService.getMedicineList(query);
     return result;
   }
+  @TypedRoute.Get('search/')
+  async getMedicineList2(
+    @TypedQuery() query: { page: number; limit: number; search?: string },
+  ): Promise<MedicineRes.Page> {
+    const { page, limit, search } = query;
+    const result = search
+      ? await this.medicineService.searchMedicine({
+          ...query,
+          search,
+          path: ['name'],
+        })
+      : await this.medicineService.getMedicineList(query);
+    return result;
+  }
 }

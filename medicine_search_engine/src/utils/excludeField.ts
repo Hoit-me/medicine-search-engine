@@ -5,4 +5,4 @@ export const selectAll = <T>() => {
   return a;
 };
 
-export type SelectAll<T> = Record<keyof T, true>;
+export type SelectAll<T, U extends true | 1> = Record<keyof T, U>;
