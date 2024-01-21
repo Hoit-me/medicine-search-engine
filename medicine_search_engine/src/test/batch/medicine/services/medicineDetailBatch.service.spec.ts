@@ -9,7 +9,6 @@ import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 describe('MedicineDetailBatchService', () => {
   let medicineDetailBatchService: MedicineDetailBatchService;
-  let httpService: HttpService;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [HttpModule.register({ timeout: 5000 })],
@@ -29,7 +28,6 @@ describe('MedicineDetailBatchService', () => {
     medicineDetailBatchService = module.get<MedicineDetailBatchService>(
       MedicineDetailBatchService,
     );
-    httpService = module.get<HttpService>(HttpService);
   });
 
   afterEach(() => {

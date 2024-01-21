@@ -48,15 +48,12 @@ export class MedicineCommonBatchService {
         concatMap((common) => this.bulkCheckExistMedicine(common)),
         mergeMap((c) => c),
         map((c) => this.checkImageUpdated$(c)),
-        mergeMap(
-          ({ common, updated }) =>
-            updated ? this.uploadAndSetUpdatedImage$(common) : of(common),
-          5,
+        mergeMap(({ common, updated }) =>
+          updated ? this.uploadAndSetUpdatedImage$(common) : of(common),
         ),
         map((common) => this.pickMedicineCommonData(common)),
         bufferCount(100),
-        mergeMap((common) => this.bulkUpdateMedicineCommon$(common), 2),
-        //   map((_, i) => console.log('batch', i)),
+        mergeMap((common) => this.bulkUpdateMedicineCommon$(common)),
       );
   }
 
@@ -118,7 +115,7 @@ export class MedicineCommonBatchService {
             return of(null); // 에러 처리
           }),
         );
-      }, 1), // 동시성 제한
+      }), // 동시성 제한
       retry({ count: 3, delay: 5000 }),
       catchError((error) => {
         console.error('Error in bulk update', error);

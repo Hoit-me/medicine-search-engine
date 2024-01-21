@@ -18,7 +18,7 @@ export class DurVolumeTabooBatchService {
       .fetchOpenApiPages$<{ item: Dur.Ingredient.Volume.OpenApiDto }>(
         DUR_VOLUME_API_URL_BUILD,
         100,
-        2,
+        1,
         'ASC',
       )
       .pipe(
@@ -31,7 +31,7 @@ export class DurVolumeTabooBatchService {
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         toArray(),
-        mergeMap((data) => this.bulkUpsert$(data, 20)),
+        mergeMap((data) => this.bulkUpsert$(data, 10), 2),
       );
   }
 

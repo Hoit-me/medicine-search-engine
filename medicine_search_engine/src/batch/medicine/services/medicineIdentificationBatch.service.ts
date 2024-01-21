@@ -6,12 +6,12 @@ import { IDENTIFICATION_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
 import {
   Observable,
+  bufferCount,
   catchError,
   from,
   map,
   mergeMap,
   of,
-  tap,
   toArray,
 } from 'rxjs';
 
@@ -38,12 +38,12 @@ export class MedicineIdentificationBatchService {
           >(openApi, Medicine.Indentification.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
-        toArray(),
-        tap(() => console.log('batch')),
-        mergeMap((prismaInputs) =>
-          this.bulkCheckAndCehckImageUpdated$(prismaInputs),
+        bufferCount(100),
+        mergeMap(
+          (prismaInputs) => this.bulkCheckAndCehckImageUpdated$(prismaInputs),
+          5,
         ),
-        mergeMap((prismaInputs) => this.bulkUpsert$(prismaInputs)),
+        mergeMap((prismaInputs) => this.bulkUpsert$(prismaInputs), 5),
         catchError((err) => {
           console.log(err.message, 'batch');
           return of([]);
@@ -78,6 +78,7 @@ export class MedicineIdentificationBatchService {
     data: Prisma.medicine_identificationCreateInput[],
     batchSize = 20,
   ) {
+    console.log('bulkUpsert', data.length);
     return from(data).pipe(
       mergeMap((data) => {
         const { id, ...rest } = data;
@@ -101,6 +102,7 @@ export class MedicineIdentificationBatchService {
       image_created_date,
       item_approval_date,
       change_date,
+      color_front,
       ...rest
     } = dto;
     const id = serial_number;
@@ -116,6 +118,7 @@ export class MedicineIdentificationBatchService {
       ...rest,
       id,
       serial_number,
+      color_front: color_front ?? '',
       classification_name: _classification_name,
       form_code_name: _form_code_name,
       image_created_date: _image_created_date,
@@ -137,7 +140,7 @@ export class MedicineIdentificationBatchService {
           ),
           toArray(),
         );
-      }),
+      }, batchSize),
     );
   }
 

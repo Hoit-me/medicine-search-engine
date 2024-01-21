@@ -356,7 +356,7 @@ export namespace Medicine {
       print_front?: string; // 표시(앞)
       print_back?: string; // 표시(뒤)
       drug_shape?: string; // 의약품모양
-      color_front: string; // 색깔(앞)
+      color_front?: string; // 색깔(앞)
       color_back?: string; // 색깔(뒤)
       line_front?: string; // 분할선(앞)
       line_back?: string; // 분할선(뒤)

@@ -4,7 +4,15 @@ import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { INGREDIENT_API_URL_BUILD } from '@src/constant';
 import { Medicine } from '@src/type/medicine';
-import { catchError, from, map, mergeMap, of, tap, toArray } from 'rxjs';
+import {
+  bufferCount,
+  catchError,
+  from,
+  map,
+  mergeMap,
+  of,
+  toArray,
+} from 'rxjs';
 
 @Injectable()
 export class MedicineIngredientBatchService {
@@ -29,10 +37,9 @@ export class MedicineIngredientBatchService {
           >(openApi, Medicine.Ingredient.OPEN_API_DTO_KEY_MAP),
         ),
         map((ingredient) => this.convertDtoToPrismaSchema(ingredient)),
-        toArray(),
-        tap(() => console.log('batch')),
+        bufferCount(100),
 
-        mergeMap((prismaInputs) => this.bulkUpsert$(prismaInputs), 1),
+        mergeMap((prismaInputs) => this.bulkUpsert$(prismaInputs), 2),
         catchError((err) => {
           console.log(err.message, 'batch');
           return of([]);
@@ -40,7 +47,7 @@ export class MedicineIngredientBatchService {
       );
   }
 
-  bulkUpsert$(datas: Prisma.medicine_ingredientCreateInput[], batchSize = 20) {
+  bulkUpsert$(datas: Prisma.medicine_ingredientCreateInput[], batchSize = 10) {
     return from(datas).pipe(
       mergeMap((data) => {
         const { id, ...rest } = data;
