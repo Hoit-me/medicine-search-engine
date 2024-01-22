@@ -1,0 +1,251 @@
+{
+  "openapi": "3.0.1",
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local Server"
+    }
+  ],
+  "info": {
+    "version": "0.0.1",
+    "title": "nestjs",
+    "description": "",
+    "license": {
+      "name": "UNLICENSED"
+    }
+  },
+  "paths": {
+    "/medicine": {
+      "get": {
+        "tags": [],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PageSearch"
+            },
+            "description": "",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicineRes.Page"
+                }
+              }
+            }
+          }
+        },
+        "description": "test"
+      }
+    },
+    "/medicine/search": {
+      "get": {
+        "tags": [],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PageSearch"
+            },
+            "description": "",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicineRes.Page"
+                }
+              }
+            }
+          }
+        },
+        "description": "test1"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PageSearch": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "number"
+          },
+          "limit": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "number"
+          },
+          "search": {
+            "x-typia-required": false,
+            "x-typia-optional": true,
+            "type": "string"
+          }
+        },
+        "nullable": false,
+        "required": [
+          "page",
+          "limit"
+        ],
+        "x-typia-jsDocTags": []
+      },
+      "MedicineRes.Page": {
+        "type": "object",
+        "properties": {
+          "medicineList": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MedicineRes.Medicine"
+            }
+          },
+          "totalCount": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "number"
+          }
+        },
+        "nullable": false,
+        "required": [
+          "medicineList",
+          "totalCount"
+        ],
+        "x-typia-jsDocTags": []
+      },
+      "MedicineRes.Medicine": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "string"
+          },
+          "company": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "string"
+          },
+          "image_url": {
+            "x-typia-required": false,
+            "x-typia-optional": true,
+            "type": "string",
+            "nullable": true
+          },
+          "english_name": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "string",
+            "nullable": true
+          },
+          "ingredients": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                },
+                "en": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string",
+                  "nullable": true
+                },
+                "ko": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                },
+                "pharmacopoeia": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                },
+                "standard": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                },
+                "unit": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                }
+              },
+              "nullable": false,
+              "required": [
+                "amount",
+                "en",
+                "ko",
+                "pharmacopoeia",
+                "standard",
+                "unit"
+              ],
+              "x-typia-jsDocTags": []
+            }
+          },
+          "pharmacological_class": {
+            "x-typia-required": true,
+            "x-typia-optional": false,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                },
+                "name": {
+                  "x-typia-required": true,
+                  "x-typia-optional": false,
+                  "type": "string"
+                }
+              },
+              "nullable": false,
+              "required": [
+                "code",
+                "name"
+              ],
+              "x-typia-jsDocTags": []
+            }
+          }
+        },
+        "nullable": false,
+        "required": [
+          "name",
+          "company",
+          "english_name",
+          "ingredients",
+          "pharmacological_class"
+        ],
+        "x-typia-jsDocTags": []
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  }
+}
