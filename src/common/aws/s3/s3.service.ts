@@ -8,8 +8,8 @@ export class S3Service {
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION || 'ap-northeast-2',
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.S3_AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.S3_AWS_SECRET_ACCESS_KEY!,
       },
     });
   }
