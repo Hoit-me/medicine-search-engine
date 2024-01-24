@@ -1,0 +1,12 @@
+name: push-main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    uses: Hoit-me/action/.github/workflows/test.yml@main
+    with:
+      node-version: '20.5.1'
+      pnpm-version: '8'
