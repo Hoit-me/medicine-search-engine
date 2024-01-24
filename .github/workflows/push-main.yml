@@ -5,8 +5,21 @@ on:
       - main
 
 jobs:
-  deploy:
+  test:
     uses: Hoit-me/action/.github/workflows/test.yml@main
     with:
       node-version: '20.5.1'
       pnpm-version: '8'
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: env
+        run: |
+          echo "${{ ENV }}" >> .env
+          cat .env
+          ls
+        env:
+          ENV: ${{ secrets.ENV }}
