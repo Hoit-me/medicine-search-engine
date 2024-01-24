@@ -8,8 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
+//--------------------------------------------------
+// COMMON TYPE
+//--------------------------------------------------
 type changeContent {
   content String
   date    DateTime 
