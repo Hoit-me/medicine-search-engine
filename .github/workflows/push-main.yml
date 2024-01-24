@@ -16,12 +16,53 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20.5.1'
+      - uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+          run_install: false
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          pnpm install
 
       - name: env
         run: |
           echo "${{ ENV }}" >> .env
-          echo "${{ ENV }}" 
-          cat .env
-          ls
         env:
           ENV: ${{ secrets.ENV }}
+
+      - name: Build
+        run: |
+          pnpm run build
+          npx nestia swagger
+
+      - name: docker build
+        run: |
+          docker build -t ${{ secrets.AWS_ECR }}:latest .
+
+      - name: aws login
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region ap-northeast-2
+          aws configure set default.output json
+
+      - name: aws ecr push
+        run: |
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
+          docker tag ${{ secrets.AWS_ECR }}:latest ${{ secrets.AWS_ECR }}:latest
+          docker push ${{ secrets.AWS_ECR }}:latest
+
+      - name: aws ecs update
+        run: |
+          aws ecs update-service --cluster ${{ secrets.AWS_ECS_CLUSTER }} --service ${{ secrets.AWS_ECS_SERVICE }} --force-new-deployment
