@@ -80,18 +80,12 @@
         "type": "object",
         "properties": {
           "page": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "number"
           },
           "limit": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "number"
           },
           "search": {
-            "x-typia-required": false,
-            "x-typia-optional": true,
             "type": "string"
           }
         },
@@ -99,23 +93,18 @@
         "required": [
           "page",
           "limit"
-        ],
-        "x-typia-jsDocTags": []
+        ]
       },
       "MedicineRes.Page": {
         "type": "object",
         "properties": {
           "medicineList": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MedicineRes.Medicine"
             }
           },
           "totalCount": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "number"
           }
         },
@@ -123,70 +112,47 @@
         "required": [
           "medicineList",
           "totalCount"
-        ],
-        "x-typia-jsDocTags": []
+        ]
       },
       "MedicineRes.Medicine": {
         "type": "object",
         "properties": {
           "name": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "string"
           },
           "company": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "string"
           },
           "image_url": {
-            "x-typia-required": false,
-            "x-typia-optional": true,
             "type": "string",
             "nullable": true
           },
           "english_name": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "string",
             "nullable": true
           },
           "ingredients": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "amount": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 },
                 "en": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string",
                   "nullable": true
                 },
                 "ko": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 },
                 "pharmacopoeia": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 },
                 "standard": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 },
                 "unit": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 }
               },
@@ -198,25 +164,18 @@
                 "pharmacopoeia",
                 "standard",
                 "unit"
-              ],
-              "x-typia-jsDocTags": []
+              ]
             }
           },
           "pharmacological_class": {
-            "x-typia-required": true,
-            "x-typia-optional": false,
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "code": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 },
                 "name": {
-                  "x-typia-required": true,
-                  "x-typia-optional": false,
                   "type": "string"
                 }
               },
@@ -224,8 +183,7 @@
               "required": [
                 "code",
                 "name"
-              ],
-              "x-typia-jsDocTags": []
+              ]
             }
           }
         },
@@ -236,8 +194,7 @@
           "english_name",
           "ingredients",
           "pharmacological_class"
-        ],
-        "x-typia-jsDocTags": []
+        ]
       }
     },
     "securitySchemes": {
