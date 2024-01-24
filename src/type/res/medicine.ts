@@ -1,5 +1,4 @@
 import { ingredients } from '@prisma/client';
-
 export namespace MedicineRes {
   export interface Medicine {
     name: string;

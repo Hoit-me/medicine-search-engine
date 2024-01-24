@@ -18,12 +18,9 @@ export class DurCombinedTabooBatchService {
   /// ------------------------------------
   batch$() {
     return this.util
-      .fetchOpenApiPages$<{ item: Dur.Ingredient.Combined.OpenApiDto }>(
-        DUR_COMBINED_API_URL_BUILD,
-        100,
-        2,
-        'ASC',
-      )
+      .fetchOpenApiPages$<{
+        item: Dur.Ingredient.Combined.OpenApiDto;
+      }>(DUR_COMBINED_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
