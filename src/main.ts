@@ -11,6 +11,6 @@ async function bootstrap() {
     type: VersioningType.URI,
     prefix: 'v',
   });
-  await app.listen(3000);
+  await app.listen(8000);
 }
 bootstrap();
