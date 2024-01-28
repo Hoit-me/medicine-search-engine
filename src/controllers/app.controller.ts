@@ -2,7 +2,7 @@ import { TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
 import { AppService } from '../app.service';
 
-@Controller({ version: '1', path: '/' })
+@Controller({ path: '/' })
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

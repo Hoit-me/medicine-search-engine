@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AwsModule } from './common/aws/aws.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { AppController } from './controllers/app.controller';
 import { MedicineModule } from './modules/medicine.module';
 
 @Module({
@@ -19,7 +20,7 @@ import { MedicineModule } from './modules/medicine.module';
     },
     AwsModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
