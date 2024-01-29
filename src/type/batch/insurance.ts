@@ -1,6 +1,6 @@
 import { OpenApiResponse2 } from '.';
 
-export namespace Insurance {
+export namespace InsuranceBatch {
   export interface Dto {
     insurance_code: number; // 제품코드
     name: string; // 제품명

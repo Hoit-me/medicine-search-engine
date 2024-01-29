@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUR_COMBINED_API_URL_BUILD } from '@src/constant/api_url';
-import { Dur } from '@src/type/batch/dur';
+import { DurBatch } from '@src/type/batch/dur';
 import { filter, from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 
@@ -19,15 +19,15 @@ export class DurCombinedTabooBatchService {
   batch$() {
     return this.util
       .fetchOpenApiPages$<{
-        item: Dur.Ingredient.Combined.OpenApiDto;
+        item: DurBatch.Ingredient.Combined.OpenApiDto;
       }>(DUR_COMBINED_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Dur.Ingredient.Combined.OpenApiDto,
-            Dur.Ingredient.Combined.Dto
-          >(openApi, Dur.Ingredient.Combined.OPEN_API_DTO_KEY_MAP),
+            DurBatch.Ingredient.Combined.OpenApiDto,
+            DurBatch.Ingredient.Combined.Dto
+          >(openApi, DurBatch.Ingredient.Combined.OPEN_API_DTO_KEY_MAP),
         ),
         filter((dto) => dto.deletion_status !== '삭제'),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
@@ -57,7 +57,7 @@ export class DurCombinedTabooBatchService {
   }
 
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.Combined.Dto,
+    dto: DurBatch.Ingredient.Combined.Dto,
   ): Prisma.dur_ingredient_combined_tabooCreateInput {
     const {
       dur_code,

@@ -3,7 +3,7 @@ import { Prisma, medicine_identification } from '@prisma/client';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { IDENTIFICATION_API_URL_BUILD } from '@src/constant/api_url';
-import { Medicine } from '@src/type/batch/medicine';
+import { MedicineBatch } from '@src/type/batch/medicine';
 import {
   Observable,
   bufferCount,
@@ -24,7 +24,7 @@ export class MedicineIdentificationBatchService {
 
   batch$(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.util
-      .fetchOpenApiPages$<Medicine.Indentification.OpenApiDto>(
+      .fetchOpenApiPages$<MedicineBatch.Indentification.OpenApiDto>(
         IDENTIFICATION_API_URL_BUILD,
         100,
         1,
@@ -33,9 +33,9 @@ export class MedicineIdentificationBatchService {
       .pipe(
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Medicine.Indentification.OpenApiDto,
-            Medicine.Indentification.Dto
-          >(openApi, Medicine.Indentification.OPEN_API_DTO_KEY_MAP),
+            MedicineBatch.Indentification.OpenApiDto,
+            MedicineBatch.Indentification.Dto
+          >(openApi, MedicineBatch.Indentification.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         bufferCount(100),
@@ -93,7 +93,7 @@ export class MedicineIdentificationBatchService {
   }
 
   convertDtoToPrismaSchema(
-    dto: Medicine.Indentification.Dto,
+    dto: MedicineBatch.Indentification.Dto,
   ): Prisma.medicine_identificationCreateInput {
     const {
       serial_number,

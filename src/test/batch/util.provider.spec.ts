@@ -2,8 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
-import { Dur } from '@src/type/batch/dur';
-import { Medicine } from '@src/type/batch/medicine';
+import { DurBatch } from '@src/type/batch/dur';
+import { MedicineBatch } from '@src/type/batch/medicine';
 import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 
@@ -414,13 +414,13 @@ describe('util.provider.ts', () => {
        */
       convertOpenApiToDtoTestCaseBuilder(
         'Medicine Detail OpenApi를 Detail Dto로 변환한다',
-        typia.random<Medicine.Detail.OpenApiDto>(),
-        Medicine.Detail.OPEN_API_DTO_KEY_MAP,
+        typia.random<MedicineBatch.Detail.OpenApiDto>(),
+        MedicineBatch.Detail.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'Medicine Common OpenApi를 Common Dto로 변환한다',
-        typia.random<Medicine.Common.OpenApiDto>(),
-        Medicine.Common.OPEN_API_DTO_KEY_MAP,
+        typia.random<MedicineBatch.Common.OpenApiDto>(),
+        MedicineBatch.Common.OPEN_API_DTO_KEY_MAP,
       ),
 
       /**
@@ -436,39 +436,39 @@ describe('util.provider.ts', () => {
        */
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Age OpenApi를 DUR Ingredient Age Dto로 변환한다',
-        typia.random<Dur.Ingredient.Age.OpenApiDto>(),
-        Dur.Ingredient.Age.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Age.OpenApiDto>(),
+        DurBatch.Ingredient.Age.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Combined OpenApi를 DUR Ingredient Combined Dto로 변환한다',
-        typia.random<Dur.Ingredient.Combined.OpenApiDto>(),
-        Dur.Ingredient.Combined.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Combined.OpenApiDto>(),
+        DurBatch.Ingredient.Combined.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient OpenApi를 DUR Ingredient Dto로 변환한다',
-        typia.random<Dur.Ingredient.DuplicateEffect.OpenApiDto>(),
-        Dur.Ingredient.DuplicateEffect.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.DuplicateEffect.OpenApiDto>(),
+        DurBatch.Ingredient.DuplicateEffect.OPEN_API_DTO_KEY_MAP,
       ),
 
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Old OpenApi를 DUR Ingredient Old Dto로 변환한다',
-        typia.random<Dur.Ingredient.Old.OpenApiDto>(),
-        Dur.Ingredient.Old.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Old.OpenApiDto>(),
+        DurBatch.Ingredient.Old.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Period OpenApi를 DUR Ingredient Period Dto로 변환한다',
-        typia.random<Dur.Ingredient.Period.OpenApiDto>(),
-        Dur.Ingredient.Period.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Period.OpenApiDto>(),
+        DurBatch.Ingredient.Period.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Pregnant OpenApi를 DUR Ingredient Pregnant Dto로 변환한다',
-        typia.random<Dur.Ingredient.Pregnant.OpenApiDto>(),
-        Dur.Ingredient.Pregnant.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Pregnant.OpenApiDto>(),
+        DurBatch.Ingredient.Pregnant.OPEN_API_DTO_KEY_MAP,
       ),
       convertOpenApiToDtoTestCaseBuilder(
         'DUR Ingredient Volumet OpenApi를 DUR Ingredient Volumet Dto로 변환한다',
-        typia.random<Dur.Ingredient.Volume.OpenApiDto>(),
-        Dur.Ingredient.Volume.OPEN_API_DTO_KEY_MAP,
+        typia.random<DurBatch.Ingredient.Volume.OpenApiDto>(),
+        DurBatch.Ingredient.Volume.OPEN_API_DTO_KEY_MAP,
       ),
     ];
 

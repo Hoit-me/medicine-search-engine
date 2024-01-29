@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUR_PREGNAT_API_URL_BUILD } from '@src/constant/api_url';
-import { Dur } from '@src/type/batch/dur';
+import { DurBatch } from '@src/type/batch/dur';
 import { from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 
@@ -16,15 +16,15 @@ export class DurPregnantTabooBatchService {
   batch$() {
     return this.util
       .fetchOpenApiPages$<{
-        item: Dur.Ingredient.Pregnant.OpenApiDto;
+        item: DurBatch.Ingredient.Pregnant.OpenApiDto;
       }>(DUR_PREGNAT_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Dur.Ingredient.Pregnant.OpenApiDto,
-            Dur.Ingredient.Pregnant.Dto
-          >(openApi, Dur.Ingredient.Pregnant.OPEN_API_DTO_KEY_MAP),
+            DurBatch.Ingredient.Pregnant.OpenApiDto,
+            DurBatch.Ingredient.Pregnant.Dto
+          >(openApi, DurBatch.Ingredient.Pregnant.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         toArray(),
@@ -56,7 +56,7 @@ export class DurPregnantTabooBatchService {
   /// convert DTO to Prisma Schema
   /// ------------------------------------
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.Pregnant.Dto,
+    dto: DurBatch.Ingredient.Pregnant.Dto,
   ): Prisma.dur_ingredient_pregnant_tabooCreateInput {
     const {
       dur_code,

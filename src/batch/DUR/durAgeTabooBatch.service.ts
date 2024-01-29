@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUR_AGE_API_URL_BUILD } from '@src/constant/api_url';
-import { Dur } from '@src/type/batch/dur';
+import { DurBatch } from '@src/type/batch/dur';
 import {
   catchError,
   filter,
@@ -30,15 +30,15 @@ export class DurAgeTabooBatchService {
   batch$() {
     return this.util
       .fetchOpenApiPages$<{
-        item: Dur.Ingredient.Age.OpenApiDto;
+        item: DurBatch.Ingredient.Age.OpenApiDto;
       }>(DUR_AGE_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Dur.Ingredient.Age.OpenApiDto,
-            Dur.Ingredient.Age.Dto
-          >(openApi, Dur.Ingredient.Age.OPEN_API_DTO_KEY_MAP),
+            DurBatch.Ingredient.Age.OpenApiDto,
+            DurBatch.Ingredient.Age.Dto
+          >(openApi, DurBatch.Ingredient.Age.OPEN_API_DTO_KEY_MAP),
         ),
         filter((dto) => dto.deletion_status !== '삭제'),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
@@ -51,7 +51,7 @@ export class DurAgeTabooBatchService {
   /// ------------------------------------
   fetchOpenApi$(pageNum: number, rows = 100) {
     return this.httpService
-      .get<Dur.Ingredient.Age.OpenApiResponseDto>(
+      .get<DurBatch.Ingredient.Age.OpenApiResponseDto>(
         DUR_AGE_API_URL_BUILD(pageNum, rows),
       )
       .pipe(
@@ -114,7 +114,7 @@ export class DurAgeTabooBatchService {
   /// CONVERT DTO
   /// ------------------------------------
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.Age.Dto,
+    dto: DurBatch.Ingredient.Age.Dto,
   ): Prisma.dur_ingredient_age_tabooCreateInput {
     const {
       dur_code,

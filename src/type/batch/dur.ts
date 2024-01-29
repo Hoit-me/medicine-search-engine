@@ -1,6 +1,6 @@
 import { OpenApiResponse } from '.';
 
-export namespace Dur {
+export namespace DurBatch {
   export namespace Ingredient {
     // ------------------------------------
     // COMBINED - 병용금기

@@ -1,6 +1,6 @@
 import { OpenApiResponse2 } from '.';
 
-export namespace Disease {
+export namespace DiseaseBatch {
   export interface Dto {
     kor_name: string;
     eng_name: string;
