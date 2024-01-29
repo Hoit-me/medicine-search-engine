@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, medicine } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
+import { MedicineRepository } from '@src/repository/medicine.repository';
+import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
 import { SelectAll } from '@src/utils/excludeField';
 import typia from 'typia';
@@ -11,27 +13,21 @@ import typia from 'typia';
  */
 @Injectable()
 export class MedicineService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly medicineRepository: MedicineRepository,
+  ) {}
 
   transeformPage(
     input: Prisma.medicineGetPayload<ReturnType<typeof this.selectPage>>,
   ) {
-    return {
-      id: input.id,
-      name: input.name,
-      company_name: input.company,
-    };
+    return input;
   }
 
   selectPage() {
     return {
       select: {
-        ...typia.random<SelectAll<medicine, true>>(),
-        document: false,
-        usage: false,
-        effect: false,
-        change_content: false,
-        caution: false,
+        ...typia.random<SelectAll<Medicine, true>>(),
       },
     } satisfies Prisma.medicineFindManyArgs;
   }
@@ -60,7 +56,11 @@ export class MedicineService {
    * - 검색어 X
    *
    */
-  async getMedicineList({ page = 1, limit = 10, search = '' }: Page.Search) {
+  async getMedicineList({
+    page = 1,
+    limit = 10,
+    search = '',
+  }: Page.Search): Promise<Page<Medicine>> {
     const medicineList = await this.prisma.medicine.findMany({
       ...this.selectPage(),
       skip: (page - 1) * limit,
@@ -85,8 +85,13 @@ export class MedicineService {
     });
 
     return {
-      medicineList,
-      totalCount,
+      data: medicineList.map(this.transeformPage),
+      pagenation: {
+        current: page,
+        limit,
+        total_count: totalCount,
+        total_page: Math.ceil(totalCount / limit),
+      },
     };
   }
 
@@ -107,64 +112,28 @@ export class MedicineService {
    * - 환경
    *
    */
-  async searchMedicine({
+  async search({
     page = 1,
     limit = 10,
     search = '',
     path = ['name'],
   }: Page.Search & {
     path: ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[];
-  }) {
-    const medicine_list = (await this.prisma.medicine.aggregateRaw({
-      pipeline: [
-        {
-          $search: {
-            index: 'medicine_kor',
-            text: {
-              query: search,
-              path,
-              fuzzy: {
-                maxEdits: 1,
-              },
-            },
-            count: {
-              type: 'total',
-            },
-          },
+  }): Promise<Page<Medicine>> {
+    const result = await this.medicineRepository.aggregateSearch(
+      {
+        page,
+        limit,
+        search,
+        path,
+      },
+      {
+        fuzzy: {
+          maxEdits: 1,
         },
-        { $skip: (page - 1) * limit },
-        {
-          $limit: limit,
-        },
-      ],
-    })) as unknown as Omit<
-      medicine,
-      'document' | 'usage' | 'effect' | 'change_content' | 'caution'
-    >[];
+      },
+    );
 
-    const total = (await this.prisma.medicine.aggregateRaw({
-      pipeline: [
-        {
-          $searchMeta: {
-            index: 'medicine_kor',
-            text: {
-              query: search,
-              path,
-              fuzzy: {
-                maxEdits: 1,
-              },
-            },
-            count: {
-              type: 'total',
-            },
-          },
-        },
-      ],
-    })) as unknown as [{ count: { total: number } }];
-
-    return {
-      medicineList: medicine_list,
-      totalCount: total[0]?.count.total || 0,
-    };
+    return result;
   }
 }

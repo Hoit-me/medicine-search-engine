@@ -1,3 +1,4 @@
+import { Page as IPage } from './page';
 export interface SUCCESS<T> {
   /**
    * Whether the request was successful
@@ -17,6 +18,7 @@ export interface SUCCESS<T> {
 }
 
 export namespace SUCCESS {
+  export type Page<T> = SUCCESS<IPage<T>>;
   export type Filtered<T> = T extends SUCCESS<infer S> ? SUCCESS<S> : never;
 
   export type FilteredReturn<T extends (...args: any) => any> = Filtered<
