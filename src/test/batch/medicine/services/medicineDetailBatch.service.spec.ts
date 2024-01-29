@@ -5,7 +5,7 @@ import { MedicineDetailBatchService } from '@src/batch/medicine/services/medicin
 import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { Medicine } from '@src/type/batch/medicine';
+import { MedicineBatch } from '@src/type/batch/medicine';
 import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 describe('MedicineDetailBatchService', () => {
@@ -52,7 +52,7 @@ describe('MedicineDetailBatchService', () => {
 
       it('성분의 한글 문자열과, 영어 문자열을 둘다 입력시 해당 객체 배열을 반환한다.(복합)', () => {
         // arrange
-        const expected: Medicine.Ingredient[] = [
+        const expected: MedicineBatch.Ingredient[] = [
           {
             ko: '포도당',
             en: 'Glucose',
@@ -83,7 +83,7 @@ describe('MedicineDetailBatchService', () => {
 
       it('성분의 한글 문자열과, 영어 문자열을 둘다 입력시 해당 객체 배열을 반환한다.(단일)', () => {
         // arrange
-        const expected: Medicine.Ingredient[] = [
+        const expected: MedicineBatch.Ingredient[] = [
           {
             ko: '포도당',
             en: 'Glucose',
@@ -107,7 +107,7 @@ describe('MedicineDetailBatchService', () => {
       it('성분의 한글 문자열만 입력시 해당 성분의 영어이름은 ""인 객체 배열을 반환한다.(복합)', () => {
         // arrange
         const englishIngredientsStr = '';
-        const expected: Medicine.Ingredient[] = [
+        const expected: MedicineBatch.Ingredient[] = [
           {
             ko: '포도당',
             en: '',
@@ -139,7 +139,7 @@ describe('MedicineDetailBatchService', () => {
       it('성분의 한글 문자열만 입력시 해당 성분의 영어이름은 ""인 객체 배열을 반환한다.(단일)', () => {
         // arrange
         const englishIngredientsStr = '';
-        const expected: Medicine.Ingredient[] = [
+        const expected: MedicineBatch.Ingredient[] = [
           {
             ko: '포도당',
             en: '',
@@ -163,7 +163,7 @@ describe('MedicineDetailBatchService', () => {
       it('한글 성분의 문자열을 입력하지 않으면 빈 배열을 반환한다.', () => {
         // arrange
         const ingredientStr = '';
-        const expected: Medicine.Ingredient[] = [];
+        const expected: MedicineBatch.Ingredient[] = [];
 
         // act
         const result = medicineDetailBatchService.parseIngredients(
@@ -181,7 +181,7 @@ describe('MedicineDetailBatchService', () => {
     // 의약품의 변경사항을 파싱하는 함수
     describe('parseChangedContents', () => {
       const changedContents = '성상, 2021-08-20/성상변경, 2019-07-30';
-      const expected: Medicine.ChangeContent[] = [
+      const expected: MedicineBatch.ChangeContent[] = [
         {
           content: '성상',
           date: new Date('2021-08-20'),
@@ -192,7 +192,7 @@ describe('MedicineDetailBatchService', () => {
         },
       ];
       const singleChangedContents = '성상, 2021-08-20';
-      const singleExpected: Medicine.ChangeContent[] = [
+      const singleExpected: MedicineBatch.ChangeContent[] = [
         {
           content: '성상',
           date: new Date('2021-08-20'),
@@ -200,9 +200,9 @@ describe('MedicineDetailBatchService', () => {
       ];
       const emptyChangedContents = '';
       const nullChangedContents = null;
-      const nullOrEmptyExpected: Medicine.ChangeContent[] = [];
+      const nullOrEmptyExpected: MedicineBatch.ChangeContent[] = [];
       const changedContentsWithSlash = '성상, 2021-08-20/성상변경, 2019-07-30/';
-      const expectedWithSlash: Medicine.ChangeContent[] = [
+      const expectedWithSlash: MedicineBatch.ChangeContent[] = [
         {
           content: '성상',
           date: new Date('2021-08-20'),
@@ -278,7 +278,7 @@ describe('MedicineDetailBatchService', () => {
         '재심사대상(6년),재심사대상(6년),재심사대상(6년),재심사대상(6년)';
       const periodStr =
         '2018-12-26~2024-12-25,2018-12-26~2024-12-25,~2024-12-25,~2024-12-25';
-      const expected: Medicine.ReExamination[] = [
+      const expected: MedicineBatch.ReExamination[] = [
         {
           re_examination_start_date: new Date('2018-12-26'),
           re_examination_end_date: new Date('2024-12-25'),
@@ -303,7 +303,7 @@ describe('MedicineDetailBatchService', () => {
 
       const singleReExaminationsStr = '재심사대상(6년)';
       const singlePeriodStr = '2018-12-26~2024-12-25';
-      const singleExpected: Medicine.ReExamination[] = [
+      const singleExpected: MedicineBatch.ReExamination[] = [
         {
           re_examination_start_date: new Date('2018-12-26'),
           re_examination_end_date: new Date('2024-12-25'),
@@ -496,7 +496,7 @@ describe('MedicineDetailBatchService', () => {
   //           subscriber.error('error');
   //         } else {
   //           subscriber.next({
-  //             data: typia.random<Medicine.Detail.OpenApiResponseDto>(),
+  //             data: typia.random<MedicineBatch.Detail.OpenApiResponseDto>(),
   //           } as unknown as any);
   //         }
   //       }),
@@ -516,7 +516,7 @@ describe('MedicineDetailBatchService', () => {
   //------------------ CONVERT ------------------
   describe('convert', () => {
     describe('convertMedicineDetailToPrismaMedicine', () => {
-      const medicineDetail = typia.random<Medicine.Detail.Dto>();
+      const medicineDetail = typia.random<MedicineBatch.Detail.Dto>();
       const medicineCreateInput = typia.random<Prisma.medicineCreateInput>();
       const medicineCreateInputKeys = Object.keys(medicineCreateInput);
 

@@ -1,6 +1,6 @@
 import { OpenApiResponse, OpenApiResponse2 } from '.';
 
-export namespace Medicine {
+export namespace MedicineBatch {
   export type Pharmacopoeia =
     | 'KP'
     | 'KCP'

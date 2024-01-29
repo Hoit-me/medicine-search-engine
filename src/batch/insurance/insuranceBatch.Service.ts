@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { INSURANCE_API_URL_BUILD } from '@src/constant/api_url';
-import { Insurance } from '@src/type/batch/insurance';
+import { InsuranceBatch } from '@src/type/batch/insurance';
 import { from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 
@@ -15,7 +15,7 @@ export class InsuranceBatchService {
 
   batch$() {
     return this.util
-      .fetchOpenApiPagesType2$<Insurance.OpenApiDto>(
+      .fetchOpenApiPagesType2$<InsuranceBatch.OpenApiDto>(
         INSURANCE_API_URL_BUILD,
         100,
         2,
@@ -23,10 +23,10 @@ export class InsuranceBatchService {
       )
       .pipe(
         map((insurance) =>
-          this.util.convertOpenApiToDto<Insurance.OpenApiDto, Insurance.Dto>(
-            insurance,
-            Insurance.OPEN_API_DTO_KEY_MAP,
-          ),
+          this.util.convertOpenApiToDto<
+            InsuranceBatch.OpenApiDto,
+            InsuranceBatch.Dto
+          >(insurance, InsuranceBatch.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         toArray(),
@@ -56,7 +56,7 @@ export class InsuranceBatchService {
   }
 
   convertDtoToPrismaSchema(
-    dto: Insurance.Dto,
+    dto: InsuranceBatch.Dto,
   ): Prisma.medicine_insuranceCreateInput {
     const { insurance_code, type, list_code, ...rest } = dto;
     return {

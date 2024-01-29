@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUPLICATE_EFFECT_API_URL_BUILD } from '@src/constant/api_url';
-import { Dur } from '@src/type/batch/dur';
+import { DurBatch } from '@src/type/batch/dur';
 import { from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 
@@ -16,15 +16,15 @@ export class DurDuplicateEffectTabooBatchService {
   batch$() {
     return this.util
       .fetchOpenApiPages$<{
-        item: Dur.Ingredient.DuplicateEffect.OpenApiDto;
+        item: DurBatch.Ingredient.DuplicateEffect.OpenApiDto;
       }>(DUPLICATE_EFFECT_API_URL_BUILD, 100, 2, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Dur.Ingredient.DuplicateEffect.OpenApiDto,
-            Dur.Ingredient.DuplicateEffect.Dto
-          >(openApi, Dur.Ingredient.DuplicateEffect.OPEN_API_DTO_KEY_MAP),
+            DurBatch.Ingredient.DuplicateEffect.OpenApiDto,
+            DurBatch.Ingredient.DuplicateEffect.Dto
+          >(openApi, DurBatch.Ingredient.DuplicateEffect.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         toArray(),
@@ -53,7 +53,7 @@ export class DurDuplicateEffectTabooBatchService {
   /// CONVERT DTO
   /// ------------------------------------
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.DuplicateEffect.Dto,
+    dto: DurBatch.Ingredient.DuplicateEffect.Dto,
   ): Prisma.dur_ingredient_duplicate_effect_tabooCreateInput {
     const {
       dur_code,

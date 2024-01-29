@@ -3,7 +3,7 @@ import { Prisma, medicine } from '@prisma/client';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DETAIL_API_URL_BUILD } from '@src/constant/api_url';
-import { Medicine } from '@src/type/batch/medicine';
+import { MedicineBatch } from '@src/type/batch/medicine';
 import { Parser } from 'htmlparser2';
 import {
   bufferCount,
@@ -34,7 +34,7 @@ export class MedicineDetailBatchService {
   // --------------------------------
   batch(sort: 'ASC' | 'DESC' = 'ASC') {
     return this.util
-      .fetchOpenApiPages$<Medicine.Detail.OpenApiDto>(
+      .fetchOpenApiPages$<MedicineBatch.Detail.OpenApiDto>(
         DETAIL_API_URL_BUILD,
         100,
         1,
@@ -43,9 +43,9 @@ export class MedicineDetailBatchService {
       .pipe(
         map((openApiDetail) =>
           this.util.convertOpenApiToDto<
-            Medicine.Detail.OpenApiDto,
-            Medicine.Detail.Dto
-          >(openApiDetail, Medicine.Detail.OPEN_API_DTO_KEY_MAP),
+            MedicineBatch.Detail.OpenApiDto,
+            MedicineBatch.Detail.Dto
+          >(openApiDetail, MedicineBatch.Detail.OPEN_API_DTO_KEY_MAP),
         ),
 
         map((medicineDetail) =>
@@ -69,7 +69,7 @@ export class MedicineDetailBatchService {
 
   // DETAIL TO Prisma.medcine
   convertMedicineDetailToPrismaMedicine(
-    medicine: Medicine.Detail.Dto,
+    medicine: MedicineBatch.Detail.Dto,
   ): Prisma.medicineCreateInput {
     const {
       cancel_date,
@@ -268,7 +268,7 @@ export class MedicineDetailBatchService {
   parseIngredients(
     ingredientsStr?: string | null,
     englishIngredientsStr?: string | null,
-  ): Medicine.Ingredient[] {
+  ): MedicineBatch.Ingredient[] {
     // ingredientsStr example
     // 총량 : 1000밀리리터|성분명 : 포도당|분량 : 50|단위 : 그램|규격 : USP|성분정보 : |비고 : ;
     // 총량 : 1000밀리리터|성분명 : 염화나트륨|분량 : 9|단위 : 그램|규격 : KP|성분정보 : |비고 :
@@ -299,7 +299,7 @@ export class MedicineDetailBatchService {
           en,
           amount,
           unit,
-          pharmacopoeia: pharmacopoeia as Medicine.Pharmacopoeia,
+          pharmacopoeia: pharmacopoeia as MedicineBatch.Pharmacopoeia,
         };
       })
       .filter(({ ko }) => ko);
@@ -328,7 +328,7 @@ export class MedicineDetailBatchService {
   parseReExaminations(
     reExaminationsStr?: string | null,
     periodStr?: string | null,
-  ): Medicine.ReExamination[] {
+  ): MedicineBatch.ReExamination[] {
     // "reExaminationsStr": "재심사대상(6년),재심사대상(6년),재심사대상(6년),재심사대상(6년)",
     // "periodStr": "2018-12-26~2024-12-25,2018-12-26~2024-12-25,~2024-12-25,~2024-12-25",
     if (!reExaminationsStr || !periodStr) return [];
@@ -348,7 +348,7 @@ export class MedicineDetailBatchService {
           re_examination_end_date: new Date(end.trim()),
         };
       })
-      .filter(Boolean) as Medicine.ReExamination[];
+      .filter(Boolean) as MedicineBatch.ReExamination[];
   }
 
   // -------------------------------------------

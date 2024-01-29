@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { DUR_VOLUME_API_URL_BUILD } from '@src/constant/api_url';
-import { Dur } from '@src/type/batch/dur';
+import { DurBatch } from '@src/type/batch/dur';
 import { from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 
@@ -16,15 +16,15 @@ export class DurVolumeTabooBatchService {
   batch$() {
     return this.util
       .fetchOpenApiPages$<{
-        item: Dur.Ingredient.Volume.OpenApiDto;
+        item: DurBatch.Ingredient.Volume.OpenApiDto;
       }>(DUR_VOLUME_API_URL_BUILD, 100, 1, 'ASC')
       .pipe(
         map(({ item }) => item),
         map((openApi) =>
           this.util.convertOpenApiToDto<
-            Dur.Ingredient.Volume.OpenApiDto,
-            Dur.Ingredient.Volume.Dto
-          >(openApi, Dur.Ingredient.Volume.OPEN_API_DTO_KEY_MAP),
+            DurBatch.Ingredient.Volume.OpenApiDto,
+            DurBatch.Ingredient.Volume.Dto
+          >(openApi, DurBatch.Ingredient.Volume.OPEN_API_DTO_KEY_MAP),
         ),
         map((dto) => this.convertDtoToPrismaSchema(dto)),
         toArray(),
@@ -53,7 +53,7 @@ export class DurVolumeTabooBatchService {
   }
 
   convertDtoToPrismaSchema(
-    dto: Dur.Ingredient.Volume.Dto,
+    dto: DurBatch.Ingredient.Volume.Dto,
   ): Prisma.dur_ingredient_volume_tabooCreateInput {
     const {
       dur_code,
