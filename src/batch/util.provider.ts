@@ -1,7 +1,8 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { S3Service } from '@src/common/aws/s3/s3.service';
-import { HasKey, OpenApiResponse, OpenApiResponse2 } from '@src/type';
+import { OpenApiResponse, OpenApiResponse2 } from '@src/type/batch';
+import { HasKey } from '@src/type/util';
 import { renameKeys } from '@src/utils/renameKeys';
 import { typedEntries } from '@src/utils/typedEntries';
 import {
@@ -208,12 +209,12 @@ export class UtilProvider {
   checkImageUpdatedKey<
     K extends string,
     T extends HasKey<K>,
-    U extends HasKey<K>,
+    U extends HasKey<K> | null,
   >(
     key: K,
     { now, before }: { now: T; before?: U | null },
     source: string = 'nedrug',
-  ) {
+  ): { now: T; updated: boolean; key: K } {
     if (!before) return { now, updated: true, key };
     const now_image_url = now[key];
     const before_image_url = before[key];

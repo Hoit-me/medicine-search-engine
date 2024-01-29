@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, medicine } from '@prisma/client';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { DETAIL_API_URL_BUILD } from '@src/constant';
-import { Medicine } from '@src/type/medicine';
+import { DETAIL_API_URL_BUILD } from '@src/constant/api_url';
+import { Medicine } from '@src/type/batch/medicine';
 import { Parser } from 'htmlparser2';
 import {
   bufferCount,

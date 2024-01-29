@@ -1,22 +1,3 @@
-// export const renameKeys = <T extends object>(
-//   keysMap: T,
-//   arg: [keyof T, string][],
-//   opt?: {
-//     undefinedToNull?: boolean;
-//   },
-// ) => {
-//   const temp: any = { ...keysMap };
-
-//   arg.forEach(([oldKey, newKey]) => {
-//     if (oldKey in temp) {
-//       temp[newKey] = temp[oldKey];
-//       delete temp[oldKey];
-//     } else if (opt && opt.undefinedToNull) {
-//       temp[newKey] = null;
-//     }
-//   });
-//   return temp as { [key: string]: any };
-// };
 export type TypedRenameKeys<T extends object, M extends [keyof T, string][]> = {
   [K in M[number][1]]: Extract<M[number], [string, K]> extends [infer O, K]
     ? O extends keyof T

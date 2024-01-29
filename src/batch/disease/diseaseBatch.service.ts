@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { DISEASE_API_URL_BUILD } from '@src/constant';
-import { Disease } from '@src/type/disease';
+import { DISEASE_API_URL_BUILD } from '@src/constant/api_url';
+import { Disease } from '@src/type/batch/disease';
 import { bufferCount, from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 

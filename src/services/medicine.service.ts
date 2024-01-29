@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, medicine } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
+import { Page } from '@src/type/page';
 import { SelectAll } from '@src/utils/excludeField';
 import typia from 'typia';
 /**
@@ -59,15 +60,7 @@ export class MedicineService {
    * - 검색어 X
    *
    */
-  async getMedicineList({
-    page,
-    limit,
-    search = '',
-  }: {
-    page: number;
-    limit: number;
-    search?: string;
-  }) {
+  async getMedicineList({ page = 1, limit = 10, search = '' }: Page.Search) {
     const medicineList = await this.prisma.medicine.findMany({
       ...this.selectPage(),
       skip: (page - 1) * limit,
@@ -116,13 +109,10 @@ export class MedicineService {
    */
   async searchMedicine({
     page = 1,
-    limit,
+    limit = 10,
     search = '',
     path = ['name'],
-  }: {
-    search: string;
-    page: number;
-    limit: number;
+  }: Page.Search & {
     path: ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[];
   }) {
     const medicine_list = (await this.prisma.medicine.aggregateRaw({

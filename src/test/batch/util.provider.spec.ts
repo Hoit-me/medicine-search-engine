@@ -2,8 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
-import { Dur } from '@src/type/dur';
-import { Medicine } from '@src/type/medicine';
+import { Dur } from '@src/type/batch/dur';
+import { Medicine } from '@src/type/batch/medicine';
 import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 
