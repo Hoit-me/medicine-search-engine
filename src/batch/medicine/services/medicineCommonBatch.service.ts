@@ -4,8 +4,8 @@ import { Prisma, medicine, pharmacologicalClass } from '@prisma/client';
 import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { COMMON_API_URL_BUILD } from '@src/constant';
-import { Medicine } from '@src/type/medicine';
+import { COMMON_API_URL_BUILD } from '@src/constant/api_url';
+import { Medicine } from '@src/type/batch/medicine';
 import {
   bufferCount,
   catchError,

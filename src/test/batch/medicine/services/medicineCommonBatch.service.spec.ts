@@ -4,7 +4,7 @@ import { Prisma, medicine } from '@prisma/client';
 import { MedicineCommonBatchService } from '@src/batch/medicine/services/medicineCommonBatch.service';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { Medicine } from '@src/type/medicine';
+import { Medicine } from '@src/type/batch/medicine';
 import { mockDeep } from 'jest-mock-extended';
 import { of } from 'rxjs';
 import typia, { tags } from 'typia';

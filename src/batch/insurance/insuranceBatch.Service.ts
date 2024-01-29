@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { INSURANCE_API_URL_BUILD } from '@src/constant';
-import { Insurance } from '@src/type/insurance';
+import { INSURANCE_API_URL_BUILD } from '@src/constant/api_url';
+import { Insurance } from '@src/type/batch/insurance';
 import { from, map, mergeMap, toArray } from 'rxjs';
 import { UtilProvider } from '../util.provider';
 

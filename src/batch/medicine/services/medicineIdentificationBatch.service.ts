@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, medicine_identification } from '@prisma/client';
 import { UtilProvider } from '@src/batch/util.provider';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { IDENTIFICATION_API_URL_BUILD } from '@src/constant';
-import { Medicine } from '@src/type/medicine';
+import { IDENTIFICATION_API_URL_BUILD } from '@src/constant/api_url';
+import { Medicine } from '@src/type/batch/medicine';
 import {
   Observable,
   bufferCount,
@@ -151,6 +151,7 @@ export class MedicineIdentificationBatchService {
     before: medicine_identification | null;
     now: Prisma.medicine_identificationCreateInput;
   }) {
+    now.image_url;
     return of(now).pipe(
       map((now) =>
         this.util.checkImageUpdatedKey('image_url', { now, before }),

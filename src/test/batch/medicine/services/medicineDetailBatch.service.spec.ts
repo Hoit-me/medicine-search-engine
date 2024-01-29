@@ -5,7 +5,7 @@ import { MedicineDetailBatchService } from '@src/batch/medicine/services/medicin
 import { UtilProvider } from '@src/batch/util.provider';
 import { S3Service } from '@src/common/aws/s3/s3.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { Medicine } from '@src/type/medicine';
+import { Medicine } from '@src/type/batch/medicine';
 import { mockDeep } from 'jest-mock-extended';
 import typia from 'typia';
 describe('MedicineDetailBatchService', () => {

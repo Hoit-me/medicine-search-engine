@@ -2,8 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
-import { DUR_AGE_API_URL_BUILD } from '@src/constant';
-import { Dur } from '@src/type/dur';
+import { DUR_AGE_API_URL_BUILD } from '@src/constant/api_url';
+import { Dur } from '@src/type/batch/dur';
 import {
   catchError,
   filter,
