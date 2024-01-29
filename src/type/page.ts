@@ -1,5 +1,4 @@
-import { SUCCESS } from './success';
-export type Page<T> = SUCCESS<{
+export type Page<T> = {
   /**
    * List of items
    */
@@ -8,7 +7,7 @@ export type Page<T> = SUCCESS<{
    * Page information
    */
   pagenation: Page.Pagenation;
-}>;
+};
 
 export namespace Page {
   export interface Pagenation {
