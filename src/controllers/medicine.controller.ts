@@ -1,5 +1,5 @@
 import { TypedQuery, TypedRoute } from '@nestia/core';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { generateResponse } from '@src/common/res/success';
 import { MedicineService } from '@src/services/medicine.service';
@@ -16,6 +16,7 @@ export class MedicineController {
    */
   @TypedRoute.Get('/')
   @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60 * 60 * 24)
   async getMedicineList(
     @TypedQuery() query: Page.Search,
   ): Promise<SUCCESS.Page<Medicine>> {

@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
+import { redisStore } from 'cache-manager-redis-store';
 import { AppService } from './app.service';
 import { AwsModule } from './common/aws/aws.module';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -18,8 +19,22 @@ import { MedicineModule } from './modules/medicine.module';
       }),
       global: true,
     },
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
+      useFactory: async () => {
+        try {
+          const url = process.env.REDIS_URL;
+          const store = await redisStore({
+            url,
+          });
+          return {
+            ttl: 60 * 60 * 24,
+            store: store,
+          } as unknown as CacheStore;
+        } catch (e) {
+          return {};
+        }
+      },
     }),
     AwsModule,
   ],
