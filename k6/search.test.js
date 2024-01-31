@@ -16,7 +16,7 @@ export const options = {
   scenarios: {
     no_search_NoEngine: {
       executor: 'constant-vus',
-      vus: 10,
+      vus: 30,
       duration: '1m',
       exec: 'no_search_NoEngine',
       env: {
@@ -39,9 +39,10 @@ export const options = {
 
 export function no_search_NoEngine() {
   const page = Math.floor(Math.random() * 10) + 1;
+  console.log(page);
   const limit = 10;
-  // const url = `http://localhost:8000/api/medicine/search?page=${page}&limit=${limit}`;
-  const url = `https://dev.search.ho-it.me/api/medicine/search?page=${page}&limit=${limit}`;
+  const url = `http://localhost:8000/api/medicine/search?page=${page}&limit=${limit}`;
+  // const url = `https://dev.search.ho-it.me/api/medicine/search?page=${page}&limit=${limit}`;
   //   const url = 'http://localhost:8000/api/health-check';
   const res = http.get(url);
 

@@ -30,12 +30,17 @@ export class MedicineRepository {
     tx?: PrismaTxType, // 만약 트랜잭션내에서 실행되는 쿼리라면, 해당 트랜잭션을 사용하도록 합니다.
   ) {
     const searchParam = {
-      index: 'medicine_kor',
+      index: 'medicine',
       ...(search
         ? {
             text: {
               query: search,
               path,
+              ...(searchOption?.fuzzy
+                ? {
+                    fuzzy: searchOption.fuzzy,
+                  }
+                : {}),
             },
           }
         : {

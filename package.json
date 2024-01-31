@@ -114,5 +114,8 @@
   },
   "lint-staged": {
     "**/*.ts": "eslint --fix"
-  }
+  },
+  "eslintIgnore": [
+    "k6/**/*"
+  ]
 }
