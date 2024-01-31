@@ -1,11 +1,11 @@
 import { HttpModule } from '@nestjs/axios';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AwsModule } from './common/aws/aws.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AppController } from './controllers/app.controller';
 import { MedicineModule } from './modules/medicine.module';
-
 @Module({
   imports: [
     PrismaModule,
@@ -18,6 +18,9 @@ import { MedicineModule } from './modules/medicine.module';
       }),
       global: true,
     },
+    CacheModule.register({
+      isGlobal: true,
+    }),
     AwsModule,
   ],
   controllers: [AppController],

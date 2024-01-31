@@ -20,4 +20,12 @@ export class AppController {
   async healthCheck(): Promise<string> {
     return await this.appService.healthCheck();
   }
+
+  /**
+   * 현재 메모리사용량 측정 API 입니다.
+   */
+  @TypedRoute.Get('/performance')
+  async performance() {
+    return this.appService.performance();
+  }
 }
