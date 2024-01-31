@@ -25,7 +25,7 @@
       "@v1/*": ["./src/v1/*"],
       "@common/*": ["./src/common/*"],
       "@config/*": ["./src/config/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
     },
     "esModuleInterop": true,
     "plugins": [
@@ -51,12 +51,13 @@
          *   - "stringify": Use typia.stringify() function, but dangerous
          *   - null: Just use JSON.stringify() function, without boosting
          */
-        "stringify": "assert"
+        "stringify": "assert",
       },
       {
-        "transform": "typia/lib/transform"
-      }
-    ]
+        "transform": "typia/lib/transform",
+      },
+    ],
   },
-  "include": ["src/**/*", "test/**/*", "nestia.config.ts"]
+  "include": ["src/**/*", "test/**/*", "nestia.config.ts"],
+  "exclude": ["k6"],
 }
