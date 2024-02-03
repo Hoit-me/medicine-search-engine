@@ -30,4 +30,15 @@ export class MedicineController {
       : await this.medicineService.getMedicineList(query);
     return generateResponse(result);
   }
+
+  @TypedRoute.Get('/keyword')
+  async getMedicineKeyword(@TypedQuery() query: Page.Search) {
+    const { search } = query;
+    const result = await this.medicineService.getMedicineKeyword({
+      ...query,
+      search,
+      path: 'name',
+    });
+    return generateResponse(result);
+  }
 }

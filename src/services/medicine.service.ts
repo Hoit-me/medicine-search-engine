@@ -82,4 +82,18 @@ export class MedicineService {
       },
     };
   }
+
+  async getMedicineKeyword({
+    page = 1,
+    limit = 10,
+    search = '',
+    path = 'name',
+  }: Page.Search & {
+    path: 'name' | 'english_name';
+  }): Promise<string[]> {
+    const arg = { page, limit, search, path };
+    return (await this.medicineRepository.aggregateKeyword(arg)).map(
+      (item) => item.keyword,
+    );
+  }
 }

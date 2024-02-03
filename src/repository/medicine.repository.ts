@@ -126,4 +126,44 @@ export class MedicineRepository {
 
     return count[0].count.total;
   }
+
+  async aggregateKeyword({
+    search,
+    path,
+    page,
+    limit,
+  }: Required<Page.Search> & {
+    path: 'name' | 'english_name';
+  }) {
+    const searchParam = {
+      index: 'autocomplete',
+      autocomplete: {
+        query: search,
+        path: path,
+        tokenOrder: 'sequential',
+      },
+      count: {
+        type: 'total',
+      },
+    };
+
+    const data = (await this.prisma.medicine.aggregateRaw({
+      pipeline: [
+        {
+          $search: searchParam,
+        },
+        {
+          $project: {
+            _id: 0,
+            keyword: `$${path}`,
+          },
+        },
+        { $skip: (page - 1) * limit },
+        {
+          $limit: limit,
+        },
+      ],
+    })) as unknown as { keyword: string }[];
+    return data;
+  }
 }
