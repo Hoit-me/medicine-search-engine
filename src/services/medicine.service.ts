@@ -144,4 +144,31 @@ export class MedicineService {
     });
     return result;
   }
+
+  async getMedicineByIngredient(
+    code: string,
+    { page = 1, limit = 10 }: Page.Query,
+  ): Promise<Page<Medicine>> {
+    return await this.prisma.$transaction(async (tx) => {
+      const data = await this.medicineRepository.findManyByIntegredientCode(
+        code,
+        { page, limit },
+        tx,
+      );
+      const count = await this.medicineRepository.countByIntegredientCode(
+        code,
+        tx,
+      );
+
+      return {
+        data,
+        pagenation: {
+          current: page,
+          limit,
+          total_count: count,
+          total_page: Math.ceil(count / limit),
+        },
+      };
+    });
+  }
 }

@@ -11,6 +11,9 @@ import typia from 'typia';
 export class MedicineRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  //////////////////////////////////////////
+  // default
+  //////////////////////////////////////////
   findUnique(id: string, tx?: PrismaTxType) {
     return (tx ?? this.prisma).medicine.findUnique({
       where: {
@@ -20,23 +23,6 @@ export class MedicineRepository {
         ...(typia.random<
           SelectAll<Medicine, true>
         >() satisfies Prisma.medicineFindUniqueArgs['select']),
-      },
-    });
-  }
-
-  findManyByIntegredientCode(ingredient_code: string, tx?: PrismaTxType) {
-    return (tx ?? this.prisma).medicine.findMany({
-      where: {
-        main_ingredients: {
-          some: {
-            code: ingredient_code,
-          },
-        },
-      },
-      select: {
-        ...(typia.random<
-          SelectAll<Medicine, true>
-        >() satisfies Prisma.medicineFindManyArgs['select']),
       },
     });
   }
@@ -71,6 +57,44 @@ export class MedicineRepository {
 
   count(tx?: PrismaTxType) {
     return (tx ?? this.prisma).medicine.count();
+  }
+
+  //////////////////////////////////////////
+  // search
+  //////////////////////////////////////////
+  findManyByIntegredientCode(
+    ingredient_code: string,
+    { page, limit }: Required<Page.Query>,
+    tx?: PrismaTxType,
+  ) {
+    return (tx ?? this.prisma).medicine.findMany({
+      where: {
+        main_ingredients: {
+          some: {
+            code: ingredient_code,
+          },
+        },
+      },
+      select: {
+        ...(typia.random<
+          SelectAll<Medicine, true>
+        >() satisfies Prisma.medicineFindManyArgs['select']),
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  countByIntegredientCode(ingredient_code: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).medicine.count({
+      where: {
+        main_ingredients: {
+          some: {
+            code: ingredient_code,
+          },
+        },
+      },
+    });
   }
 
   async aggregateSearch(

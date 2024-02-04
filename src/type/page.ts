@@ -42,6 +42,7 @@ export namespace Page {
     /**
      * Number of items per page
      * @default 10
+     * @maximum 100
      */
     limit?: number;
   }

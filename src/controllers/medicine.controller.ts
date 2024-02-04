@@ -1,6 +1,6 @@
 import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
-import { Controller, Get, UseInterceptors } from '@nestjs/common';
+import { Controller, UseInterceptors } from '@nestjs/common';
 import { isError, throwError } from '@src/common/res/error';
 import { generateResponse } from '@src/common/res/success';
 import { MedicineService } from '@src/services/medicine.service';
@@ -43,7 +43,7 @@ export class MedicineController {
     return generateResponse(result);
   }
 
-  @Get('/:id')
+  @TypedRoute.Get('/:id')
   async getMedicineDetail(
     @TypedParam('id') id: string,
   ): Promise<SUCCESS<Medicine.DetailJoinInsuranceAndDUR>> {
@@ -51,6 +51,20 @@ export class MedicineController {
     if (isError(result)) {
       return throwError(result);
     }
+    return generateResponse(result);
+  }
+
+  @TypedRoute.Get('/ingredient/:code')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60 * 60 * 24)
+  async getMedicineByIngredient(
+    @TypedParam('code') code: string,
+    @TypedQuery() query: Page.Query,
+  ): Promise<SUCCESS<Page<Medicine>>> {
+    const result = await this.medicineService.getMedicineByIngredient(
+      code,
+      query,
+    );
     return generateResponse(result);
   }
 }
