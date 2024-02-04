@@ -24,6 +24,23 @@ export class MedicineRepository {
     });
   }
 
+  findManyByIntegredientCode(ingredient_code: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).medicine.findMany({
+      where: {
+        main_ingredients: {
+          some: {
+            code: ingredient_code,
+          },
+        },
+      },
+      select: {
+        ...(typia.random<
+          SelectAll<Medicine, true>
+        >() satisfies Prisma.medicineFindManyArgs['select']),
+      },
+    });
+  }
+
   findUniqueDetail(id: string, tx?: PrismaTxType) {
     return (tx ?? this.prisma).medicine.findUnique({
       where: {

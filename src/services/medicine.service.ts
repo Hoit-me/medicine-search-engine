@@ -6,7 +6,6 @@ import { MedicineRepository } from '@src/repository/medicine.repository';
 import { MedicineInsuranceRepository } from '@src/repository/medicineInsurance.repository';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
-import typia from 'typia';
 import { DurRepository } from './../repository/dur.repository';
 /**
  * MEDICINE
@@ -122,18 +121,16 @@ export class MedicineService {
     const result = await this.prisma.$transaction(async (tx) => {
       const medicine = await this.medicineRepository.findUniqueDetail(id, tx);
       if (!medicine) {
-        return typia.random<MedicineError.NOT_FOUND>();
+        return MedicineError.NOT_FOUND;
       }
       const insurance = medicine.insurance_code;
       const insuranceList = await this.medicineInsuranceRepository.findMany(
         insurance,
         tx,
       );
-
       const ingredientCodes = medicine.main_ingredients.map(
         (item) => item.code,
       );
-
       const dur = await this.durRepository.findManyDurTaboo(
         ingredientCodes,
         tx,
@@ -141,8 +138,8 @@ export class MedicineService {
 
       return {
         ...medicine,
-        insurance: insuranceList,
         ...dur,
+        insurance: insuranceList,
       };
     });
     return result;
