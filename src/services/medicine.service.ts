@@ -6,6 +6,8 @@ import { MedicineRepository } from '@src/repository/medicine.repository';
 import { MedicineInsuranceRepository } from '@src/repository/medicineInsurance.repository';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
+import typia from 'typia';
+import { DurRepository } from './../repository/dur.repository';
 /**
  * MEDICINE
  *
@@ -17,12 +19,10 @@ export class MedicineService {
     private readonly prisma: PrismaService,
     private readonly medicineRepository: MedicineRepository,
     private readonly medicineInsuranceRepository: MedicineInsuranceRepository,
+    private readonly durRepository: DurRepository,
   ) {}
 
-  async joinInsurance(
-    medicine: Omit<Medicine, 'insurance'>,
-    tx?: PrismaTxType,
-  ) {
+  async joinInsurance(medicine: Medicine, tx?: PrismaTxType) {
     const insurance = medicine.insurance_code;
     const insuranceList = await this.medicineInsuranceRepository.findMany(
       insurance,
@@ -37,7 +37,7 @@ export class MedicineService {
   async getMedicineList({
     page = 1,
     limit = 10,
-  }: Page.Search): Promise<Page<Medicine>> {
+  }: Page.Search): Promise<Page<Medicine.JoinInsurance<Medicine>>> {
     return await this.prisma.$transaction(async (tx) => {
       const data = await this.medicineRepository.findMany({ page, limit }, tx);
       const count = await this.medicineRepository.count(tx);
@@ -64,7 +64,7 @@ export class MedicineService {
     path = ['name'],
   }: Page.Search & {
     path: ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[];
-  }): Promise<Page<Medicine>> {
+  }): Promise<Page<Medicine.JoinInsurance<Medicine>>> {
     const arg = { page, limit, search, path };
     const editCount = search.length > 6 ? 2 : search.length > 3 ? 1 : 0;
     const searchOption = editCount
@@ -118,17 +118,33 @@ export class MedicineService {
 
   async getMedicineDetail(
     id: string,
-  ): Promise<Medicine | MedicineError.NOT_FOUND> {
+  ): Promise<Medicine.DetailJoinInsuranceAndDUR | MedicineError.NOT_FOUND> {
     const result = await this.prisma.$transaction(async (tx) => {
-      const medicine = await this.medicineRepository.findUnique(id, tx);
+      const medicine = await this.medicineRepository.findUniqueDetail(id, tx);
       if (!medicine) {
-        return MedicineError.NOT_FOUND;
+        return typia.random<MedicineError.NOT_FOUND>();
       }
+      const insurance = medicine.insurance_code;
+      const insuranceList = await this.medicineInsuranceRepository.findMany(
+        insurance,
+        tx,
+      );
 
-      const medicineJoinInsurance = await this.joinInsurance(medicine, tx);
-      return medicineJoinInsurance;
+      const ingredientCodes = medicine.main_ingredients.map(
+        (item) => item.code,
+      );
+
+      const dur = await this.durRepository.findManyDurTaboo(
+        ingredientCodes,
+        tx,
+      );
+
+      return {
+        ...medicine,
+        insurance: insuranceList,
+        ...dur,
+      };
     });
-
     return result;
   }
 }

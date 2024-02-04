@@ -1,6 +1,7 @@
 import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
+import { isError, throwError } from '@src/common/res/error';
 import { generateResponse } from '@src/common/res/success';
 import { MedicineService } from '@src/services/medicine.service';
 import { Medicine } from '@src/type/medicine';
@@ -19,7 +20,7 @@ export class MedicineController {
   @CacheTTL(60 * 60 * 24)
   async getMedicineList(
     @TypedQuery() query: Page.Search,
-  ): Promise<SUCCESS.Page<Medicine>> {
+  ): Promise<SUCCESS.Page<Medicine.JoinInsurance<Medicine>>> {
     const { search } = query;
     const result = search
       ? await this.medicineService.search({
@@ -43,8 +44,13 @@ export class MedicineController {
   }
 
   @TypedRoute.Get('/:id')
-  async getMedicineDetail(@TypedParam('id') id: string) {
+  async getMedicineDetail(
+    @TypedParam('id') id: string,
+  ): Promise<SUCCESS<Medicine.DetailJoinInsuranceAndDUR>> {
     const result = await this.medicineService.getMedicineDetail(id);
+    if (isError(result)) {
+      return throwError(result);
+    }
     return generateResponse(result);
   }
 }

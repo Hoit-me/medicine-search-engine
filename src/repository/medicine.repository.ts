@@ -24,6 +24,19 @@ export class MedicineRepository {
     });
   }
 
+  findUniqueDetail(id: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).medicine.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        ...(typia.random<
+          SelectAll<Medicine.Detail, true>
+        >() satisfies Prisma.medicineFindUniqueArgs['select']),
+      },
+    });
+  }
+
   findMany(
     { page, limit }: Required<Pick<Page.Search, 'page' | 'limit'>>,
     tx?: PrismaTxType,
