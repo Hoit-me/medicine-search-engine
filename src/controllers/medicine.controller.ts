@@ -1,4 +1,4 @@
-import { TypedQuery, TypedRoute } from '@nestia/core';
+import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { generateResponse } from '@src/common/res/success';
@@ -39,6 +39,12 @@ export class MedicineController {
       search,
       path: 'name',
     });
+    return generateResponse(result);
+  }
+
+  @TypedRoute.Get('/:id')
+  async getMedicineDetail(@TypedParam('id') id: string) {
+    const result = await this.medicineService.getMedicineDetail(id);
     return generateResponse(result);
   }
 }

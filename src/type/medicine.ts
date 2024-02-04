@@ -1,4 +1,4 @@
-import { ingredients } from '@prisma/client';
+import { ingredients, medicine_insurance } from '@prisma/client';
 
 /**
  * 현재는 다른 정보를 제공하지 않습니다.
@@ -32,5 +32,13 @@ export interface Medicine {
    * 약효분류
    */
   pharmacological_class: { code: string; name: string }[];
+
+  /**
+   * 보험코드
+   * @default []
+   * @example ['1234', '5678']
+   */
+  insurance_code: string[];
+  insurance: medicine_insurance[];
 }
 export namespace Medicine {}

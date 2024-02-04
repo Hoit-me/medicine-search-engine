@@ -11,6 +11,19 @@ import typia from 'typia';
 export class MedicineRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  findUnique(id: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).medicine.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        ...(typia.random<
+          SelectAll<Medicine, true>
+        >() satisfies Prisma.medicineFindUniqueArgs['select']),
+      },
+    });
+  }
+
   findMany(
     { page, limit }: Required<Pick<Page.Search, 'page' | 'limit'>>,
     tx?: PrismaTxType,

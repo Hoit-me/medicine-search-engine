@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/common/prisma/prisma.service';
+import { PrismaTxType } from '@src/common/prisma/prisma.type';
+import { MedicineError } from '@src/constant/error/medicine.error';
 import { MedicineRepository } from '@src/repository/medicine.repository';
+import { MedicineInsuranceRepository } from '@src/repository/medicineInsurance.repository';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
 /**
@@ -13,7 +16,23 @@ export class MedicineService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly medicineRepository: MedicineRepository,
+    private readonly medicineInsuranceRepository: MedicineInsuranceRepository,
   ) {}
+
+  async joinInsurance(
+    medicine: Omit<Medicine, 'insurance'>,
+    tx?: PrismaTxType,
+  ) {
+    const insurance = medicine.insurance_code;
+    const insuranceList = await this.medicineInsuranceRepository.findMany(
+      insurance,
+      tx,
+    );
+    return {
+      ...medicine,
+      insurance: insuranceList,
+    };
+  }
 
   async getMedicineList({
     page = 1,
@@ -22,8 +41,12 @@ export class MedicineService {
     return await this.prisma.$transaction(async (tx) => {
       const data = await this.medicineRepository.findMany({ page, limit }, tx);
       const count = await this.medicineRepository.count(tx);
+      const medicineJoinInsurance = await Promise.all(
+        data.map((medicine) => this.joinInsurance(medicine, tx)),
+      );
+
       return {
-        data,
+        data: medicineJoinInsurance,
         pagenation: {
           current: page,
           limit,
@@ -32,17 +55,6 @@ export class MedicineService {
         },
       };
     });
-  }
-
-  async getMedicineInsuranceList(insuranceCedes: string[]) {
-    const medicineList = await this.prisma.medicine_insurance.findMany({
-      where: {
-        insurance_code: {
-          in: insuranceCedes,
-        },
-      },
-    });
-    return medicineList;
   }
 
   async search({
@@ -63,7 +75,7 @@ export class MedicineService {
         }
       : undefined;
 
-    const data = await this.medicineRepository.aggregateSearch(
+    const medicines = await this.medicineRepository.aggregateSearch(
       arg,
       searchOption,
     );
@@ -72,8 +84,15 @@ export class MedicineService {
       searchOption,
     );
 
+    const data = await this.prisma.$transaction(async (tx) => {
+      const medicineJoinInsurance = Promise.all(
+        medicines.map((medicine) => this.joinInsurance(medicine, tx)),
+      );
+      return medicineJoinInsurance;
+    });
+
     return {
-      data: data,
+      data,
       pagenation: {
         current: page,
         limit,
@@ -95,5 +114,21 @@ export class MedicineService {
     return (await this.medicineRepository.aggregateKeyword(arg)).map(
       (item) => item.keyword,
     );
+  }
+
+  async getMedicineDetail(
+    id: string,
+  ): Promise<Medicine | MedicineError.NOT_FOUND> {
+    const result = await this.prisma.$transaction(async (tx) => {
+      const medicine = await this.medicineRepository.findUnique(id, tx);
+      if (!medicine) {
+        return MedicineError.NOT_FOUND;
+      }
+
+      const medicineJoinInsurance = await this.joinInsurance(medicine, tx);
+      return medicineJoinInsurance;
+    });
+
+    return result;
   }
 }
