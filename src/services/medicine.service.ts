@@ -21,7 +21,17 @@ export class MedicineService {
     private readonly durRepository: DurRepository,
   ) {}
 
-  async joinInsurance(medicine: Medicine, tx?: PrismaTxType) {
+  // Before Refactoring
+  /**
+   * 문제
+   * - 보험 정보를 가져오는 로직이 해당 보험정보개수 만큼 호출되어야 함
+   * - DB 호출이 많아질수록 성능이 저하됨
+   *
+   * 성능 측정
+   * page:10, limit:10
+   * - 평균 0.5초 ~ 1초
+   */
+  async joinInsurance_Before(medicine: Medicine, tx?: PrismaTxType) {
     const insurance = medicine.insurance_code;
     const insuranceList = await this.medicineInsuranceRepository.findMany(
       insurance,
@@ -33,6 +43,37 @@ export class MedicineService {
     };
   }
 
+  // After Refactoring
+  /**
+   * 해결
+   * - 보험 정보를 한번에 가져와서 join
+   * - DB 호출을 최소화하여 성능을 향상
+   *
+   * 성능 측정
+   * page:10, limit:10
+   * - 평균 0.3초 이하
+   */
+  async joinInsurance(medicines: Medicine[], tx?: PrismaTxType) {
+    const insurance = medicines
+      .map((medicine) => medicine.insurance_code)
+      .flat();
+    const insuranceList = await this.medicineInsuranceRepository.findMany(
+      insurance,
+      tx,
+    );
+    const result = medicines.map((medicine) => {
+      const insuranceCodes = medicine.insurance_code;
+      const insurance = insuranceList.filter((item) =>
+        insuranceCodes.includes(item.insurance_code),
+      );
+      return {
+        ...medicine,
+        insurance,
+      };
+    });
+    return result;
+  }
+
   async getMedicineList({
     page = 1,
     limit = 10,
@@ -40,10 +81,10 @@ export class MedicineService {
     return await this.prisma.$transaction(async (tx) => {
       const data = await this.medicineRepository.findMany({ page, limit }, tx);
       const count = await this.medicineRepository.count(tx);
-      const medicineJoinInsurance = await Promise.all(
-        data.map((medicine) => this.joinInsurance(medicine, tx)),
-      );
-
+      // const medicineJoinInsurance = await Promise.all(
+      //   data.map((medicine) => this.joinInsurance_Before(medicine, tx)),
+      // );
+      const medicineJoinInsurance = await this.joinInsurance(data, tx);
       return {
         data: medicineJoinInsurance,
         pagenation: {
@@ -55,7 +96,6 @@ export class MedicineService {
       };
     });
   }
-
   async search({
     page = 1,
     limit = 10,
@@ -84,9 +124,7 @@ export class MedicineService {
     );
 
     const data = await this.prisma.$transaction(async (tx) => {
-      const medicineJoinInsurance = Promise.all(
-        medicines.map((medicine) => this.joinInsurance(medicine, tx)),
-      );
+      const medicineJoinInsurance = await this.joinInsurance(medicines, tx);
       return medicineJoinInsurance;
     });
 

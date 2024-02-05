@@ -16,8 +16,8 @@ export const options = {
   scenarios: {
     no_search_NoEngine: {
       executor: 'constant-vus',
-      vus: 50,
-      duration: '10s',
+      vus: 30,
+      duration: '1m',
       exec: 'no_search_NoEngine',
       env: {
         SEARCH_ENGINE: 'false',
@@ -49,6 +49,7 @@ export function no_search_NoEngine() {
 
   check(res, {
     'is status 200': (r) => r.status === 200,
+    'error rate is 0': (r) => r.status !== 500,
   });
 }
 
