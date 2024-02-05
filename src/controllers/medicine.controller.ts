@@ -16,8 +16,8 @@ export class MedicineController {
    * 의약품 검색
    */
   @TypedRoute.Get('/')
-  // @UseInterceptors(CacheInterceptor)
-  // @CacheTTL(60 * 60 * 24)
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60 * 60 * 24)
   async getMedicineList(
     @TypedQuery() query: Page.Search,
   ): Promise<SUCCESS.Page<Medicine.JoinInsurance<Medicine>>> {
