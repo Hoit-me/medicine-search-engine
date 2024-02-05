@@ -377,3 +377,25 @@ model disease {
   @@index([code])
   @@index([complete_code_type])
 }
+
+
+//--------------------------------------------------
+// AUTH
+//--------------------------------------------------
+model user {
+  id        String   @id @db.ObjectId @map("_id")
+  email     String   @unique
+  password  String
+  name      String
+  role      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model api_key {
+  id        String  @id @db.ObjectId @map("_id")
+  key       String   @unique
+  user_id   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
