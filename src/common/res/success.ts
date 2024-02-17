@@ -1,7 +1,6 @@
 import { ErrorHttpStatusCode } from '@nestjs/common/utils/http-error-by-code.util';
 import { ERROR } from '@src/type/error';
 import { SUCCESS } from '@src/type/success';
-import { from, map } from 'rxjs';
 import { isError } from './error';
 
 export const generateResponse = <T>(
@@ -13,22 +12,11 @@ export const generateResponse = <T>(
   result,
 });
 
-export const wrapResponse = <T>(
-  result: Promise<T | ERROR<string, ErrorHttpStatusCode>>,
-) =>
-  from(result).pipe(
-    map((data) => {
-      console.log('wrapResponse', data);
-      if (isError(data)) {
-        return data;
-      }
-      return generateResponse(data);
-    }),
-    map((data) => {
-      console.log('wrapResponse', data);
-      if (isError(data)) {
-        return data;
-      }
-      return data;
-    }),
-  );
+type WrapResponse<T> =
+  T extends ERROR<string, ErrorHttpStatusCode> ? T : SUCCESS<T>;
+export const wrapResponse = <T>(result: T): WrapResponse<T> => {
+  if (isError(result)) {
+    return result as WrapResponse<T>;
+  }
+  return generateResponse(result) as WrapResponse<T>;
+};

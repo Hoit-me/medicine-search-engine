@@ -1,8 +1,7 @@
 import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
-import { isError, throwError } from '@src/common/res/error';
-import { generateResponse } from '@src/common/res/success';
+import { wrapResponse } from '@src/common/res/success';
 import { MedicineService } from '@src/services/medicine.service';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
@@ -18,9 +17,7 @@ export class MedicineController {
   @TypedRoute.Get('/')
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60 * 60 * 24)
-  async getMedicineList(
-    @TypedQuery() query: Page.Search,
-  ): Promise<SUCCESS.Page<Medicine.JoinInsurance<Medicine>>> {
+  async getMedicineList(@TypedQuery() query: Page.Search) {
     const { search } = query;
     const result = search
       ? await this.medicineService.search({
@@ -29,7 +26,7 @@ export class MedicineController {
           path: ['name'],
         })
       : await this.medicineService.getMedicineList(query);
-    return generateResponse(result);
+    return wrapResponse(result);
   }
 
   @TypedRoute.Get('/keyword')
@@ -40,7 +37,7 @@ export class MedicineController {
       search,
       path: 'name',
     });
-    return generateResponse(result);
+    return wrapResponse(result);
   }
 
   // @TypedRoute.Get('/keyword')
@@ -66,14 +63,9 @@ export class MedicineController {
   // }
 
   @TypedRoute.Get('/:id')
-  async getMedicineDetail(
-    @TypedParam('id') id: string,
-  ): Promise<SUCCESS<Medicine.DetailJoinInsuranceAndDUR>> {
+  async getMedicineDetail(@TypedParam('id') id: string) {
     const result = await this.medicineService.getMedicineDetail(id);
-    if (isError(result)) {
-      return throwError(result);
-    }
-    return generateResponse(result);
+    return wrapResponse(result);
   }
 
   @TypedRoute.Get('/ingredient/:code')
@@ -87,6 +79,6 @@ export class MedicineController {
       code,
       query,
     );
-    return generateResponse(result);
+    return wrapResponse(result);
   }
 }
