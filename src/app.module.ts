@@ -1,9 +1,11 @@
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { redisStore } from 'cache-manager-redis-store';
 import { AppService } from './app.service';
 import { AwsModule } from './common/aws/aws.module';
+import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AppController } from './controllers/app.controller';
 import { MedicineModule } from './modules/medicine.module';
@@ -39,6 +41,12 @@ import { MedicineModule } from './modules/medicine.module';
     AwsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+  ],
 })
 export class AppModule {}

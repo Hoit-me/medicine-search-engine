@@ -4,7 +4,15 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
-    super({ log: [{ emit: 'stdout', level: 'warn' }], errorFormat: 'pretty' });
+    super({
+      log: [
+        {
+          emit: 'stdout',
+          level: process.env.NODE_ENV === 'PRODUCTION' ? 'warn' : 'query',
+        },
+      ],
+      errorFormat: 'pretty',
+    });
   }
 
   async onModuleInit() {

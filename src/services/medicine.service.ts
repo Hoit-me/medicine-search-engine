@@ -158,9 +158,11 @@ export class MedicineService {
   ): Promise<Medicine.DetailJoinInsuranceAndDUR | MedicineError.NOT_FOUND> {
     const result = await this.prisma.$transaction(async (tx) => {
       const medicine = await this.medicineRepository.findUniqueDetail(id, tx);
+
       if (!medicine) {
         return MedicineError.NOT_FOUND;
       }
+
       const insurance = medicine.insurance_code;
       const insuranceList = await this.medicineInsuranceRepository.findMany(
         insurance,

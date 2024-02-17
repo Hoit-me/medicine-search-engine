@@ -16,7 +16,7 @@ export const options = {
   scenarios: {
     no_search_NoEngine: {
       executor: 'constant-vus',
-      vus: 30,
+      vus: 100,
       duration: '1m',
       exec: 'no_search_NoEngine',
       env: {

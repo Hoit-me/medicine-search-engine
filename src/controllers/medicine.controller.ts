@@ -43,6 +43,28 @@ export class MedicineController {
     return generateResponse(result);
   }
 
+  // @TypedRoute.Get('/keyword')
+  // ISSUE(@TypedQuery() query: Page.Search) {
+  //   const { search } = query;
+  //   const result = this.medicineService.getMedicineKeyword({
+  //     ...query,
+  //     search,
+  //     path: 'name',
+  //   });
+  //   return from(result);
+  // }
+
+  // @Get('/keyword')
+  // ISSUE2(@TypedQuery() query: Page.Search) {
+  //   const { search } = query;
+  //   const result = this.medicineService.getMedicineKeyword({
+  //     ...query,
+  //     search,
+  //     path: 'name',
+  //   });
+  //   return from(result);
+  // }
+
   @TypedRoute.Get('/:id')
   async getMedicineDetail(
     @TypedParam('id') id: string,
