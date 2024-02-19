@@ -1,6 +1,7 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
 import { wrapResponse } from '@src/common/res/success';
+import { Auth } from '@src/type/auth';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -59,11 +60,12 @@ export class AuthController {
    * 3. 인증번호 발송
    */
   @TypedRoute.Post('/email/certification')
-  async emailCertification(@TypedBody() body: { email: string }) {
+  async sendEmailVerificationCode(
+    @TypedBody() { email }: Auth.SendEmailVerificationCodeDto,
+  ) {
     // 이메일 인증번호 발송
-    await this.authService.emailCertification(body.email);
-
-    return wrapResponse(true);
+    const result = await this.authService.sendEmailVerificationCode(email);
+    return wrapResponse(result);
   }
 
   /**

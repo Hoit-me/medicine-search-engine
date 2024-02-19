@@ -403,7 +403,7 @@ model api_key {
 }
 
 model email_certification {
-  id        String  @id @db.ObjectId @map("_id")
+  id        String  @id @db.ObjectId @map("_id") @default(auto())
   email     String
   code      String
   type      CERTIFICATION_TYPE
@@ -423,5 +423,5 @@ enum CERTIFICATION_TYPE {
 enum CERTIFICATION_STATUS {
   SUCCESS
   PENDING
-  DELETED
+  EXPIRED
 }
