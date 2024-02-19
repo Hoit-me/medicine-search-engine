@@ -390,6 +390,8 @@ model user {
   role      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+ 
+
 }
 
 model api_key {
@@ -398,4 +400,28 @@ model api_key {
   user_id   String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model email_certification {
+  id        String  @id @db.ObjectId @map("_id")
+  email     String
+  code      String
+  type      CERTIFICATION_TYPE
+  status    CERTIFICATION_STATUS @default(PENDING)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([email])
+}
+
+enum CERTIFICATION_TYPE {
+  SIGN_UP
+  FIND_PASSWORD
+}
+
+enum CERTIFICATION_STATUS {
+  SUCCESS
+  PENDING
+  DELETED
 }
