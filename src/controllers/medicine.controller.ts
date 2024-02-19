@@ -2,6 +2,7 @@ import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { wrapResponse } from '@src/common/res/success';
+import { MedicineError } from '@src/constant/error/medicine.error';
 import { MedicineService } from '@src/services/medicine.service';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
@@ -17,7 +18,9 @@ export class MedicineController {
   @TypedRoute.Get('/')
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60 * 60 * 24)
-  async getMedicineList(@TypedQuery() query: Page.Search) {
+  async getMedicineList(
+    @TypedQuery() query: Page.Search,
+  ): Promise<SUCCESS<Page<Medicine.JoinInsurance<Medicine>>>> {
     const { search } = query;
     const result = search
       ? await this.medicineService.search({
@@ -30,7 +33,9 @@ export class MedicineController {
   }
 
   @TypedRoute.Get('/keyword')
-  async getMedicineKeyword(@TypedQuery() query: Page.Search) {
+  async getMedicineKeyword(
+    @TypedQuery() query: Page.Search,
+  ): Promise<SUCCESS<string[]>> {
     const { search } = query;
     const result = await this.medicineService.getMedicineKeyword({
       ...query,
@@ -40,30 +45,12 @@ export class MedicineController {
     return wrapResponse(result);
   }
 
-  // @TypedRoute.Get('/keyword')
-  // ISSUE(@TypedQuery() query: Page.Search) {
-  //   const { search } = query;
-  //   const result = this.medicineService.getMedicineKeyword({
-  //     ...query,
-  //     search,
-  //     path: 'name',
-  //   });
-  //   return from(result);
-  // }
-
-  // @Get('/keyword')
-  // ISSUE2(@TypedQuery() query: Page.Search) {
-  //   const { search } = query;
-  //   const result = this.medicineService.getMedicineKeyword({
-  //     ...query,
-  //     search,
-  //     path: 'name',
-  //   });
-  //   return from(result);
-  // }
-
   @TypedRoute.Get('/:id')
-  async getMedicineDetail(@TypedParam('id') id: string) {
+  async getMedicineDetail(
+    @TypedParam('id') id: string,
+  ): Promise<
+    SUCCESS<Medicine.DetailJoinInsuranceAndDUR> | MedicineError.NOT_FOUND
+  > {
     const result = await this.medicineService.getMedicineDetail(id);
     return wrapResponse(result);
   }
