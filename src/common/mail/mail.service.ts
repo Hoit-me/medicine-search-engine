@@ -44,8 +44,8 @@ export class MailService {
       });
     });
     return nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
+      service: this.configService.get('MAIL_SERVICE'),
+      host: this.configService.get('MAIL_HOST'),
       auth: {
         type: 'OAuth2',
         user: this.configService.get('MAIL_USER'),
