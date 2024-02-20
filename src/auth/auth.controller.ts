@@ -1,12 +1,17 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
-import { wrapResponse } from '@src/common/res/success';
+import { eitherToResponse } from '@src/common/res/success';
+import { EmailError } from '@src/constant/error/email.error';
+import { EmailCertificationService } from '@src/services/emailCertification.service';
 import { Auth } from '@src/type/auth';
+import { SUCCESS } from '@src/type/success';
 import { AuthService } from './auth.service';
-
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailCertificationService: EmailCertificationService,
+  ) {}
 
   /**
    * Google Login
@@ -62,10 +67,15 @@ export class AuthController {
   @TypedRoute.Post('/email/certification')
   async sendEmailVerificationCode(
     @TypedBody() { email }: Auth.SendEmailVerificationCodeDto,
-  ) {
+  ): Promise<
+    | SUCCESS<true>
+    | EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED
+    | EmailError.EMAIL_ALREADY_EXISTS
+  > {
     // 이메일 인증번호 발송
-    const result = await this.authService.sendEmailVerificationCode(email);
-    return wrapResponse(result);
+    const result =
+      await this.emailCertificationService.sendEmailVerificationCode(email);
+    return eitherToResponse(result);
   }
 
   /**

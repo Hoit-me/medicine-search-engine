@@ -5,7 +5,7 @@ import { ERROR } from './../../type/error';
 export const isError = (
   error: any,
 ): error is ERROR<string, ErrorHttpStatusCode> => {
-  return error.is_success === false;
+  return error?.is_success === false;
 };
 
 export const throwError = (err: ERROR<string, ErrorHttpStatusCode>) => {

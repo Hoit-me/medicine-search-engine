@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MailModule } from '@src/common/mail/mail.module';
 import { MailService } from '@src/common/mail/mail.service';
 import { configModule } from '@src/config';
+import { catchError, from, map, of } from 'rxjs';
 
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn().mockReturnValue({
@@ -56,4 +57,21 @@ describe('메일 서비스', () => {
       await expect(mailService.send(mailDto)).rejects.toThrow('Fail');
     });
   });
+});
+
+describe('test', () => {
+  from([12])
+    .pipe(
+      map((x) => x + 1),
+      map((x) => {
+        if (x === 2) throw { sad: 'asd' };
+        return x;
+      }),
+      map((x) => x + 1),
+      catchError((err) => {
+        console.log(err);
+        return of(err);
+      }),
+    )
+    .subscribe((x) => console.log(x));
 });
