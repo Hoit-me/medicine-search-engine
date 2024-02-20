@@ -6,6 +6,7 @@ import { MedicineRepository } from '@src/repository/medicine.repository';
 import { MedicineInsuranceRepository } from '@src/repository/medicineInsurance.repository';
 import { Medicine } from '@src/type/medicine';
 import { Page } from '@src/type/page';
+import { Either, left, right } from 'fp-ts/lib/Either';
 import { DurRepository } from './../repository/dur.repository';
 /**
  * MEDICINE
@@ -155,12 +156,14 @@ export class MedicineService {
 
   async getMedicineDetail(
     id: string,
-  ): Promise<Medicine.DetailJoinInsuranceAndDUR | MedicineError.NOT_FOUND> {
+  ): Promise<
+    Either<MedicineError.NOT_FOUND, Medicine.DetailJoinInsuranceAndDUR>
+  > {
     const result = await this.prisma.$transaction(async (tx) => {
       const medicine = await this.medicineRepository.findUniqueDetail(id, tx);
 
       if (!medicine) {
-        return MedicineError.NOT_FOUND;
+        return left(MedicineError.NOT_FOUND);
       }
 
       const insurance = medicine.insurance_code;
@@ -176,11 +179,11 @@ export class MedicineService {
         tx,
       );
 
-      return {
+      return right({
         ...medicine,
         ...dur,
         insurance: insuranceList,
-      };
+      });
     });
     return result;
   }

@@ -4,6 +4,7 @@ import { PrismaService } from '@src/common/prisma/prisma.service';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { EmailError } from '@src/constant/error/email.error';
 import { EmailCertificationRepository } from '@src/repository/emailCertification.repository';
+import { getTodayDateRange } from '@src/utils/getTodayDateRange';
 import { randomCode } from '@src/utils/randomCode';
 import { Either, isLeft, left, right } from 'fp-ts/lib/Either';
 import { UserService } from './user.service';
@@ -41,10 +42,70 @@ export class EmailCertificationService {
         tx,
       );
       if (isLeft(checkEmailLimit)) return checkEmailLimit;
-
       const code = await this.generateAndSaveEmailCode(email, type, tx);
       await this.sendVerificationEmail(email, code);
       return right(true);
+    });
+  }
+
+  async verifyEmailCode(
+    email: string,
+    code: string,
+    type: 'SIGN_UP' | 'FIND_PASSWORD' = 'SIGN_UP',
+  ): Promise<
+    Either<
+      | EmailError.EMAIL_ALREADY_EXISTS
+      | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH,
+      string
+    >
+  > {
+    const result = await this.prisma.$transaction(async (tx) => {
+      const checkUser = await this.userService.checkUserExists(email, tx);
+      if (isLeft(checkUser)) return checkUser;
+
+      const emailCertification =
+        await this.emailCertificationRepository.findFirst(
+          {
+            email,
+            code,
+            type,
+            date: {
+              // 15분 전 ~ 현재
+              gte: new Date(new Date().getTime() - 15 * 60 * 1000),
+              lte: new Date(),
+            },
+            status: 'PENDING',
+          },
+          tx,
+        );
+      if (!emailCertification) {
+        return left(EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH);
+      }
+      await this.emailCertificationRepository.updateMany(
+        {
+          where: { email, status: 'PENDING', type },
+          data: { status: 'VERIFIED' },
+        },
+        tx,
+      );
+      return right(emailCertification.id);
+    });
+    return result;
+  }
+
+  ///////////////////////////
+  // Batch
+  ///////////////////////////
+  async deleteExpiredEmailCertification() {
+    await this.emailCertificationRepository.updateMany({
+      where: {
+        status: { in: ['PENDING', 'VERIFIED'] },
+        created_at: {
+          // 00:00:00 ~ 23:59:59
+          lte: getTodayDateRange().startOfDay,
+        },
+      },
+      data: { status: 'EXPIRED' },
     });
   }
 
@@ -56,8 +117,17 @@ export class EmailCertificationService {
     type: 'SIGN_UP' | 'FIND_PASSWORD',
     tx?: PrismaTxType,
   ) {
+    const { startOfDay, endOfDay } = getTodayDateRange();
     const exists = await this.emailCertificationRepository.findMany(
-      { email, type, date: new Date() },
+      {
+        email,
+        type,
+        date: {
+          // 00:00:00 ~ 23:59:59
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
       tx,
     );
     if (exists.length >= 5) {
@@ -88,7 +158,16 @@ export class EmailCertificationService {
   ): Promise<string> {
     const code = randomCode();
     await this.emailCertificationRepository.updateMany(
-      { email, status: 'EXPIRED', type },
+      {
+        where: {
+          email,
+          status: { in: ['PENDING', 'VERIFIED'] }, // PENDING, VERIFIED 상태인 인증번호는 만료처리
+          type,
+        },
+        data: {
+          status: 'EXPIRED',
+        },
+      },
       tx,
     );
     await this.emailCertificationRepository.create({ email, code, type }, tx);

@@ -15,4 +15,11 @@ export namespace EmailError {
     HttpStatus.BAD_REQUEST
   >;
   export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
+
+  export type EMAIL_CERTIFICATION_CODE_NOT_MATCH = ERROR<
+    '인증번호가 일치하지 않습니다.',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const EMAIL_CERTIFICATION_CODE_NOT_MATCH =
+    typia.random<EMAIL_CERTIFICATION_CODE_NOT_MATCH>();
 }

@@ -1,7 +1,7 @@
 import { TypedParam, TypedQuery, TypedRoute } from '@nestia/core';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { Controller, UseInterceptors } from '@nestjs/common';
-import { wrapResponse } from '@src/common/res/success';
+import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { MedicineError } from '@src/constant/error/medicine.error';
 import { MedicineService } from '@src/services/medicine.service';
 import { Medicine } from '@src/type/medicine';
@@ -52,7 +52,7 @@ export class MedicineController {
     SUCCESS<Medicine.DetailJoinInsuranceAndDUR> | MedicineError.NOT_FOUND
   > {
     const result = await this.medicineService.getMedicineDetail(id);
-    return wrapResponse(result);
+    return eitherToResponse(result);
   }
 
   @TypedRoute.Get('/ingredient/:code')

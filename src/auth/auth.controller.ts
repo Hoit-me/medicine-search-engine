@@ -1,5 +1,6 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { eitherToResponse } from '@src/common/res/success';
 import { EmailError } from '@src/constant/error/email.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
@@ -78,6 +79,22 @@ export class AuthController {
     return eitherToResponse(result);
   }
 
+  @TypedRoute.Post('/email/certification/verify')
+  async verifyEmailCode(
+    @TypedBody()
+    { email, code }: Auth.VerifyEmailCodeDto,
+  ): Promise<
+    | SUCCESS<string>
+    | EmailError.EMAIL_ALREADY_EXISTS
+    | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH
+  > {
+    const result = await this.emailCertificationService.verifyEmailCode(
+      email,
+      code,
+    );
+    return eitherToResponse(result);
+  }
+
   /**
    * logout
    */
@@ -112,4 +129,18 @@ export class AuthController {
   /**
    * get api key detail
    */
+
+  ///////////////////////////
+  // batch
+  ///////////////////////////
+  /**
+   * batch - delete expired email certification
+   *
+   * 매일 0시에 만료된 이메일 인증번호 삭제 (소프트 삭제)
+   * - 1일 이상 지난 인증번호 삭제
+   */
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async deleteExpiredEmailCertification() {
+    await this.emailCertificationService.deleteExpiredEmailCertification();
+  }
 }

@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { redisStore } from 'cache-manager-redis-store';
 import Joi from 'joi';
 export const configValidationSchema = Joi.object({
@@ -59,4 +60,11 @@ export const cacheModule = CacheModule.registerAsync({
   },
 });
 
-export const defaultModules = [configModule, httpModule, cacheModule];
+export const scheduleModule = ScheduleModule.forRoot();
+
+export const defaultModules = [
+  configModule,
+  httpModule,
+  cacheModule,
+  scheduleModule,
+];

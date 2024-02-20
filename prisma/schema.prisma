@@ -413,6 +413,10 @@ model email_certification {
   updated_at DateTime @updatedAt
 
   @@index([email])
+  @@index([email,code])
+  @@index([status])
+  @@index([created_at])
+  @@index([status,created_at])
 }
 
 enum CERTIFICATION_TYPE {
@@ -421,7 +425,8 @@ enum CERTIFICATION_TYPE {
 }
 
 enum CERTIFICATION_STATUS {
-  SUCCESS
+  COMPLETE
+  VERIFIED
   PENDING
   EXPIRED
 }
