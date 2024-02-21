@@ -391,6 +391,18 @@ model user {
   updated_at DateTime @updatedAt
 }
 
+model refresh_token {
+  id        String  @id @db.ObjectId @map("_id") @default(auto())
+  user_id   String  
+  token     String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([token])
+  @@index([created_at])
+}
+
 model api_key {
   id        String  @id @db.ObjectId @map("_id")
   key       String   @unique

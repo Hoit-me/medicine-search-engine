@@ -18,7 +18,10 @@ export interface BasicAuthJWTService {
 
 export interface BasicAuthPasswordService {
   hash(password: string): Promise<string>;
-  compare(password: string, hashed: string): Promise<boolean>;
+  compare(
+    password: string,
+    hashed: string,
+  ): Promise<Either<UserError.INVALID_PASSWORD, boolean>>;
 }
 
 export interface BasicAuthService {
@@ -33,5 +36,12 @@ export interface BasicAuthService {
     >
   >;
 
-  login(): Promise<void>;
+  login(
+    dto: Auth.LoginDto,
+  ): Promise<
+    Either<
+      UserError.NOT_FOUND_USER | UserError.INVALID_PASSWORD,
+      { access_token: string; refresh_token: string }
+    >
+  >;
 }

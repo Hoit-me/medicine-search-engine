@@ -27,4 +27,10 @@ export class UserService {
   async createUser(user: Prisma.userCreateInput, tx?: PrismaTxType) {
     return await this.userRepository.create(user, tx);
   }
+
+  async findUnique(email: string, tx?: PrismaTxType) {
+    const user = await this.userRepository.findUnique(email, tx);
+    if (!user) return left(UserError.NOT_FOUND_USER);
+    return right(user);
+  }
 }

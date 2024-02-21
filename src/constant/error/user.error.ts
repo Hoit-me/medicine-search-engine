@@ -15,4 +15,16 @@ export namespace UserError {
   >;
   export const NICKNAME_ALREADY_EXISTS =
     typia.random<NICKNAME_ALREADY_EXISTS>();
+
+  export type NOT_FOUND_USER = ERROR<
+    '존재하지 않는 유저입니다.',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const NOT_FOUND_USER = typia.random<NOT_FOUND_USER>();
+
+  export type INVALID_PASSWORD = ERROR<
+    '비밀번호가 일치하지 않습니다.',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const INVALID_PASSWORD = typia.random<INVALID_PASSWORD>();
 }

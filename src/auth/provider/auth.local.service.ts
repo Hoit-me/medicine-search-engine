@@ -3,8 +3,12 @@ import { EmailCertificationService } from '@src/services/emailCertification.serv
 import { UserService } from '@src/services/user.service';
 import { Auth } from '@src/type/auth';
 import { isLeft, right } from 'fp-ts/lib/Either';
-import { BasicAuthPasswordService, BasicAuthService } from '../auth.interface';
-import { PASSWORD_SERVICE } from '../constant';
+import {
+  BasicAuthJWTService,
+  BasicAuthPasswordService,
+  BasicAuthService,
+} from '../auth.interface';
+import { JWT_SERVICE, PASSWORD_SERVICE } from '../constant';
 
 @Injectable()
 export class AuthLocalService implements BasicAuthService {
@@ -13,6 +17,8 @@ export class AuthLocalService implements BasicAuthService {
     private readonly emailCertificationService: EmailCertificationService,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: BasicAuthPasswordService,
+    @Inject(JWT_SERVICE)
+    private readonly jwtService: BasicAuthJWTService,
   ) {}
   async signup(dto: Auth.SignupDto) {
     if (dto.type !== 'local') throw new Error('Check Signup type!'); // never
@@ -38,5 +44,25 @@ export class AuthLocalService implements BasicAuthService {
 
     return right(newUser);
   }
-  async login() {}
+  async login(dto: Auth.LoginDto) {
+    if (dto.type !== 'local') throw new Error('Check Login type!'); // never
+    const { email, password } = dto;
+    const eitherUser = await this.userService.findUnique(email);
+    if (isLeft(eitherUser)) return eitherUser;
+    const { right: user } = eitherUser;
+    const isPasswordMatch = await this.passwordService.compare(
+      password,
+      user.password,
+    );
+    if (isLeft(isPasswordMatch)) return isPasswordMatch;
+    const accessToken = this.jwtService.accessTokenSign({
+      id: user.id,
+      email: user.email,
+    });
+    const refreshToken = this.jwtService.refreshTokenSign({
+      id: user.id,
+      email: user.email,
+    });
+    return right({ access_token: accessToken, refresh_token: refreshToken });
+  }
 }

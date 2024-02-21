@@ -4,7 +4,7 @@ import { BasicAuthService } from '../auth.interface';
 import { AUTH_LOCAL_SERVICE } from '../constant';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements BasicAuthService {
   constructor(
     @Inject(AUTH_LOCAL_SERVICE)
     private readonly localAuthService: BasicAuthService,
@@ -18,5 +18,13 @@ export class AuthService {
         throw new Error('Not supported');
     }
   }
-  async login() {}
+  async login(dto: Auth.LoginDto) {
+    switch (dto.type) {
+      case 'local':
+        return this.localAuthService.login(dto);
+      case 'google':
+      case 'kakao':
+        throw new Error('Not supported');
+    }
+  }
 }

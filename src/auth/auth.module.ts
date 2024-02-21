@@ -7,9 +7,11 @@ import { AuthController } from './auth.controller';
 import {
   AUTH_LOCAL_SERVICE,
   JWT_OPTIONS,
+  JWT_SERVICE,
   PASSWORD_OPTIONS,
   PASSWORD_SERVICE,
 } from './constant';
+import { AuthJWTService } from './provider/auth.jwt.service';
 import { AuthLocalService } from './provider/auth.local.service';
 import { AuthPasswordService } from './provider/auth.password.service';
 import { AuthService } from './provider/auth.service';
@@ -18,6 +20,7 @@ const authServices: Provider[] = [
   AuthService,
   { provide: AUTH_LOCAL_SERVICE, useClass: AuthLocalService },
   { provide: PASSWORD_SERVICE, useClass: AuthPasswordService },
+  { provide: JWT_SERVICE, useClass: AuthJWTService },
 ];
 
 const options: Provider[] = [
