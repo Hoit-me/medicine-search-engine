@@ -3,6 +3,7 @@ import { MailService } from '@src/common/mail/mail.service';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { EmailError } from '@src/constant/error/email.error';
+import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationRepository } from '@src/repository/emailCertification.repository';
 import { getTodayDateRange } from '@src/utils/getTodayDateRange';
 import { randomCode } from '@src/utils/randomCode';
@@ -27,12 +28,12 @@ export class EmailCertificationService {
   ): Promise<
     Either<
       | EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED
-      | EmailError.EMAIL_ALREADY_EXISTS,
+      | UserError.EMAIL_ALREADY_EXISTS,
       true
     >
   > {
     return await this.prisma.$transaction(async (tx) => {
-      const checkUser = await this.userService.checkUserExists(email, tx);
+      const checkUser = await this.userService.checkEmailExists(email, tx);
       if (isLeft(checkUser)) return checkUser;
 
       // 이메일 인증번호 발송 횟수 확인
@@ -54,13 +55,13 @@ export class EmailCertificationService {
     type: 'SIGN_UP' | 'FIND_PASSWORD' = 'SIGN_UP',
   ): Promise<
     Either<
-      | EmailError.EMAIL_ALREADY_EXISTS
+      | UserError.EMAIL_ALREADY_EXISTS
       | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH,
       string
     >
   > {
     const result = await this.prisma.$transaction(async (tx) => {
-      const checkUser = await this.userService.checkUserExists(email, tx);
+      const checkUser = await this.userService.checkEmailExists(email, tx);
       if (isLeft(checkUser)) return checkUser;
 
       const emailCertification =
@@ -91,6 +92,28 @@ export class EmailCertificationService {
       return right(emailCertification.id);
     });
     return result;
+  }
+
+  async checkEmailCertification(
+    {
+      id,
+      email,
+    }: {
+      id: string;
+      email: string;
+    },
+    tx?: PrismaTxType,
+  ) {
+    const check = await this.emailCertificationRepository.findFirst(
+      {
+        id,
+        email,
+        status: 'VERIFIED',
+      },
+      tx,
+    );
+    if (!check) return left(EmailError.EMAIL_CERTIFICATION_NOT_VERIFIED);
+    return right(null);
   }
 
   ///////////////////////////

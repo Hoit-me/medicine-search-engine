@@ -10,16 +10,17 @@ export namespace EmailError {
   export const EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED =
     typia.random<EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED>();
 
-  export type EMAIL_ALREADY_EXISTS = ERROR<
-    '이미 가입된 이메일입니다.',
-    HttpStatus.BAD_REQUEST
-  >;
-  export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
-
   export type EMAIL_CERTIFICATION_CODE_NOT_MATCH = ERROR<
     '인증번호가 일치하지 않습니다.',
     HttpStatus.BAD_REQUEST
   >;
   export const EMAIL_CERTIFICATION_CODE_NOT_MATCH =
     typia.random<EMAIL_CERTIFICATION_CODE_NOT_MATCH>();
+
+  export type EMAIL_CERTIFICATION_NOT_VERIFIED = ERROR<
+    '이메일 인증이 되지 않았습니다.',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const EMAIL_CERTIFICATION_NOT_VERIFIED =
+    typia.random<EMAIL_CERTIFICATION_NOT_VERIFIED>();
 }

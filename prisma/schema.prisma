@@ -383,15 +383,12 @@ model disease {
 // AUTH
 //--------------------------------------------------
 model user {
-  id        String   @id @db.ObjectId @map("_id")
+  id        String   @id @db.ObjectId @map("_id") @default(auto())
   email     String   @unique
   password  String
-  name      String
-  role      String
+  nickname      String @unique
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
- 
-
 }
 
 model api_key {

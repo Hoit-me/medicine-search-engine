@@ -45,12 +45,14 @@ export class EmailCertificationRepository {
 
   findFirst(
     {
+      id,
       email,
       date,
       status = 'PENDING',
       type = 'SIGN_UP',
       code,
     }: {
+      id?: string;
       email: string;
       date?: {
         gte: Date;
@@ -64,6 +66,7 @@ export class EmailCertificationRepository {
   ) {
     return (tx ?? this.prisma).email_certification.findFirst({
       where: {
+        id,
         email,
         type,
         status,

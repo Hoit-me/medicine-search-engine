@@ -1,17 +1,18 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { eitherToResponse } from '@src/common/res/success';
 import { EmailError } from '@src/constant/error/email.error';
+import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
 import { Auth } from '@src/type/auth';
 import { SUCCESS } from '@src/type/success';
-import { AuthService } from './auth.service';
+import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
     private readonly emailCertificationService: EmailCertificationService,
+    private readonly authService: AuthService,
   ) {}
 
   /**
@@ -25,6 +26,15 @@ export class AuthController {
   /**
    * local Login
    */
+
+  // @TypedRoute.Post('/login')
+  // async login(
+  //   @TypedBody()
+  //   body: Auth.LoginDto,
+  // ) {
+  //   const result = await this.authService.login(body);
+  //   return eitherToResponse(result);
+  // }
 
   /**
    * local Signup
@@ -41,15 +51,13 @@ export class AuthController {
    *    - 인증번호가 이메일이 일치하지 않으면 에러
    * 3. 회원가입
    */
+  @TypedRoute.Post('/signup')
   async signup(
     @TypedBody()
-    body: {
-      email: string;
-      password: string;
-      certifictaion_id: string;
-    },
+    body: Auth.SignupDto,
   ) {
-    body;
+    const result = await this.authService.signup(body);
+    return eitherToResponse(result);
   }
 
   /**
@@ -71,7 +79,7 @@ export class AuthController {
   ): Promise<
     | SUCCESS<true>
     | EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED
-    | EmailError.EMAIL_ALREADY_EXISTS
+    | UserError.EMAIL_ALREADY_EXISTS
   > {
     // 이메일 인증번호 발송
     const result =
@@ -85,7 +93,7 @@ export class AuthController {
     { email, code }: Auth.VerifyEmailCodeDto,
   ): Promise<
     | SUCCESS<string>
-    | EmailError.EMAIL_ALREADY_EXISTS
+    | UserError.EMAIL_ALREADY_EXISTS
     | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH
   > {
     const result = await this.emailCertificationService.verifyEmailCode(
@@ -139,7 +147,7 @@ export class AuthController {
    * 매일 0시에 만료된 이메일 인증번호 삭제 (소프트 삭제)
    * - 1일 이상 지난 인증번호 삭제
    */
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron('0 0 * * *')
   async deleteExpiredEmailCertification() {
     await this.emailCertificationService.deleteExpiredEmailCertification();
   }
