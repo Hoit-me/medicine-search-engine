@@ -11,6 +11,7 @@ import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
 import { JwtPayload } from './auth.interface';
 import { AuthGuard } from './guard/auth.guard';
+import { RefreshGuard } from './guard/refresh.guard';
 import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
@@ -32,6 +33,35 @@ export class AuthController {
       return wrapResponse({ is_login: true, user: user });
     }
     return wrapResponse({ is_login: false });
+  }
+
+  @TypedRoute.Get('/token')
+  @UseGuards(RefreshGuard)
+  async refreshToken(
+    @Request() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<
+    SUCCESS<
+      { access_token: string; refresh_token: string } | { access_token: string }
+    >
+  > {
+    const { access_token, refresh_token } =
+      await this.authService.refresh(user);
+
+    if (
+      !req.headers['x-client-type'] ||
+      req.headers['x-client-type'] !== process.env.CLIENT_TYPE
+    ) {
+      res.cookie('_refresh_token', refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS를 사용하는 경우에만 쿠키 전송
+        sameSite: 'strict', // CSRF 공격 방지
+      });
+      return wrapResponse({ access_token });
+    }
+
+    return wrapResponse({ access_token, refresh_token });
   }
 
   /**
@@ -161,13 +191,15 @@ export class AuthController {
     // 로그인 성공 및 클라이언트 유형이 웹일 경우 리프레시 토큰을 쿠키로 설정
     if (
       result._tag === 'Right' &&
-      req.headers['x-client-type'] !== process.env.CLIENT_TYPE
+      (!req.headers['x-client-type'] ||
+        req.headers['x-client-type'] !== process.env.CLIENT_TYPE)
     ) {
-      res.cookie('_refresh_token', result.right.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS를 사용하는 경우에만 쿠키 전송
-        sameSite: 'strict', // CSRF 공격 방지
-      });
+      body.auto_login ??
+        res.cookie('_refresh_token', result.right.refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS를 사용하는 경우에만 쿠키 전송
+          sameSite: 'strict', // CSRF 공격 방지
+        });
       // 리프레시 토큰은 쿠키로 전달되므로 응답 바디에서 제외
       return wrapResponse({ access_token: result.right.access_token });
     }

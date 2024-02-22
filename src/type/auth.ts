@@ -18,6 +18,12 @@ export namespace Auth {
      * 리다이렉트 URI
      */
     redirect_uri: string;
+
+    /**
+     * 자동 로그인 여부
+     * @default false
+     */
+    auto_login?: boolean;
   }
 
   export type Local = {
@@ -38,6 +44,11 @@ export namespace Auth {
      * @minLength 8
      */
     password: string;
+    /**
+     * 자동 로그인 여부
+     * @default false
+     */
+    auto_login?: boolean;
   };
 
   export type LoginDto = Oauth | Local;

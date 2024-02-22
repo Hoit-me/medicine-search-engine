@@ -41,7 +41,7 @@ export interface BasicAuthService {
   ): Promise<
     Either<
       UserError.NOT_FOUND_USER | UserError.INVALID_PASSWORD,
-      { access_token: string; refresh_token: string }
+      { access_token: string; refresh_token: string; payload: JwtPayload }
     >
   >;
 }

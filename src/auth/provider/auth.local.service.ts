@@ -55,14 +55,17 @@ export class AuthLocalService implements BasicAuthService {
       user.password,
     );
     if (isLeft(isPasswordMatch)) return isPasswordMatch;
-    const accessToken = this.jwtService.accessTokenSign({
+    const payload = {
       id: user.id,
       email: user.email,
+    };
+
+    const accessToken = this.jwtService.accessTokenSign(payload);
+    const refreshToken = this.jwtService.refreshTokenSign(payload);
+    return right({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      payload,
     });
-    const refreshToken = this.jwtService.refreshTokenSign({
-      id: user.id,
-      email: user.email,
-    });
-    return right({ access_token: accessToken, refresh_token: refreshToken });
   }
 }
