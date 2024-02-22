@@ -5,3 +5,5 @@ export const PASSWORD_SERVICE = Symbol('PASSWORD_SERVICE');
 export const AUTH_LOCAL_SERVICE = Symbol('AUTH_LOCAL_SERVICE');
 
 export const AUTH_STRATEGY = 'AUTH_STRATEGY';
+
+export const AUTH_CACHE_SERVICE = Symbol('AUTH_CACHE_SERVICE');

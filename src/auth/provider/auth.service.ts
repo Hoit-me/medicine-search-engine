@@ -1,16 +1,18 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Auth } from '@src/type/auth';
-import { Cache } from 'cache-manager';
-import { RedisStore } from 'cache-manager-redis-store';
 import { isLeft } from 'fp-ts/lib/Either';
 import { assertPrune } from 'typia/lib/misc';
 import {
+  BasicAuthCacheService,
   BasicAuthJWTService,
   BasicAuthService,
   JwtPayload,
 } from '../auth.interface';
-import { AUTH_LOCAL_SERVICE, JWT_SERVICE } from '../constant';
+import {
+  AUTH_CACHE_SERVICE,
+  AUTH_LOCAL_SERVICE,
+  JWT_SERVICE,
+} from '../constant';
 
 @Injectable()
 export class AuthService implements BasicAuthService {
@@ -19,8 +21,8 @@ export class AuthService implements BasicAuthService {
     private readonly localAuthService: BasicAuthService,
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
-    @Inject(CACHE_MANAGER)
-    private readonly cache: Cache & RedisStore,
+    @Inject(AUTH_CACHE_SERVICE)
+    private readonly cacheService: BasicAuthCacheService,
   ) {}
   async signup(dto: Auth.SignupDto) {
     switch (dto.type) {
@@ -41,6 +43,14 @@ export class AuthService implements BasicAuthService {
     }
   }
 
+  async refresh(payload: JwtPayload) {
+    const _payload = assertPrune<JwtPayload>(payload);
+    const access_token = this.jwtService.accessTokenSign(_payload);
+    const refresh_token = this.jwtService.refreshTokenSign(_payload);
+    await this.cacheService.setCache(_payload.id, refresh_token);
+    return { access_token, refresh_token };
+  }
+
   private generateLogin(fn: BasicAuthService['login']) {
     return async (dto: Auth.LoginDto) => {
       const result = await fn(dto);
@@ -51,23 +61,8 @@ export class AuthService implements BasicAuthService {
           refresh_token,
         },
       } = result;
-      await this.setCache(id, refresh_token);
+      await this.cacheService.setCache(id, refresh_token);
       return result;
     };
-  }
-
-  async refresh(payload: JwtPayload) {
-    const _payload = assertPrune<JwtPayload>(payload);
-    const access_token = this.jwtService.accessTokenSign(_payload);
-    const refresh_token = this.jwtService.refreshTokenSign(_payload);
-    await this.setCache(_payload.id, refresh_token);
-    return { access_token, refresh_token };
-  }
-
-  async setCache(id: string, token: string) {
-    this.cache.set(`refresh_${id}`, token, {
-      // TODO: set ttl from config
-      ttl: 60 * 60 * 24 * 30,
-    } as any);
   }
 }

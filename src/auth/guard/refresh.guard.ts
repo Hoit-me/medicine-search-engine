@@ -1,25 +1,25 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   CanActivate,
   ExecutionContext,
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { Cache } from 'cache-manager';
-import { RedisStore } from 'cache-manager-redis-store';
 import { Observable } from 'rxjs';
 import typia from 'typia';
-import { BasicAuthJWTService, JwtPayload } from '../auth.interface';
-import { JWT_SERVICE } from '../constant';
+import {
+  BasicAuthCacheService,
+  BasicAuthJWTService,
+  JwtPayload,
+} from '../auth.interface';
+import { AUTH_CACHE_SERVICE, JWT_SERVICE } from '../constant';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {
   constructor(
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
-
-    @Inject(CACHE_MANAGER)
-    private readonly cache: Cache & RedisStore,
+    @Inject(AUTH_CACHE_SERVICE)
+    private readonly cacheService: BasicAuthCacheService,
   ) {}
   canActivate(
     context: ExecutionContext,
@@ -42,21 +42,19 @@ export class RefreshGuard implements CanActivate {
   }
 
   private async isTokenValid(id: string, token: string) {
-    const cacheToken = await this.cache.get<string>(`refresh_${id}`);
+    const cacheToken = await this.cacheService.getCache(id);
     if (cacheToken !== token) {
       await this.addToBlacklist(token);
       cacheToken && (await this.addToBlacklist(cacheToken));
       return false;
     }
 
-    return !(await this.cache.get<string>(`blacklist_${token}`));
+    return !(await this.cacheService.checkBlacklist(token));
   }
 
   private async addToBlacklist(token: string | null) {
     if (!token) return;
-    await this.cache.set(`blacklist_${token}`, 'true', {
-      ttl: 60 * 60 * 24 * 30,
-    } as any);
+    await this.cacheService.addBlacklist(token);
   }
 
   private extractToken(request: any) {

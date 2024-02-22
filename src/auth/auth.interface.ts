@@ -45,3 +45,11 @@ export interface BasicAuthService {
     >
   >;
 }
+
+export interface BasicAuthCacheService {
+  setCache(id: string, token: string): Promise<void>;
+  deleteCache(id: string): Promise<void>;
+  getCache(id: string): Promise<string | undefined>;
+  checkBlacklist(token: string): Promise<boolean>;
+  addBlacklist(token: string): Promise<void>;
+}
