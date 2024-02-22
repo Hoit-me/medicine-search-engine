@@ -277,9 +277,10 @@ export class AuthController {
 
   /**
    * logout
+   * 
    */
   @TypedRoute.Post('/logout')
-  @UseGuards(AuthGuard)
+  @UseGuards(RefreshGuard)
   async logout(
     @Request() req: Request,
     @Res({ passthrough: true }) res: Response,
