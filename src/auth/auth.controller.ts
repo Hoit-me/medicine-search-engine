@@ -1,5 +1,5 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
-import { Controller, Request, Res } from '@nestjs/common';
+import { Controller, Request, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { EmailError } from '@src/constant/error/email.error';
@@ -8,6 +8,7 @@ import { EmailCertificationService } from '@src/services/emailCertification.serv
 import { Auth } from '@src/type/auth';
 import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
+import { RefreshGuard } from './guard/refresh.guard';
 import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
@@ -15,6 +16,16 @@ export class AuthController {
     private readonly emailCertificationService: EmailCertificationService,
     private readonly authService: AuthService,
   ) {}
+
+  /**
+   * 로그인 여부 확인
+   */
+  @TypedRoute.Get('/')
+  @UseGuards(RefreshGuard)
+  async checkLogin(@Request() req: any) {
+    console.log(req.user);
+    return wrapResponse(true);
+  }
 
   /**
    * # oauth 연동관련
@@ -147,7 +158,7 @@ export class AuthController {
     ) {
       res.cookie('_refresh_token', result.right.refresh_token, {
         httpOnly: true,
-        secure: true, // HTTPS를 사용하는 경우에만 쿠키 전송
+        secure: process.env.NODE_ENV === 'production' ? true : false, // HTTPS를 사용하는 경우에만 쿠키 전송
         sameSite: 'strict', // CSRF 공격 방지
       });
       // 리프레시 토큰은 쿠키로 전달되므로 응답 바디에서 제외

@@ -1,6 +1,8 @@
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { throwError } from '@src/common/res/error';
 import { JwtOption } from '@src/config/interface/option.interface';
+import { AuthError } from '@src/constant/error/auth.error';
 import { JWT_OPTIONS } from '../constant';
 import { BasicAuthJWTService, JwtPayload } from './../auth.interface';
 
@@ -19,9 +21,13 @@ export class AuthJWTService implements BasicAuthJWTService {
   }
 
   accessTokenVerify(token: string) {
-    return this.jwtService.verify<JwtPayload>(token, {
-      secret: this.option.access_secret,
-    });
+    try {
+      return this.jwtService.verify<JwtPayload>(token, {
+        secret: this.option.access_secret,
+      });
+    } catch (_) {
+      return throwError(AuthError.TOKEN_INVALID);
+    }
   }
 
   refreshTokenSign(payLoad: JwtPayload) {
@@ -32,8 +38,12 @@ export class AuthJWTService implements BasicAuthJWTService {
   }
 
   refreshTokenVerify(token: string) {
-    return this.jwtService.verify<JwtPayload>(token, {
-      secret: this.option.refresh_secret,
-    });
+    try {
+      return this.jwtService.verify<JwtPayload>(token, {
+        secret: this.option.refresh_secret,
+      });
+    } catch (_) {
+      return throwError(AuthError.TOKEN_INVALID);
+    }
   }
 }
