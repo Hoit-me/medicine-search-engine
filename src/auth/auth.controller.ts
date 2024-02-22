@@ -278,6 +278,22 @@ export class AuthController {
   /**
    * logout
    */
+  @TypedRoute.Post('/logout')
+  @UseGuards(AuthGuard)
+  async logout(
+    @Request() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (
+      !req.headers['x-client-type'] ||
+      req.headers['x-client-type'] !== process.env.CLIENT_TYPE
+    ) {
+      res.clearCookie('_refresh_token');
+    }
+    await this.authService.logout(user);
+    return wrapResponse({ is_login: false });
+  }
 
   /**
    * find password

@@ -24,6 +24,7 @@ export class AuthService implements BasicAuthService {
     @Inject(AUTH_CACHE_SERVICE)
     private readonly cacheService: BasicAuthCacheService,
   ) {}
+
   async signup(dto: Auth.SignupDto) {
     switch (dto.type) {
       case 'local':
@@ -33,6 +34,7 @@ export class AuthService implements BasicAuthService {
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }
   }
+
   async login(dto: Auth.LoginDto) {
     switch (dto.type) {
       case 'local':
@@ -41,6 +43,11 @@ export class AuthService implements BasicAuthService {
       case 'kakao':
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  async logout(payload: JwtPayload) {
+    const _payload = assertPrune<JwtPayload>(payload);
+    await this.cacheService.addBlacklist(_payload.id);
   }
 
   async refresh(payload: JwtPayload) {
