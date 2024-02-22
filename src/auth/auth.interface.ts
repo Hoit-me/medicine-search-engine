@@ -53,3 +53,13 @@ export interface BasicAuthCacheService {
   checkBlacklist(token: string): Promise<boolean>;
   addBlacklist(token: string): Promise<void>;
 }
+
+export interface BasicAuthApiKeyCacheService {
+  setCache(id: string, date: Date, token: string): Promise<void>;
+  increaseCount(id: string, date: Date): Promise<void>;
+  getCache(id: string, date: Date): Promise<string | undefined>;
+  getCount(id: string): Promise<number>;
+  deleteCache(id: string): Promise<void>;
+  checkBlacklist(key: string): Promise<boolean>;
+  addBlacklist(key: string): Promise<void>;
+}

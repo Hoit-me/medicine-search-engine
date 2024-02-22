@@ -403,13 +403,6 @@ model refresh_token {
   @@index([created_at])
 }
 
-model api_key {
-  id        String  @id @db.ObjectId @map("_id")
-  key       String   @unique
-  user_id   String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
 
 model email_certification {
   id        String  @id @db.ObjectId @map("_id") @default(auto())
@@ -438,4 +431,74 @@ enum CERTIFICATION_STATUS {
   VERIFIED
   PENDING
   EXPIRED
+}
+
+
+
+
+model api_key {
+  id        String  @id @db.ObjectId @map("_id") @default(auto())
+  key       String   @unique
+  name      String   
+  user_id   String
+  default_limit Int @default(1000) 
+  status    STATUS @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  api_key_monthly_usage api_key_monthly_usage[]
+  api_key_usage_log api_key_usage_log[]
+}
+
+model api_key_monthly_usage {
+  id       String  @id @db.ObjectId @map("_id") @default(auto())
+  key   String
+  year     Int
+  month    Int
+  usage    Int
+  monthly_limit    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+
+  ///////////////////////////
+  /// relation
+  ///////////////////////////
+  api_key api_key @relation(fields: [key], references: [key])
+
+
+  @@unique([key,year,month])
+  @@index([key])
+  @@index([year,month])
+}
+
+model api_key_usage_log{
+  id        String  @id @db.ObjectId @map("_id") @default(auto())
+  key       String
+  url       String 
+  method    String
+  date      DateTime 
+  http_status    Int
+  delay     Int
+
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  ///////////////////////////
+  /// relation
+  ///////////////////////////
+  api_key api_key @relation(fields: [key], references: [key])
+
+  @@index([key])
+  @@index([url])
+  @@index([method])
+  @@index([date])
+  @@index([http_status])
+  @@index([url,method])
+}
+
+enum STATUS {
+  ACTIVE
+  INACTIVE
+  DELETED
 }

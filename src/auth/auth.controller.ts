@@ -277,7 +277,7 @@ export class AuthController {
 
   /**
    * logout
-   * 
+   *
    */
   @TypedRoute.Post('/logout')
   @UseGuards(RefreshGuard)
@@ -310,10 +310,12 @@ export class AuthController {
 
   /**
    * get api key
-   *
    * API 키 발급
    * 사용량 측정 및 제한
    */
+  @TypedRoute.Get('/api-key')
+  @UseGuards(AuthGuard)
+  async getApiKey() {}
 
   /**
    * get api key list
