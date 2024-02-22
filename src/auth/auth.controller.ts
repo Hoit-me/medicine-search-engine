@@ -1,6 +1,7 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller, Request, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
@@ -8,7 +9,8 @@ import { EmailCertificationService } from '@src/services/emailCertification.serv
 import { Auth } from '@src/type/auth';
 import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
-import { RefreshGuard } from './guard/refresh.guard';
+import { JwtPayload } from './auth.interface';
+import { AuthGuard } from './guard/auth.guard';
 import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
@@ -21,10 +23,15 @@ export class AuthController {
    * 로그인 여부 확인
    */
   @TypedRoute.Get('/')
-  @UseGuards(RefreshGuard)
-  async checkLogin(@Request() req: any) {
-    console.log(req.user);
-    return wrapResponse(true);
+  @UseGuards(AuthGuard)
+  async checkLogin(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<SUCCESS<{ is_login: boolean; user?: JwtPayload }>> {
+    console.log('user', user);
+    if (user) {
+      return wrapResponse({ is_login: true, user: user });
+    }
+    return wrapResponse({ is_login: false });
   }
 
   /**
