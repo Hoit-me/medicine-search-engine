@@ -1,7 +1,7 @@
 import { user } from '@prisma/client';
 import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
-import { Auth } from '@src/type/auth';
+import { Auth } from '@src/type/auth.type';
 import { Either } from 'fp-ts/lib/Either';
 
 export interface JwtPayload {

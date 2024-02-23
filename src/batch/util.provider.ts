@@ -80,7 +80,6 @@ export class UtilProvider {
             ),
           batchSize,
         ),
-
         mergeMap((body) => body.items),
         catchError((err) => {
           console.log(err.message, 'fetchOpenApiPages$');

@@ -6,7 +6,7 @@ import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
-import { Auth } from '@src/type/auth';
+import { Auth } from '@src/type/auth.type';
 import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
 import { JwtPayload } from './auth.interface';
@@ -277,7 +277,6 @@ export class AuthController {
 
   /**
    * logout
-   *
    */
   @TypedRoute.Post('/logout')
   @UseGuards(RefreshGuard)

@@ -4,7 +4,7 @@ import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { MedicineError } from '@src/constant/error/medicine.error';
 import { MedicineRepository } from '@src/repository/medicine.repository';
 import { MedicineInsuranceRepository } from '@src/repository/medicineInsurance.repository';
-import { Medicine } from '@src/type/medicine';
+import { Medicine } from '@src/type/medicine.type';
 import { Page } from '@src/type/page';
 import { Either, left, right } from 'fp-ts/lib/Either';
 import { DurRepository } from './../repository/dur.repository';

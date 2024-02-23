@@ -4,7 +4,7 @@ import { Controller, UseInterceptors } from '@nestjs/common';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { MedicineError } from '@src/constant/error/medicine.error';
 import { MedicineService } from '@src/services/medicine.service';
-import { Medicine } from '@src/type/medicine';
+import { Medicine } from '@src/type/medicine.type';
 import { Page } from '@src/type/page';
 import { SUCCESS } from '@src/type/success';
 

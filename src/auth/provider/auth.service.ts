@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { Auth } from '@src/type/auth';
+import { Auth } from '@src/type/auth.type';
 import { isLeft } from 'fp-ts/lib/Either';
 import { assertPrune } from 'typia/lib/misc';
 import {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, medicine } from '@prisma/client';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
-import { Medicine } from '@src/type/medicine';
+import { Medicine } from '@src/type/medicine.type';
 import { Page } from '@src/type/page';
 import { SelectAll } from '@src/utils/excludeField';
 import typia from 'typia';

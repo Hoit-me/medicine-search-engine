@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
 import { UserService } from '@src/services/user.service';
-import { Auth } from '@src/type/auth';
+import { Auth } from '@src/type/auth.type';
 import { isLeft, right } from 'fp-ts/lib/Either';
 import {
   BasicAuthJWTService,
