@@ -14,6 +14,11 @@ import {
   JWT_SERVICE,
 } from '../constant';
 
+/**
+ * AuthService
+ * 유지보수가 용이한 코드작성 관련 글
+ * @link https://git-blog-alpha.vercel.app/ko/post/16
+ */
 @Injectable()
 export class AuthService implements BasicAuthService {
   constructor(
@@ -31,16 +36,24 @@ export class AuthService implements BasicAuthService {
         return this.localAuthService.signup(dto);
       case 'google':
       case 'kakao':
+      default:
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }
   }
 
+  /**
+   * this bind 문제관련 글
+   * @link https://git-blog-alpha.vercel.app/ko/post/18
+   */
   async login(dto: Auth.LoginDto) {
     switch (dto.type) {
       case 'local':
-        return this.generateLogin(this.localAuthService.login)(dto);
+        return await this.generateLogin(
+          this.localAuthService.login.bind(this.localAuthService),
+        )(dto);
       case 'google':
       case 'kakao':
+      default:
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }
   }
@@ -58,9 +71,9 @@ export class AuthService implements BasicAuthService {
     return { access_token, refresh_token };
   }
 
-  private generateLogin(fn: BasicAuthService['login']) {
+  private generateLogin(login: BasicAuthService['login']) {
     return async (dto: Auth.LoginDto) => {
-      const result = await fn(dto);
+      const result = await login(dto);
       if (isLeft(result)) return result;
       const {
         right: {

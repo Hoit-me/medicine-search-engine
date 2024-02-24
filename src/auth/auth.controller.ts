@@ -12,12 +12,14 @@ import { Response } from 'express';
 import { JwtPayload } from './auth.interface';
 import { AuthGuard } from './guard/auth.guard';
 import { RefreshGuard } from './guard/refresh.guard';
+import { AuthApiKeyService } from './provider/auth.apiKey.service';
 import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly emailCertificationService: EmailCertificationService,
     private readonly authService: AuthService,
+    private readonly apiKeyService: AuthApiKeyService,
   ) {}
 
   /**
@@ -84,92 +86,10 @@ export class AuthController {
    * 문제 2.
    * oauth 로그인 -> 로컬 회원가입 절차 (이메일인증 및 비밀번호 입력) -> 로컬계정과 연동
    */
-
-  /**
-   * Google Login
-   */
-
-  /**
-   * Kakao Login
-   */
-
   /**
    * local Login
-   *
-   * ## 해당내용은 이슈로 이동할 예정입니다.
-   * 본 프로젝트에서는 앱과 웹의 구분이 필요없지만, 연습하고자 클라이언트 유형을 구분하여 처리
-   *
-   * - 웹
-   *   - http only 쿠키를 이용하여 안전하게 토큰을 저장
-   *   - HTTP only 쿠키를 사용하여 XSS 공격을 방지
-   *   - cookie의 smaeSite 속성을 strict로 설정하여 CSRF 공격 방지
-   *
-   * - 앱 (안드로이드, IOS)
-   *   - HTTP only 쿠키를 사용할 수 없음
-   *   - 따라서 리프레시 토큰을 쿠키로 전달할 수 없음
-   *   - 리프레시 토큰을 바디에 담아 전달
-   *   - 각 플랫폼에서 제공하는 저장소를 사용하여 토큰을 저장
-   *
-   * ### refresh token 탈취 당했을 경우 대응
-   * - refresh token을 탈취당했을 경우, 해당 토큰을 무효화하고 새로운 토큰을 발급
-   *   - 해당 사항을 처리하기 위해서는 사용자는 재로그인을 해야함
-   *
-   * - refresh token을 서버측 (DB, Redis)에 저장하여 관리
-   *   - 이때,key:value / user_id(unique 값): refresh_token 으로 저장
-   *
-   * 보안성 향상을 위한 추가적인 방법
-   * RTR (Refresh Token Rotation) : 리프레시 토큰을 주기적으로 갱신하여 탈취당했을 때의 피해를 최소화
-   * - 리프레시 토큰을 사용할 때마다 새로운 리프레시 토큰을 발급
-   *  - 즉, 리프레시토큰 사용가능횟수 1회
-   *
-   * 하지만 refresh token을 사용자보다 먼저 사용할경우 막을수 없음
-   *
-   * 해당 보안이슈를 해결하기위해서 적용할수 있는 방법
-   *
-   * - refresh할때 redis에 user_id로 조회후 refresh_token이 일치하는지 확인
-   * - 일치하지 않는다면 현재 해당 유저의 토큰 전체를 블랙리스트에 추가후 무효화
-   * - 유저 재로그인 요청 (리프레시토큰을 탈취한 사용자는 재로그인을 하지못하기때문에)
-   *
-   * - 하지만 이는 다중 로그인을 허용하지 않는 경우에만 적용가능
-   *
-   * ### 다중 로그인 (기기별 로그인)을 허용할 경우
-   * user_id: user_agent/token 형태로 저장하여 관리
-   * - user_agent가 다르다면 다른 기기로 판단
-   * - 같은 기기라면 refresh_token을 갱신
-   * - 다른 기기라면 해당 기기의 refresh_token을 무효화
-   *
-   * 만약 새로운 지역(혹은 기기)에서 로그인을 시도할 경우, 사용자에게 알림을 보내고 로그인을 할지 말지 알림을 보낼수도 있음.
-   *  - 이메일, SMS, 푸시 알림 등을 통해 알림을 보낼 수 있음
-   *  - 이때, 사용자가 로그인을 허용하면 해당 기기의 refresh_token을 갱신
-   *  - 사용자가 로그인을 거부하면 해당 기기의 refresh_token을 무효화
-   *
-   *
-   *
-   * #### 추가적인 방법
-   * - 기기지문(device fingerprint) or IP 주소를 사용하여 보안성 향상시킬수 있음
-   *   - 기기지문: 사용자의 기기를 식별하는 정보
-   *   - IP 주소: 사용자의 IP 주소를 식별하는 정보
-   *
-   * ##기기지문이란? (device fingerprint / browser fingerprint)
-   * - 사용자의 브라우저에서 수집되는 여러 속성들을 조합하여 사용자의 기기를 식별하는 정보
-   *
-   * ### 관련 라이브러리
-   * - FingerPrintJS
-   *
-   * ### 어떻게 동작하나?
-   * - 설치 폰트정보 : 특정 문자열을 렌더링 후, 글자의 너비/높이 차이를 비교하여 특정폰트의 존재여부를 확인
-   *
-   * - 스크린 정보: 해상도, 터치지원여부, 색상깊이 등을 확인
-   *    - screen.width, screen.height, screen.colorDepth, screen.pixelDepth 등을 사용하여 가져올수있음
-   *
-   * - canvas 정보:
-   *   - 그래픽카드, 드라이버, 브라우저, 운영체제등에 따라 픽셀값이 민감하게 달라짐을 이용하여 사용자의 기기를 식별
-   *   - toDataURL을 사용하여 canvas에 그림을 그린후, 그림을 base64로 인코딩하여 가져옴
-   *
-   * ### 기기지문의 문제점
-   * - 같은 기기라도 브라우저를 업데이트하거나, 브라우저의 설정을 변경하면 기기지문이 변경될수 있음
-   * - 듀얼 모니터 사용시, 두 모니터의 정보가 다르게 나올수 있음
-   * - 모바일기기의 경우 종류가 많지않아, 기기지문이 중복될수 있음
+   *  - 리프레시토큰 전략에 대한 설명
+   *  @link https://git-blog-alpha.vercel.app/ko/post/17
    */
   @TypedRoute.Post('/login')
   async login(
@@ -312,9 +232,15 @@ export class AuthController {
    * API 키 발급
    * 사용량 측정 및 제한
    */
-  @TypedRoute.Get('/api-key')
+  @TypedRoute.Post('/api-key')
   @UseGuards(AuthGuard)
-  async getApiKey() {}
+  async createApiKey(
+    @CurrentUser() user: JwtPayload,
+    @TypedBody() body: Auth.ApiKey.CreateDto,
+  ) {
+    const result = await this.apiKeyService.createApiKey(user.id, body.name);
+    return wrapResponse(result);
+  }
 
   /**
    * get api key list

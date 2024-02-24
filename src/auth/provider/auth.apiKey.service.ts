@@ -70,14 +70,14 @@ import { ulid } from 'ulid';
  *
  */
 @Injectable()
-export class AuchApiKeyService {
+export class AuthApiKeyService {
   constructor(private readonly prisma: PrismaService) {}
-  async createApiKey(user_id: string) {
+  async createApiKey(user_id: string, name: string = 'default') {
     const key = this.generateApiKey();
     return await this.prisma.api_key.create({
       data: {
         key,
-        name: 'default',
+        name,
         user_id,
       },
     });

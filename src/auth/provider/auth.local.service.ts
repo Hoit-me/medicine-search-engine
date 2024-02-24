@@ -13,6 +13,7 @@ import { JWT_SERVICE, PASSWORD_SERVICE } from '../constant';
 @Injectable()
 export class AuthLocalService implements BasicAuthService {
   constructor(
+    @Inject(UserService)
     private readonly userService: UserService,
     private readonly emailCertificationService: EmailCertificationService,
     @Inject(PASSWORD_SERVICE)
@@ -20,6 +21,7 @@ export class AuthLocalService implements BasicAuthService {
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
   ) {}
+
   async signup(dto: Auth.SignupDto) {
     if (dto.type !== 'local') throw new Error('Check Signup type!'); // never
     const { email, password, nickname, email_certification_id } = dto;
@@ -45,6 +47,7 @@ export class AuthLocalService implements BasicAuthService {
     return right(newUser);
   }
   async login(dto: Auth.LoginDto) {
+    console.log(dto);
     if (dto.type !== 'local') throw new Error('Check Login type!'); // never
     const { email, password } = dto;
     const eitherUser = await this.userService.findUnique(email);
