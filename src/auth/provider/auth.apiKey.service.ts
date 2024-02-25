@@ -139,7 +139,7 @@ export class AuthApiKeyService {
         api_key_usage_log: {
           select: {
             method: true,
-            endpoint: true,
+            url: true,
           },
         },
       },
