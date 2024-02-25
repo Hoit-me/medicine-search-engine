@@ -3,27 +3,28 @@ import { ERROR } from '@src/type/error';
 import typia from 'typia';
 
 export namespace UserError {
+  // 이미 가입된 이메일인 경우
   export type EMAIL_ALREADY_EXISTS = ERROR<
-    '이미 가입된 이메일입니다.',
+    'EMAIL_ALREADY_EXISTS',
     HttpStatus.BAD_REQUEST
   >;
   export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
 
+  // 이미 가입된 닉네임인 경우
   export type NICKNAME_ALREADY_EXISTS = ERROR<
-    '이미 존재하는 닉네임입니다.',
+    'NICKNAME_ALREADY_EXISTS',
     HttpStatus.BAD_REQUEST
   >;
   export const NICKNAME_ALREADY_EXISTS =
     typia.random<NICKNAME_ALREADY_EXISTS>();
 
-  export type NOT_FOUND_USER = ERROR<
-    '존재하지 않는 유저입니다.',
-    HttpStatus.BAD_REQUEST
-  >;
+  // 존재하지 않는 사용자인 경우
+  export type NOT_FOUND_USER = ERROR<'NOT_FOUND_USER', HttpStatus.BAD_REQUEST>;
   export const NOT_FOUND_USER = typia.random<NOT_FOUND_USER>();
 
+  // 비밀번호가 일치하지 않는 경우
   export type INVALID_PASSWORD = ERROR<
-    '비밀번호가 일치하지 않습니다.',
+    'INVALID_PASSWORD',
     HttpStatus.BAD_REQUEST
   >;
   export const INVALID_PASSWORD = typia.random<INVALID_PASSWORD>();

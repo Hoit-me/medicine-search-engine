@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { ApiKeyError } from '@src/constant/error/apiKey.error';
 import { ApiKeyRepository } from '@src/repository/apiKey.repository';
+import { Either, left, right } from 'fp-ts/lib/Either';
 import { ulid } from 'ulid';
 
 /**
@@ -70,6 +72,12 @@ import { ulid } from 'ulid';
 @Injectable()
 export class ApiKeyService {
   constructor(private readonly apiKeyRepository: ApiKeyRepository) {}
+
+  /**
+   * createApiKey
+   *
+   * 유저의 API 키를 생성합니다.
+   */
   async createApiKey(user_id: string, name: string = 'default') {
     const key = this.generateApiKey();
     return await this.apiKeyRepository.create({ key, user_id, name });
@@ -87,8 +95,20 @@ export class ApiKeyService {
     return await this.apiKeyRepository.getList({ user_id, year, month });
   }
 
-  async softDeleteApiKey(user_id: string, key: string) {
-    return await this.apiKeyRepository.softDelete(user_id, key);
+  /**
+   * softDeleteApiKey
+   *
+   * 유저의 API 키를 삭제합니다.
+   * 삭제된 API 키는 사용할 수 없습니다.
+   */
+  async softDeleteApiKey(
+    user_id: string,
+    key: string,
+  ): Promise<Either<ApiKeyError.API_KEY_NOT_FOUND, true>> {
+    const exist = await this.apiKeyRepository.getDetail(user_id, key);
+    if (!exist) return left(ApiKeyError.API_KEY_NOT_FOUND);
+    await this.apiKeyRepository.softDelete(user_id, key);
+    return right(true);
   }
 
   async getApiKeyDetail(user_id: string, key: string) {
