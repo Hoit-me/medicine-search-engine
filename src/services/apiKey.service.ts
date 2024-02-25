@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@src/common/prisma/prisma.service';
+import { ApiKeyRepository } from '@src/repository/apiKey.repository';
 import { ulid } from 'ulid';
 
 /**
@@ -68,17 +68,11 @@ import { ulid } from 'ulid';
  *     - 로그 === 유저액션 이기에 다른 서비스에서도 사용이 될 가능성이 높다 판단.
  */
 @Injectable()
-export class AuthApiKeyService {
-  constructor(private readonly prisma: PrismaService) {}
+export class ApiKeyService {
+  constructor(private readonly apiKeyRepository: ApiKeyRepository) {}
   async createApiKey(user_id: string, name: string = 'default') {
     const key = this.generateApiKey();
-    return await this.prisma.api_key.create({
-      data: {
-        key,
-        name,
-        user_id,
-      },
-    });
+    return await this.apiKeyRepository.create({ key, user_id, name });
   }
 
   /**
@@ -90,60 +84,15 @@ export class AuthApiKeyService {
   async getApiKeyList(user_id: string, date: Date = new Date()) {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
-    return await this.prisma.api_key.findMany({
-      where: {
-        user_id,
-      },
-      include: {
-        api_key_monthly_usage: {
-          select: {
-            year: true,
-            month: true,
-            usage: true,
-          },
-          where: {
-            year,
-            month,
-          },
-        },
-      },
-    });
+    return await this.apiKeyRepository.getList({ user_id, year, month });
   }
 
   async softDeleteApiKey(user_id: string, key: string) {
-    return await this.prisma.api_key.update({
-      where: {
-        user_id,
-        key,
-      },
-      data: {
-        status: 'DELETED',
-      },
-    });
+    return await this.apiKeyRepository.softDelete(user_id, key);
   }
 
   async getApiKeyDetail(user_id: string, key: string) {
-    return await this.prisma.api_key.findUnique({
-      where: {
-        key,
-        user_id,
-      },
-      include: {
-        api_key_monthly_usage: {
-          select: {
-            year: true,
-            month: true,
-            usage: true,
-          },
-        },
-        api_key_usage_log: {
-          select: {
-            method: true,
-            url: true,
-          },
-        },
-      },
-    });
+    return await this.apiKeyRepository.getDetail(user_id, key);
   }
 
   private generateApiKey() {

@@ -12,14 +12,12 @@ import { Response } from 'express';
 import { JwtPayload } from './auth.interface';
 import { AuthGuard } from './guard/auth.guard';
 import { RefreshGuard } from './guard/refresh.guard';
-import { AuthApiKeyService } from './provider/auth.apiKey.service';
 import { AuthService } from './provider/auth.service';
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly emailCertificationService: EmailCertificationService,
     private readonly authService: AuthService,
-    private readonly apiKeyService: AuthApiKeyService,
   ) {}
 
   /**
@@ -66,6 +64,10 @@ export class AuthController {
   }
 
   /**
+   * local Login
+   *  - 리프레시토큰 전략에 대한 설명
+   *  @link https://git-blog-alpha.vercel.app/ko/post/17
+   *
    * # oauth 연동관련
    * local 로그인과, oauth 로그인의 이메일이 중복되는 경우가 생김.
    *
@@ -84,11 +86,6 @@ export class AuthController {
    *
    * 문제 2.
    * oauth 로그인 -> 로컬 회원가입 절차 (이메일인증 및 비밀번호 입력) -> 로컬계정과 연동
-   */
-  /**
-   * local Login
-   *  - 리프레시토큰 전략에 대한 설명
-   *  @link https://git-blog-alpha.vercel.app/ko/post/17
    */
   @TypedRoute.Post('/login')
   async login(
@@ -225,21 +222,6 @@ export class AuthController {
   /**
    * verify email
    */
-
-  /**
-   * get api key
-   * API 키 발급
-   * 사용량 측정 및 제한
-   */
-  @TypedRoute.Post('/api-key')
-  @UseGuards(AuthGuard)
-  async createApiKey(
-    @CurrentUser() user: JwtPayload,
-    @TypedBody() body: Auth.ApiKey.CreateDto,
-  ) {
-    const result = await this.apiKeyService.createApiKey(user.id, body.name);
-    return wrapResponse(result);
-  }
 
   /**
    * get api key list

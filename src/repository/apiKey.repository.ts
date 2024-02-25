@@ -76,10 +76,18 @@ export class ApiKeyRepository {
     });
   }
 
-  getList(user_id: string, date: Date = new Date(), tx?: PrismaTxType) {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-
+  getList(
+    {
+      user_id,
+      year,
+      month,
+    }: {
+      user_id: string;
+      year: number;
+      month: number;
+    },
+    tx?: PrismaTxType,
+  ) {
     const include: Prisma.api_keyFindManyArgs['include'] = {
       api_key_monthly_usage: {
         select: {

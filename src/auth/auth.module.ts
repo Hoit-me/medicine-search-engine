@@ -12,7 +12,6 @@ import {
   PASSWORD_OPTIONS,
   PASSWORD_SERVICE,
 } from './constant';
-import { AuthApiKeyService } from './provider/auth.apiKey.service';
 import { AuthCacheService } from './provider/auth.cache.service';
 import { AuthJWTService } from './provider/auth.jwt.service';
 import { AuthLocalService } from './provider/auth.local.service';
@@ -21,7 +20,6 @@ import { AuthService } from './provider/auth.service';
 
 const authServices: Provider[] = [
   AuthService,
-  AuthApiKeyService,
   { provide: AUTH_LOCAL_SERVICE, useClass: AuthLocalService },
   { provide: PASSWORD_SERVICE, useClass: AuthPasswordService },
   { provide: JWT_SERVICE, useClass: AuthJWTService },
