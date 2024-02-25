@@ -67,7 +67,6 @@ import { ulid } from 'ulid';
  *     - redis가 다운되었을경우 PUB/SUB을 통해 구축된 실시간 정보(snapshot)를 이용하여 복구가 가능
  *     - 비교적 비정상 적인 행위 감지및, 실시간 이벤트를 캡처하여 대응이 가능
  *     - 로그 === 유저액션 이기에 다른 서비스에서도 사용이 될 가능성이 높다 판단.
- *
  */
 @Injectable()
 export class AuthApiKeyService {
@@ -79,6 +78,35 @@ export class AuthApiKeyService {
         key,
         name,
         user_id,
+      },
+    });
+  }
+
+  /**
+   * getApiKeyList
+   *
+   * 유저의 API 키 목록을 조회합니다.
+   * api키의 달 사용량을 조회합니다.
+   */
+  async getApiKeyList(user_id: string, date: Date = new Date()) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    return await this.prisma.api_key.findMany({
+      where: {
+        user_id,
+      },
+      include: {
+        api_key_monthly_usage: {
+          select: {
+            year: true,
+            month: true,
+            usage: true,
+          },
+          where: {
+            year,
+            month,
+          },
+        },
       },
     });
   }
