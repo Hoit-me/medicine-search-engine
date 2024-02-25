@@ -13,7 +13,6 @@ import { ulid } from 'ulid';
  *   - 삭제된 API 키는 사용할 수 없습니다.
  * - API 키는 사용자가 생성한 날짜와 시간을 기록합니다.
  *
- *
  * API 키 사용 정책
  * - API 키 당 과금 정책을 적용할 수 있습니다.
  * - API 키를 사용한 정보를 저장합니다.
@@ -105,6 +104,42 @@ export class AuthApiKeyService {
           where: {
             year,
             month,
+          },
+        },
+      },
+    });
+  }
+
+  async softDeleteApiKey(user_id: string, key: string) {
+    return await this.prisma.api_key.update({
+      where: {
+        user_id,
+        key,
+      },
+      data: {
+        status: 'DELETED',
+      },
+    });
+  }
+
+  async getApiKeyDetail(user_id: string, key: string) {
+    return await this.prisma.api_key.findUnique({
+      where: {
+        key,
+        user_id,
+      },
+      include: {
+        api_key_monthly_usage: {
+          select: {
+            year: true,
+            month: true,
+            usage: true,
+          },
+        },
+        api_key_usage_log: {
+          select: {
+            method: true,
+            endpoint: true,
           },
         },
       },
