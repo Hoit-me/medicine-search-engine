@@ -7,7 +7,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   intercept(_, next: CallHandler<T>) {
     return next.handle().pipe(
       map((data) => {
-        console.log('ResponseInterceptor', data);
         if (isError(data)) {
           return throwError(data);
         }

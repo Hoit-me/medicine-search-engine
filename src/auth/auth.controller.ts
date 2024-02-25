@@ -30,7 +30,6 @@ export class AuthController {
   async checkLogin(
     @CurrentUser() user: JwtPayload,
   ): Promise<SUCCESS<{ is_login: boolean; user?: JwtPayload }>> {
-    console.log('user', user);
     if (user) {
       return wrapResponse({ is_login: true, user: user });
     }

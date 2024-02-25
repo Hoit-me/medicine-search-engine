@@ -47,7 +47,6 @@ export class AuthLocalService implements BasicAuthService {
     return right(newUser);
   }
   async login(dto: Auth.LoginDto) {
-    console.log(dto);
     if (dto.type !== 'local') throw new Error('Check Login type!'); // never
     const { email, password } = dto;
     const eitherUser = await this.userService.findUnique(email);
