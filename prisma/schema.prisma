@@ -445,6 +445,7 @@ model api_key {
   status    STATUS @default(ACTIVE)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  deleted_at DateTime?
 
   api_key_monthly_usage api_key_monthly_usage[]
   api_key_usage_log api_key_usage_log[]
@@ -465,6 +466,7 @@ model api_key_monthly_usage {
   /// relation
   ///////////////////////////
   api_key api_key @relation(fields: [key], references: [key])
+  logs api_key_usage_log[]
 
 
   @@unique([key,year,month])
@@ -475,12 +477,13 @@ model api_key_monthly_usage {
 model api_key_usage_log{
   id        String  @id @db.ObjectId @map("_id") @default(auto())
   key       String
+  year      Int
+  month     Int
   url       String 
   method    String
   date      DateTime 
   http_status    Int
   delay     Int
-
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -488,6 +491,7 @@ model api_key_usage_log{
   /// relation
   ///////////////////////////
   api_key api_key @relation(fields: [key], references: [key])
+  monthly_usage api_key_monthly_usage @relation(fields: [key,year,month], references: [key,year,month])
 
   @@index([key])
   @@index([url])
@@ -495,6 +499,7 @@ model api_key_usage_log{
   @@index([date])
   @@index([http_status])
   @@index([url,method])
+  @@index([key,year,month])
 }
 
 enum STATUS {
