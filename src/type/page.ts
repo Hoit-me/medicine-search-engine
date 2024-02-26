@@ -46,7 +46,6 @@ export namespace Page {
      */
     limit?: number;
   }
-
   export interface Search extends Query {
     /**
      * Search keyword

@@ -41,8 +41,7 @@ export class ApiKeyController {
 
   /**
    * delete api key
-   * API 키 삭제
-   * 사용량 측정 및 제한
+   * API 키 삭제 (soft delete) - 30일 후 완전 삭제
    */
   @TypedRoute.Delete('/api-key')
   @UseGuards(AuthGuard)
@@ -51,6 +50,16 @@ export class ApiKeyController {
     @TypedBody() body: ApiKey.DeleteDto,
   ): Promise<SUCCESS<true> | ApiKeyError.API_KEY_NOT_FOUND> {
     const result = await this.apiKeyService.softDeleteApiKey(user.id, body.key);
+    return eitherToResponse(result);
+  }
+
+  @TypedRoute.Get('/api-key/:key')
+  @UseGuards(AuthGuard)
+  async getApiKey(
+    @CurrentUser() user: JwtPayload,
+    @TypedBody() body: ApiKey.DeleteDto,
+  ) {
+    const result = await this.apiKeyService.getApiKeyDetail(user.id, body.key);
     return eitherToResponse(result);
   }
 }

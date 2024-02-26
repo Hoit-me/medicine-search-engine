@@ -112,7 +112,9 @@ export class ApiKeyService {
   }
 
   async getApiKeyDetail(user_id: string, key: string) {
-    return await this.apiKeyRepository.getDetail(user_id, key);
+    const apiKey = await this.apiKeyRepository.getDetail(user_id, key);
+    if (!apiKey) return left(ApiKeyError.API_KEY_NOT_FOUND);
+    return right(apiKey);
   }
 
   private generateApiKey() {

@@ -4,7 +4,7 @@ import { ApiKeyRepository } from '@src/repository/apiKey.repository';
 import { ApiKeyService } from '@src/services/apiKey.service';
 
 @Module({
-  imports: [ApiKeyService, ApiKeyRepository],
+  providers: [ApiKeyService, ApiKeyRepository],
   controllers: [ApiKeyController],
   exports: [ApiKeyService, ApiKeyRepository],
 })

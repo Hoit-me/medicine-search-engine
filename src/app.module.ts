@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { AwsModule } from './common/aws/aws.module';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -14,6 +15,7 @@ import { MedicineModule } from './modules/medicine.module';
     ...defaultModules,
     PrismaModule,
     MedicineModule,
+    MedicineBatchModule,
     ApiKeyModule,
     AwsModule,
     AuthModule,

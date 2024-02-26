@@ -39,5 +39,6 @@ const options: Provider[] = [
   imports: [JwtModule, EmailCertificationModule, UserModule],
   controllers: [AuthController],
   providers: [...options, ...authServices],
+  exports: [AuthService, ...authServices],
 })
 export class AuthModule {}

@@ -34,7 +34,7 @@ export class MedicineController {
 
   @TypedRoute.Get('/keyword')
   async getMedicineKeyword(
-    @TypedQuery() query: Page.Search,
+    @TypedQuery() query: Page.Search & { search: string },
   ): Promise<SUCCESS<string[]>> {
     const { search } = query;
     const result = await this.medicineService.getMedicineKeyword({
