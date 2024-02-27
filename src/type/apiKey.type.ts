@@ -1,3 +1,16 @@
+import { STATUS } from '@prisma/client';
+
+export interface ApiKey {
+  id: string;
+  key: string;
+  name: string;
+  user_id: string;
+  default_limit: number;
+  status: STATUS;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+}
 export namespace ApiKey {
   export interface CreateDto {
     /**
@@ -22,4 +35,47 @@ export namespace ApiKey {
      */
     key: string;
   }
+
+  export interface MonthlyUsage {
+    id: string;
+    key: string;
+    year: number;
+    month: number;
+    usage: number;
+    monthly_limit: number;
+    created_at: Date;
+    updated_at: Date;
+  }
+
+  export interface UsageLog {
+    id: string;
+    key: string;
+    year: number;
+    month: number;
+    url: string;
+    method: string;
+    date: Date;
+    http_status: number;
+    delay: number;
+    created_at: Date;
+    updated_at: Date;
+  }
+
+  export type GetDetailOutput = ApiKey & {
+    api_key_monthly_usage: MonthlyUsage[];
+    api_key_usage_log: UsageLog[];
+    _count: {
+      api_key_monthly_usage: number;
+      api_key_usage_log: number;
+    };
+  };
+
+  export type GetListOutput = (ApiKey & {
+    api_key_monthly_usage: MonthlyUsage[];
+    api_key_usage_log: UsageLog[];
+    _count: {
+      api_key_monthly_usage: number;
+      api_key_usage_log: number;
+    };
+  })[];
 }

@@ -3,14 +3,23 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/common/prisma/prisma.service';
 import { Cache } from 'cache-manager';
 import { RedisStore } from 'cache-manager-redis-store';
-
 import dayjs from 'dayjs';
+
+/**
+ * API 키 사용량 서비스
+ *
+ */
 @Injectable()
 export class ApiKeyUsageService {
   constructor(
     @Inject(CACHE_MANAGER) private readonly cache: Cache & RedisStore,
     private readonly prisma: PrismaService,
   ) {}
+
+  /**
+   * createMonthlyUsage
+   */
+  // async createMonthlyUsage(apiKey: string): Promise<void> {}
 
   // API 사용량을 증가시키고, 현재 사용량을 반환합니다.
   async incrementUsage(apiKey: string): Promise<number> {

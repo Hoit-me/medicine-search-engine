@@ -22,7 +22,7 @@ export class ApiKeyController {
   async createApiKey(
     @CurrentUser() user: JwtPayload,
     @TypedBody() body: ApiKey.CreateDto,
-  ) {
+  ): Promise<SUCCESS<ApiKey>> {
     const result = await this.apiKeyService.createApiKey(user.id, body.name);
     return wrapResponse(result);
   }
@@ -34,7 +34,9 @@ export class ApiKeyController {
    */
   @TypedRoute.Get('/api-key')
   @UseGuards(AuthGuard)
-  async getApiKeyList(@CurrentUser() user: JwtPayload) {
+  async getApiKeyList(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<SUCCESS<ApiKey.GetListOutput>> {
     const result = await this.apiKeyService.getApiKeyList(user.id);
     return wrapResponse(result);
   }
@@ -53,12 +55,16 @@ export class ApiKeyController {
     return eitherToResponse(result);
   }
 
+  /**
+   * get api key detail
+   * API 키 상세 조회
+   */
   @TypedRoute.Get('/api-key/:key')
   @UseGuards(AuthGuard)
   async getApiKey(
     @CurrentUser() user: JwtPayload,
     @TypedBody() body: ApiKey.DeleteDto,
-  ) {
+  ): Promise<SUCCESS<ApiKey.GetDetailOutput> | ApiKeyError.API_KEY_NOT_FOUND> {
     const result = await this.apiKeyService.getApiKeyDetail(user.id, body.key);
     return eitherToResponse(result);
   }

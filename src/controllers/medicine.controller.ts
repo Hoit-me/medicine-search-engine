@@ -8,6 +8,11 @@ import { Medicine } from '@src/type/medicine.type';
 import { Page } from '@src/type/page';
 import { SUCCESS } from '@src/type/success';
 
+/**
+ * Medicine Controller
+ *
+ * read only
+ */
 @Controller('/medicine')
 export class MedicineController {
   constructor(private readonly medicineService: MedicineService) {}
