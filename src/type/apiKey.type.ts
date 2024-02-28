@@ -78,4 +78,14 @@ export namespace ApiKey {
       api_key_usage_log: number;
     };
   })[];
+
+  export type UsageCache = {
+    monthly_limit: number;
+    usage: number;
+  };
+  export type CurrentApiKey = {
+    key: string;
+    monthly_limit: number;
+    usage: number;
+  };
 }

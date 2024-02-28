@@ -1,5 +1,6 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
+import { ApiKey } from '@src/type/apiKey.type';
 import { Cache } from 'cache-manager';
 import { RedisStore } from 'cache-manager-redis-store';
 import dayjs from 'dayjs';
@@ -12,16 +13,22 @@ export class ApiKeyUsageCacheRepository {
 
   async increment({
     key,
+    usage,
+    monthly_limit,
     year,
     month,
   }: {
     key: string;
+    usage: number;
+    monthly_limit: number;
     year: number;
     month: number;
-  }): Promise<number> {
+  }): Promise<ApiKey.UsageCache> {
     const api_key = this.keyName(key, year, month);
-    const currentUsage = (await this.cache.get<number>(api_key)) || 0;
-    const newUsage = currentUsage + 1;
+    const newUsage = {
+      monthly_limit: monthly_limit,
+      usage: usage + 1,
+    };
     await this.cache.set(api_key, newUsage, { ttl: this.getTtl() } as any);
     return newUsage;
   }
@@ -34,9 +41,9 @@ export class ApiKeyUsageCacheRepository {
     key: string;
     year: number;
     month: number;
-  }): Promise<number | undefined> {
+  }): Promise<ApiKey.UsageCache | undefined> {
     const api_key = this.keyName(key, year, month);
-    return await this.cache.get<number>(api_key);
+    return await this.cache.get<ApiKey.UsageCache>(api_key);
   }
 
   async set({
@@ -44,14 +51,18 @@ export class ApiKeyUsageCacheRepository {
     year,
     month,
     usage,
+    monthly_limit,
   }: {
     key: string;
     year: number;
     month: number;
     usage: number;
+    monthly_limit: number;
   }) {
     const api_key = this.keyName(key, year, month);
-    await this.cache.set(api_key, usage, { ttl: this.getTtl() } as any);
+    const usageData = { monthly_limit, usage };
+    await this.cache.set(api_key, usageData, { ttl: this.getTtl() } as any);
+    return usageData;
   }
 
   async getkeys(year: number, month: number): Promise<string[]> {

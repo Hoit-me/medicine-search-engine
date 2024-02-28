@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { api_key } from '@prisma/client';
 import { ApiKeyError } from '@src/constant/error/apiKey.error';
 import { ApiKeyRepository } from '@src/repository/apiKey.repository';
 import { Either, left, right } from 'fp-ts/lib/Either';
@@ -127,18 +126,6 @@ export class ApiKeyService {
     const apiKey = await this.apiKeyRepository.checkExist(key);
     if (!apiKey) return left(ApiKeyError.API_KEY_NOT_FOUND);
     return right(apiKey);
-  }
-
-  async setMonthlyUsage(api_key: api_key) {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    await this.apiKeyUsageService.set({
-      key: api_key.key,
-      year,
-      month,
-      monthly_limit: api_key.default_limit,
-    });
   }
 
   private generateApiKey() {

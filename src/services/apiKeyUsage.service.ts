@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ApiKey } from '@src/type/apiKey.type';
 import { ApiKeyUsageRepository } from './../repository/apiKeyUsage.repository';
 import { ApiKeyUsageCacheRepository } from './../repository/apiKeyUsageCache.repository';
 
@@ -41,23 +42,63 @@ export class ApiKeyUsageService {
       month: dto.month,
     });
     if (!usage && usage !== 0) {
-      await this.apiKeyUsageCacheRepository.set({
+      return await this.apiKeyUsageCacheRepository.set({
         key: dto.key,
         year: dto.year,
         month: dto.month,
         usage: exist?.usage || 0,
+        monthly_limit: exist?.monthly_limit || 0,
       });
     }
+    return usage;
   }
 
-  async increment(key: string) {
+  async increment(dto: ApiKey.CurrentApiKey) {
     const year = new Date().getFullYear();
     const month = new Date().getMonth() + 1;
     const usage = await this.apiKeyUsageCacheRepository.increment({
-      key,
+      ...dto,
       year,
       month,
     });
     return usage;
+  }
+
+  async batchUpdateApikeyUsage() {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    const keys = await this.apiKeyUsageCacheRepository.getkeys(year, month);
+    // TODO: batch size 설정
+    // api key가 많아 질 경우 적절한 batch size를 설정해야함
+    Promise.all(
+      keys.map(async (key) => {
+        const api_key = this.parseKey(key, year, month);
+        const usage = await this.apiKeyUsageCacheRepository.find({
+          key: api_key,
+          year,
+          month,
+        });
+        if (usage) {
+          this.apiKeyUsageRepository.update(
+            { key: api_key, year, month },
+            { usage: usage.usage },
+          );
+        }
+      }),
+    );
+  }
+
+  async findCache(key: string) {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    return await this.apiKeyUsageCacheRepository.find({
+      key,
+      year,
+      month,
+    });
+  }
+
+  private parseKey(key: string, year: number, month: number) {
+    return key.replace(`api_key:${year}-${month}:`, '');
   }
 }

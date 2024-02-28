@@ -1,19 +1,27 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
 import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { JwtPayload } from '@src/auth/auth.interface';
 import { AuthGuard } from '@src/auth/guard/auth.guard';
+import { CurrentApiKey } from '@src/common/decorator/CurrentApiKey';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { ApiKeyGuard } from '@src/common/guard/apiKey.guard';
 import { ApiKeyIncreaseInterceptor } from '@src/common/interceptor/apikeyIncrease.interceptor';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { ApiKeyError } from '@src/constant/error/apiKey.error';
+import { ApiKeyUsageCacheRepository } from '@src/repository/apiKeyUsageCache.repository';
 import { ApiKeyService } from '@src/services/apiKey.service';
+import { ApiKeyUsageService } from '@src/services/apiKeyUsage.service';
 import { ApiKey } from '@src/type/apiKey.type';
 import { SUCCESS } from '@src/type/success';
 
 @Controller('api-key')
 export class ApiKeyController {
-  constructor(private readonly apiKeyService: ApiKeyService) {}
+  constructor(
+    private readonly apiKeyService: ApiKeyService,
+    private readonly apiKeyUsageService: ApiKeyUsageService,
+    private readonly apiKeyUsageCacheRepository: ApiKeyUsageCacheRepository,
+  ) {}
   /**
    * create api key
    * API 키 발급
@@ -71,10 +79,31 @@ export class ApiKeyController {
     return eitherToResponse(result);
   }
 
-  @TypedRoute.Get('/test/test')
+  @TypedRoute.Get('/increment/test')
   @UseGuards(ApiKeyGuard)
   @UseInterceptors(ApiKeyIncreaseInterceptor)
-  async test() {
-    return 'test';
+  async incrementTest() {
+    return wrapResponse('result');
+  }
+
+  @TypedRoute.Get('/set/test')
+  @UseGuards(ApiKeyGuard)
+  async setTest(@CurrentApiKey() api_key: ApiKey.CurrentApiKey) {
+    console.log(api_key);
+    await this.apiKeyUsageCacheRepository.set({
+      key: api_key.key,
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      monthly_limit: 10,
+      usage: 0,
+    });
+
+    return wrapResponse('result');
+  }
+
+  //
+  @Cron('0 0 * * *')
+  async batchUpdateApikeyUsage() {
+    await this.apiKeyUsageService.batchUpdateApikeyUsage();
   }
 }

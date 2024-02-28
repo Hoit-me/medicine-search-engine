@@ -1,29 +1,69 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ApiKeyService } from '@src/services/apiKey.service';
+import { ApiKeyUsageService } from '@src/services/apiKeyUsage.service';
+import { ApiKey } from '@src/type/apiKey.type';
 import { isLeft } from 'fp-ts/lib/Either';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private readonly apiKeyService: ApiKeyService) {}
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(
+    private readonly apiKeyService: ApiKeyService,
+    private readonly apiKeyUsageService: ApiKeyUsageService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const api_key = request.query.api_key;
-    request.api_key = api_key;
-    return this.validateApiKey(api_key);
+    return this.validateApiKey(request);
+  }
+  async validateApiKey(request: any): Promise<boolean> {
+    const requestedApiKey = request.query.api_key;
+    if (!requestedApiKey) return false;
+
+    const cacheCheckResult = await this.checkCachedApiKeyInfo(
+      requestedApiKey,
+      request,
+    );
+    if (cacheCheckResult) {
+      return cacheCheckResult.monthly_limit > cacheCheckResult.usage;
+    }
+
+    return this.validateAndSetApiKeyUsage(requestedApiKey, request);
   }
 
-  async validateApiKey(api_key?: string) {
-    if (!api_key) return false;
+  async checkCachedApiKeyInfo(
+    requestedApiKey: string,
+    request: any,
+  ): Promise<ApiKey.UsageCache | null> {
+    const cachedApiKeyInfo =
+      await this.apiKeyUsageService.findCache(requestedApiKey);
+    if (cachedApiKeyInfo) {
+      const apiKey = { ...cachedApiKeyInfo, key: requestedApiKey };
+      request.api_key = apiKey;
+      return apiKey;
+    }
+    return null;
+  }
 
-    const result = await this.apiKeyService.checkApiKey(api_key);
-    if (isLeft(result)) {
+  async validateAndSetApiKeyUsage(
+    requestedApiKey: string,
+    request: any,
+  ): Promise<boolean> {
+    const apiKeyValidationResult =
+      await this.apiKeyService.checkApiKey(requestedApiKey);
+    if (isLeft(apiKeyValidationResult)) {
       return false;
     }
-    const exist_api_key = result.right;
-    await this.apiKeyService.setMonthlyUsage(exist_api_key);
+    const updatedApiKeyInfo = apiKeyValidationResult.right;
+    const input = {
+      key: requestedApiKey,
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      monthly_limit: updatedApiKeyInfo.default_limit,
+    };
+    const apiUsageSetResult = await this.apiKeyUsageService.set(input);
+    if (apiUsageSetResult.monthly_limit <= apiUsageSetResult.usage)
+      return false;
+    request.api_key = { ...apiUsageSetResult, key: requestedApiKey };
     return true;
   }
 }

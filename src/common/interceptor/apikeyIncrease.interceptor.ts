@@ -5,6 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { ApiKeyUsageService } from '@src/services/apiKeyUsage.service';
+import { ApiKey } from '@src/type/apiKey.type';
 import { map } from 'rxjs/operators';
 import { isError } from '../res/error';
 
@@ -14,17 +15,14 @@ export class ApiKeyIncreaseInterceptor<T> implements NestInterceptor<T, any> {
 
   intercept(context: ExecutionContext, next: CallHandler<T>) {
     const req = context.switchToHttp().getRequest();
-    console.log('req.api_key', req.api_key);
-    if (!req.api_key) {
-      return next.handle();
-    }
+    const api_key = req.api_key as ApiKey.CurrentApiKey;
 
     return next.handle().pipe(
       map((data) => {
         if (isError(data)) {
           return data;
         }
-        this.apiKeyUsageService.increment(req.api_key);
+        this.apiKeyUsageService.increment(api_key);
         return data;
       }),
     );
