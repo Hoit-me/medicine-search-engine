@@ -6,7 +6,7 @@ import { PrismaTxType } from '@src/common/prisma/prisma.type';
 export class ApiKeyUsageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createMonthlyUsage(
+  async create(
     input: {
       key: string;
       year: number;
@@ -20,27 +20,68 @@ export class ApiKeyUsageRepository {
     });
   }
 
-  async getMonthlyUsage(
-    key: string,
-    year: number,
-    month: number,
+  async createMany(
+    input: {
+      keys: string[];
+      year: number;
+      month: number;
+      monthly_limit: number;
+    },
     tx?: PrismaTxType,
   ) {
-    return await (tx ?? this.prisma).api_key_monthly_usage.findFirst({
-      where: { key, year, month },
+    return await (tx ?? this.prisma).api_key_monthly_usage.createMany({
+      data: input.keys.map((key) => ({
+        key,
+        year: input.year,
+        month: input.month,
+        monthly_limit: input.monthly_limit,
+        usage: 0,
+      })),
     });
   }
 
-  async incrementMonthlyUsage(
-    key: string,
+  async find(
+    input: {
+      key: string;
+      month: number;
+      year: number;
+    },
+    tx?: PrismaTxType,
+  ) {
+    return await (tx ?? this.prisma).api_key_monthly_usage.findUnique({
+      where: { key_year_month: input },
+    });
+  }
+
+  async update(
+    where: {
+      key: string;
+      year: number;
+      month: number;
+    },
+    data: {
+      usage: number;
+    },
+    tx?: PrismaTxType,
+  ) {
+    return await (tx ?? this.prisma).api_key_monthly_usage.update({
+      where: { key_year_month: where },
+      data,
+    });
+  }
+
+  async findMany(
+    keys: string[],
     year: number,
     month: number,
     tx?: PrismaTxType,
   ) {
-    return await (tx ?? this.prisma).api_key_monthly_usage.update({
-      where: { key_year_month: { key, year, month } },
-      data: { usage: { increment: 1 } },
+    return await (tx ?? this.prisma).api_key_monthly_usage.findMany({
+      where: {
+        key: { in: keys },
+        year,
+        month,
+      },
     });
   }
-  6;
 }

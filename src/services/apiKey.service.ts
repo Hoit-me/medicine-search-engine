@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { api_key } from '@prisma/client';
 import { ApiKeyError } from '@src/constant/error/apiKey.error';
 import { ApiKeyRepository } from '@src/repository/apiKey.repository';
 import { Either, left, right } from 'fp-ts/lib/Either';
 import { ulid } from 'ulid';
+import { ApiKeyUsageService } from './apiKeyUsage.service';
 
 /**
  * ## 해당 내용은 issue로 이동될 예정입니다.
@@ -71,7 +73,10 @@ import { ulid } from 'ulid';
  */
 @Injectable()
 export class ApiKeyService {
-  constructor(private readonly apiKeyRepository: ApiKeyRepository) {}
+  constructor(
+    private readonly apiKeyRepository: ApiKeyRepository,
+    private readonly apiKeyUsageService: ApiKeyUsageService,
+  ) {}
 
   /**
    * createApiKey
@@ -80,7 +85,8 @@ export class ApiKeyService {
    */
   async createApiKey(user_id: string, name: string = 'default') {
     const key = this.generateApiKey();
-    return await this.apiKeyRepository.create({ key, user_id, name });
+    const newKey = await this.apiKeyRepository.create({ key, user_id, name });
+    return newKey;
   }
 
   /**
@@ -115,6 +121,24 @@ export class ApiKeyService {
     const apiKey = await this.apiKeyRepository.getDetail(user_id, key);
     if (!apiKey) return left(ApiKeyError.API_KEY_NOT_FOUND);
     return right(apiKey);
+  }
+
+  async checkApiKey(key: string) {
+    const apiKey = await this.apiKeyRepository.checkExist(key);
+    if (!apiKey) return left(ApiKeyError.API_KEY_NOT_FOUND);
+    return right(apiKey);
+  }
+
+  async setMonthlyUsage(api_key: api_key) {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    await this.apiKeyUsageService.set({
+      key: api_key.key,
+      year,
+      month,
+      monthly_limit: api_key.default_limit,
+    });
   }
 
   private generateApiKey() {

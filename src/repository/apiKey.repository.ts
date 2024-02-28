@@ -124,4 +124,12 @@ export class ApiKeyRepository {
       data: input,
     });
   }
+
+  checkExist(key: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).api_key.findUnique({
+      where: {
+        key,
+      },
+    });
+  }
 }

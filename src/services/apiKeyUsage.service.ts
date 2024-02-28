@@ -1,9 +1,6 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
-import { PrismaService } from '@src/common/prisma/prisma.service';
-import { Cache } from 'cache-manager';
-import { RedisStore } from 'cache-manager-redis-store';
-import dayjs from 'dayjs';
+import { Injectable } from '@nestjs/common';
+import { ApiKeyUsageRepository } from './../repository/apiKeyUsage.repository';
+import { ApiKeyUsageCacheRepository } from './../repository/apiKeyUsageCache.repository';
 
 /**
  * API 키 사용량 서비스
@@ -12,40 +9,55 @@ import dayjs from 'dayjs';
 @Injectable()
 export class ApiKeyUsageService {
   constructor(
-    @Inject(CACHE_MANAGER) private readonly cache: Cache & RedisStore,
-    private readonly prisma: PrismaService,
+    private readonly apiKeyUsageRepository: ApiKeyUsageRepository,
+    private readonly apiKeyUsageCacheRepository: ApiKeyUsageCacheRepository,
   ) {}
 
+  // TODO: API 달 사용량에대한 정보를 어느시점에서 저장할지에 대한 고민이 필요
   /**
-   * createMonthlyUsage
+   * 매달, 첫 사용시점에 사용량 정보(달) 생성
+   * 1.해당 달 API 키 사용량 정보가 없을경우 생성
+   * 2.해당 달 API 키 사용량 정보가 캐시에 없을경우 생성
+   *    - DB정보가 존재할시 해당, 사용량을 캐시에 저장
    */
-  // async createMonthlyUsage(apiKey: string): Promise<void> {}
+  async set(dto: {
+    key: string;
+    year: number;
+    month: number;
+    monthly_limit: number;
+  }) {
+    const exist = await this.apiKeyUsageRepository.find({
+      key: dto.key,
+      year: dto.year,
+      month: dto.month,
+    });
+    if (!exist) {
+      await this.apiKeyUsageRepository.create(dto);
+    }
 
-  // API 사용량을 증가시키고, 현재 사용량을 반환합니다.
-  async incrementUsage(apiKey: string): Promise<number> {
-    const key = this.generateKey(apiKey);
-    const currentUsage = (await this.cache.get<number>(key)) || 0;
-    const newUsage = currentUsage + 1;
-    await this.cache.set(key, newUsage, { ttl: this.getTtl() } as any);
-    return newUsage;
+    const usage = await this.apiKeyUsageCacheRepository.find({
+      key: dto.key,
+      year: dto.year,
+      month: dto.month,
+    });
+    if (!usage && usage !== 0) {
+      await this.apiKeyUsageCacheRepository.set({
+        key: dto.key,
+        year: dto.year,
+        month: dto.month,
+        usage: exist?.usage || 0,
+      });
+    }
   }
 
-  // 현재 달의 API 사용량을 조회합니다.
-  async getCurrentUsage(apiKey: string): Promise<number> {
-    const key = this.generateKey(apiKey);
-    return (await this.cache.get<number>(key)) || 0;
-  }
-
-  // API 키와 현재 연도 및 월을 기반으로 레디스 키를 생성합니다.
-  private generateKey(apiKey: string): string {
-    const now = dayjs().format('YYYY-MM');
-    return `api_key:${now}:${apiKey}`;
-  }
-
-  // 달의 남은 시간에 따른 TTL(초 단위)을 계산합니다.
-  private getTtl(): number {
-    const endOfMonth = dayjs().endOf('month').unix();
-    const now = dayjs().unix();
-    return endOfMonth - now;
+  async increment(key: string) {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    const usage = await this.apiKeyUsageCacheRepository.increment({
+      key,
+      year,
+      month,
+    });
+    return usage;
   }
 }
