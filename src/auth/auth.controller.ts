@@ -34,6 +34,10 @@ export class AuthController {
     return wrapResponse({ is_login: false });
   }
 
+  /**
+   * refresh token
+   *
+   */
   @TypedRoute.Get('/token')
   @UseGuards(RefreshGuard)
   async refreshToken(
@@ -64,7 +68,7 @@ export class AuthController {
   }
 
   /**
-   * local Login
+   * Login
    *  - 리프레시토큰 전략에 대한 설명
    *  @link https://git-blog-alpha.vercel.app/ko/post/17
    *
@@ -125,7 +129,7 @@ export class AuthController {
   }
 
   /**
-   * local Signup
+   * Signup
    *
    * 이메일,
    * 비밀번호,
