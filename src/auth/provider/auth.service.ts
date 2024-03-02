@@ -10,6 +10,7 @@ import {
 } from '../auth.interface';
 import {
   AUTH_CACHE_SERVICE,
+  AUTH_GOOGLE_SERVICE,
   AUTH_KAKAO_SERVICE,
   AUTH_LOCAL_SERVICE,
   AUTH_NAVER_SERVICE,
@@ -30,6 +31,8 @@ export class AuthService implements BasicAuthService {
     private readonly kakaoAuthService: BasicAuthService,
     @Inject(AUTH_NAVER_SERVICE)
     private readonly naverAuthService: BasicAuthService,
+    @Inject(AUTH_GOOGLE_SERVICE)
+    private readonly googleAuthService: BasicAuthService,
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
     @Inject(AUTH_CACHE_SERVICE)
@@ -40,8 +43,8 @@ export class AuthService implements BasicAuthService {
     switch (dto.type) {
       case 'local':
         return this.localAuthService.signup(dto);
-
       case 'google':
+        return this.googleAuthService.signup(dto);
       case 'kakao':
         return this.kakaoAuthService.signup(dto);
       case 'naver':

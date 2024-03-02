@@ -28,8 +28,8 @@ export class MailService {
 
   private async getTransporter() {
     const oauth2Client = new google.auth.OAuth2(
-      this.configService.get('OAUTH_CLIENT_ID'),
-      this.configService.get('OAUTH_CLIENT_SECRET'),
+      this.configService.get('GOOGLE_CLIENT_ID'),
+      this.configService.get('GOOGLE_CLIENT_SECRET'),
       'https://developers.google.com/oauthplayground',
     );
     oauth2Client.setCredentials({
@@ -49,9 +49,9 @@ export class MailService {
       auth: {
         type: 'OAuth2',
         user: this.configService.get('MAIL_USER'),
-        clientId: this.configService.get('OAUTH_CLIENT_ID'),
-        privateKey: this.configService.get('OAUTH_CLIENT_SECRET'),
-        refreshToken: this.configService.get('OAUTH_REFRESH_TOKEN'),
+        clientId: this.configService.get('GOOGLE_CLIENT_ID'),
+        privateKey: this.configService.get('GOOGLE_CLIENT_SECRET'),
+        refreshToken: this.configService.get('GOOGLE_REFRESH_TOKEN'),
         accessToken: accessToken as string,
       },
     });

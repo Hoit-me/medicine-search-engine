@@ -6,6 +6,7 @@ import { UserModule } from '@src/modules/user.module';
 import { AuthController } from './auth.controller';
 import {
   AUTH_CACHE_SERVICE,
+  AUTH_GOOGLE_SERVICE,
   AUTH_KAKAO_SERVICE,
   AUTH_LOCAL_SERVICE,
   AUTH_NAVER_SERVICE,
@@ -19,6 +20,7 @@ import { AuthJWTService } from './provider/auth.jwt.service';
 import { AuthLocalService } from './provider/auth.local.service';
 import { AuthPasswordService } from './provider/auth.password.service';
 import { AuthService } from './provider/auth.service';
+import { AuthGoogleService } from './provider/oauth/auth.google.service';
 import { AuthKakaoService } from './provider/oauth/auth.kakao.service';
 import { AuthNaverService } from './provider/oauth/auth.naver.service';
 
@@ -27,6 +29,7 @@ const authServices: Provider[] = [
   { provide: AUTH_LOCAL_SERVICE, useClass: AuthLocalService },
   { provide: AUTH_KAKAO_SERVICE, useClass: AuthKakaoService },
   { provide: AUTH_NAVER_SERVICE, useClass: AuthNaverService },
+  { provide: AUTH_GOOGLE_SERVICE, useClass: AuthGoogleService },
   { provide: PASSWORD_SERVICE, useClass: AuthPasswordService },
   { provide: JWT_SERVICE, useClass: AuthJWTService },
   { provide: AUTH_CACHE_SERVICE, useClass: AuthCacheService },
