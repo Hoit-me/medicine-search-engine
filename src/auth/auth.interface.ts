@@ -1,4 +1,4 @@
-import { user } from '@prisma/client';
+import { AuthError } from '@src/constant/error/auth.error';
 import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
 import { Auth } from '@src/type/auth.type';
@@ -31,8 +31,13 @@ export interface BasicAuthService {
     Either<
       | UserError.EMAIL_ALREADY_EXISTS
       | UserError.NICKNAME_ALREADY_EXISTS
-      | EmailError.EMAIL_CERTIFICATION_NOT_VERIFIED,
-      Pick<user, 'email'>
+      | EmailError.EMAIL_CERTIFICATION_NOT_VERIFIED
+      | AuthError.OAUTH.SOCIAL_ACCOUNT_LINKING_FAILED
+      | AuthError.OAUTH.SOCIAL_AUTH_FAILED
+      | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
+      | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED
+      | AuthError.OAUTH.SOCIAL_SERVICE_RESPONSE_ERROR,
+      { email: string }
     >
   >;
 

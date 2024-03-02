@@ -386,21 +386,87 @@ model disease {
 model user {
   id        String   @id @db.ObjectId @map("_id") @default(auto())
   email     String   @unique
-  password  String
+  password  String?
   nickname      String @unique
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  user_social user_social[]
+  user_log user_log[]
+  user_snapshot user_snapshot[]
 }
 
-model refresh_token {
-  id        String  @id @db.ObjectId @map("_id") @default(auto())
-  user_id   String  
-  token     String
+model user_social{
+  id        String   @id @db.ObjectId @map("_id") @default(auto())
+  user_id   String   @db.ObjectId
+  provider  OAUTH_PROVIDER
+  social_id String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  user user @relation(fields: [user_id], references: [id])
+
   @@index([user_id])
-  @@index([token])
+  @@index([provider])
+  @@index([social_id])
+  @@unique([provider,social_id])
+}
+enum OAUTH_PROVIDER {
+  google
+  naver
+  kakao
+  facebook
+}
+
+model user_log{
+  id        String   @id @db.ObjectId @map("_id") @default(auto())
+  user_id   String   @db.ObjectId
+  type      USER_LOG_TYPE
+  ip        String
+  user_agent String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  uri       String?
+  method    String?
+  user user @relation(fields: [user_id], references: [id])
+  success Boolean
+
+  @@index([user_id])
+  @@index([type])
+  @@index([ip])
+  @@index([created_at])
+  @@index([user_id,type])
+}
+
+enum USER_LOG_TYPE {
+  LOGIN
+  LOGOUT
+  SIGN_UP
+  FIND_PASSWORD
+  CHANGE_PASSWORD
+  CHANGE_EMAIL
+  CHANGE_NICKNAME
+  DELETE_ACCOUNT
+  LINK_SOCIAL
+  CREATE_API_KEY
+  DELETE_API_KEY
+  CHANGE_API_KEY
+  CHANGE_API_KEY_LIMIT  
+}
+
+model user_snapshot{
+  id        String   @id @db.ObjectId @map("_id") @default(auto())
+  user_id   String   @db.ObjectId
+  email     String
+  password  String?
+  nickname      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user user @relation(fields: [user_id], references: [id])
+  @@index([user_id])
+  @@index([email])
+  @@index([nickname])
   @@index([created_at])
 }
 

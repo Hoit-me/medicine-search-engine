@@ -43,4 +43,45 @@ export namespace AuthError {
     HttpStatus.FORBIDDEN
   >;
   export const PERMISSION_DENIED = typia.random<PERMISSION_DENIED>();
+
+  export namespace OAUTH {
+    // 소셜 계정 연동에 실패한 경우
+    export type SOCIAL_ACCOUNT_LINKING_FAILED = ERROR<
+      'SOCIAL_ACCOUNT_LINKING_FAILED',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    >;
+    export const SOCIAL_ACCOUNT_LINKING_FAILED =
+      typia.random<SOCIAL_ACCOUNT_LINKING_FAILED>();
+
+    // 소셜 서비스로부터 응답을 받지 못한 경우
+    export type SOCIAL_SERVICE_RESPONSE_ERROR = ERROR<
+      'SOCIAL_SERVICE_RESPONSE_ERROR',
+      HttpStatus.BAD_GATEWAY
+    >;
+    export const SOCIAL_SERVICE_RESPONSE_ERROR =
+      typia.random<SOCIAL_SERVICE_RESPONSE_ERROR>();
+
+    // 소셜 인증 정보 누락
+    export type SOCIAL_AUTH_INFO_MISSING = ERROR<
+      'SOCIAL_AUTH_INFO_MISSING',
+      HttpStatus.BAD_REQUEST
+    >;
+    export const SOCIAL_AUTH_INFO_MISSING =
+      typia.random<SOCIAL_AUTH_INFO_MISSING>();
+
+    // 소셜 인증 실패
+    export type SOCIAL_AUTH_FAILED = ERROR<
+      'SOCIAL_AUTH_FAILED',
+      HttpStatus.UNAUTHORIZED
+    >;
+    export const SOCIAL_AUTH_FAILED = typia.random<SOCIAL_AUTH_FAILED>();
+
+    // 소셜 서비스 접근 거부
+    export type SOCIAL_SERVICE_ACCESS_DENIED = ERROR<
+      'SOCIAL_SERVICE_ACCESS_DENIED',
+      HttpStatus.FORBIDDEN
+    >;
+    export const SOCIAL_SERVICE_ACCESS_DENIED =
+      typia.random<SOCIAL_SERVICE_ACCESS_DENIED>();
+  }
 }

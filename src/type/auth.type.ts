@@ -2,6 +2,7 @@ import { tags } from 'typia';
 
 export namespace Auth {
   export type LoginType = 'local' | 'google' | 'kakao';
+
   export interface Oauth {
     /**
      * 로그인 타입
@@ -24,6 +25,30 @@ export namespace Auth {
      * @default false
      */
     auto_login?: boolean;
+  }
+  export namespace Oauth {
+    export namespace Kakao {
+      export interface GetTokenResponse {
+        access_token: string;
+        token_type: string;
+        refresh_token: string;
+        expires_in: number;
+        scope: string;
+        refresh_token_expires_in: number;
+      }
+
+      export interface GetUserInfoResponse {
+        id: number;
+        connected_at: string;
+        kakao_account: {
+          has_email: boolean;
+          email_needs_agreement: boolean;
+          is_email_valid: boolean;
+          is_email_verified: boolean;
+          email: string;
+        };
+      }
+    }
   }
 
   export type Local = {

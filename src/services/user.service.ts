@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { OAUTH_PROVIDER } from '@prisma/client';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { UserError } from '@src/constant/error/user.error';
 import { left, right } from 'fp-ts/lib/Either';
@@ -16,6 +16,7 @@ export class UserService {
     }
     return right(null);
   }
+
   async checkNicknameExists(nickname: string, tx?: PrismaTxType) {
     const user = await this.userRepository.findUnique(nickname, tx);
     if (user) {
@@ -24,7 +25,14 @@ export class UserService {
     return right(null);
   }
 
-  async createUser(user: Prisma.userCreateInput, tx?: PrismaTxType) {
+  async createUser(
+    user: {
+      email: string;
+      nickname: string;
+      password: string;
+    },
+    tx?: PrismaTxType,
+  ) {
     return await this.userRepository.create(user, tx);
   }
 
@@ -32,5 +40,43 @@ export class UserService {
     const user = await this.userRepository.findUnique(email, tx);
     if (!user) return left(UserError.NOT_FOUND_USER);
     return right(user);
+  }
+
+  async checkSocialIdExists(
+    dto: {
+      social_id: string;
+      provider: OAUTH_PROVIDER;
+    },
+    tx?: PrismaTxType,
+  ) {
+    const social_info = await this.userRepository.findUniqueSocialId(dto, tx);
+    if (social_info) {
+      return left(UserError.EMAIL_ALREADY_EXISTS);
+    }
+    return right(social_info);
+  }
+
+  async createSocialUser(
+    user: { email: string; nickname: string },
+    social_info: { social_id: string; provider: OAUTH_PROVIDER },
+    tx?: PrismaTxType,
+  ) {
+    return await this.userRepository.create(
+      {
+        ...user,
+        user_social: {
+          create: social_info,
+        },
+      },
+      tx,
+    );
+  }
+
+  async createSocialInfo(
+    user_id: string,
+    social_info: { social_id: string; provider: OAUTH_PROVIDER },
+    tx?: PrismaTxType,
+  ) {
+    return await this.userRepository.createSocialInfo(user_id, social_info, tx);
   }
 }

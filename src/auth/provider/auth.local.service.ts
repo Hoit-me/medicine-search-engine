@@ -46,6 +46,7 @@ export class AuthLocalService implements BasicAuthService {
 
     return right(newUser);
   }
+
   async login(dto: Auth.LoginDto) {
     if (dto.type !== 'local') throw new Error('Check Login type!'); // never
     const { email, password } = dto;
@@ -54,7 +55,7 @@ export class AuthLocalService implements BasicAuthService {
     const { right: user } = eitherUser;
     const isPasswordMatch = await this.passwordService.compare(
       password,
-      user.password,
+      user.password || '',
     );
     if (isLeft(isPasswordMatch)) return isPasswordMatch;
     const payload = {
