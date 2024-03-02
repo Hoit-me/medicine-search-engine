@@ -1,5 +1,5 @@
 import { TypedBody, TypedRoute } from '@nestia/core';
-import { Controller, Post, Request, Res, UseGuards } from '@nestjs/common';
+import { Controller, Request, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
@@ -152,14 +152,6 @@ export class AuthController {
   ) {
     const result = await this.authService.signup(body);
     return eitherToResponse(result);
-  }
-
-  @Post('/getKaKaoUserInfo')
-  async getKaKaoUserInfo(
-    @TypedBody() { accessToken }: { accessToken: string },
-  ) {
-    const result = await this.authService.getKaKaoUserInfo(accessToken);
-    return result;
   }
 
   /**

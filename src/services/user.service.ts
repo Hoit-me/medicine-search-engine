@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OAUTH_PROVIDER } from '@prisma/client';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
+import { AuthError } from '@src/constant/error/auth.error';
 import { UserError } from '@src/constant/error/user.error';
 import { left, right } from 'fp-ts/lib/Either';
 import { UserRepository } from './../repository/user.repository';
@@ -51,7 +52,7 @@ export class UserService {
   ) {
     const social_info = await this.userRepository.findUniqueSocialId(dto, tx);
     if (social_info) {
-      return left(UserError.EMAIL_ALREADY_EXISTS);
+      return left(AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED);
     }
     return right(social_info);
   }
@@ -63,7 +64,8 @@ export class UserService {
   ) {
     return await this.userRepository.create(
       {
-        ...user,
+        email: user.email,
+        nickname: user.nickname,
         user_social: {
           create: social_info,
         },
@@ -74,9 +76,13 @@ export class UserService {
 
   async createSocialInfo(
     user_id: string,
-    social_info: { social_id: string; provider: OAUTH_PROVIDER },
+    { social_id, provider }: { social_id: string; provider: OAUTH_PROVIDER },
     tx?: PrismaTxType,
   ) {
-    return await this.userRepository.createSocialInfo(user_id, social_info, tx);
+    return await this.userRepository.createSocialInfo(
+      user_id,
+      { social_id, provider },
+      tx,
+    );
   }
 }

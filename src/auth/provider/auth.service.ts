@@ -12,9 +12,9 @@ import {
   AUTH_CACHE_SERVICE,
   AUTH_KAKAO_SERVICE,
   AUTH_LOCAL_SERVICE,
+  AUTH_NAVER_SERVICE,
   JWT_SERVICE,
 } from '../constant';
-import { AuthKakaoService } from './kakao/auth.kakao.service';
 
 /**
  * AuthService
@@ -27,7 +27,9 @@ export class AuthService implements BasicAuthService {
     @Inject(AUTH_LOCAL_SERVICE)
     private readonly localAuthService: BasicAuthService,
     @Inject(AUTH_KAKAO_SERVICE)
-    private readonly kakaoAuthService: AuthKakaoService,
+    private readonly kakaoAuthService: BasicAuthService,
+    @Inject(AUTH_NAVER_SERVICE)
+    private readonly naverAuthService: BasicAuthService,
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
     @Inject(AUTH_CACHE_SERVICE)
@@ -38,9 +40,12 @@ export class AuthService implements BasicAuthService {
     switch (dto.type) {
       case 'local':
         return this.localAuthService.signup(dto);
+
       case 'google':
       case 'kakao':
         return this.kakaoAuthService.signup(dto);
+      case 'naver':
+        return this.naverAuthService.signup(dto);
       default:
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }
@@ -92,7 +97,7 @@ export class AuthService implements BasicAuthService {
   }
 
   /// dev...
-  async getKaKaoUserInfo(accessToken: string) {
-    return await this.kakaoAuthService.getUserInfo(accessToken);
-  }
+  // async getKaKaoUserInfo(accessToken: string) {
+  //   return await this.kakaoAuthService.getUserInfo(accessToken);
+  // }
 }

@@ -1,7 +1,7 @@
 import { tags } from 'typia';
 
 export namespace Auth {
-  export type LoginType = 'local' | 'google' | 'kakao';
+  export type LoginType = 'local' | 'google' | 'kakao' | 'naver';
 
   export interface Oauth {
     /**
@@ -20,6 +20,12 @@ export namespace Auth {
      */
     redirect_uri: string;
 
+    /**
+     * state
+     * ex:
+     * naver
+     */
+    state?: string;
     /**
      * 자동 로그인 여부
      * @default false
@@ -45,6 +51,26 @@ export namespace Auth {
           email_needs_agreement: boolean;
           is_email_valid: boolean;
           is_email_verified: boolean;
+          email: string;
+        };
+      }
+    }
+
+    export namespace Naver {
+      export interface GetTokenResponse {
+        access_token: string;
+        refresh_token: string;
+        token_type: string;
+        expires_in: string;
+      }
+      export interface GetUserInfoResponse {
+        resultcode: string;
+        message: string;
+        response: {
+          id: string;
+          nickname: string;
+          profile_image: string;
+          age: string;
           email: string;
         };
       }

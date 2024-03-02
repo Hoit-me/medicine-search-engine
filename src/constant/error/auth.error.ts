@@ -83,5 +83,13 @@ export namespace AuthError {
     >;
     export const SOCIAL_SERVICE_ACCESS_DENIED =
       typia.random<SOCIAL_SERVICE_ACCESS_DENIED>();
+
+    // 이미 연동된 소셜 계정
+    export type SOCIAL_ACCOUNT_ALREADY_LINKED = ERROR<
+      'SOCIAL_ACCOUNT_ALREADY_LINKED',
+      HttpStatus.BAD_REQUEST
+    >;
+    export const SOCIAL_ACCOUNT_ALREADY_LINKED =
+      typia.random<SOCIAL_ACCOUNT_ALREADY_LINKED>();
   }
 }

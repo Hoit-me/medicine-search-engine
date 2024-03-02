@@ -36,7 +36,8 @@ export interface BasicAuthService {
       | AuthError.OAUTH.SOCIAL_AUTH_FAILED
       | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
       | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED
-      | AuthError.OAUTH.SOCIAL_SERVICE_RESPONSE_ERROR,
+      | AuthError.OAUTH.SOCIAL_SERVICE_RESPONSE_ERROR
+      | AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED,
       { email: string }
     >
   >;

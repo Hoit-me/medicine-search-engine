@@ -6,12 +6,19 @@ export const PASSWORD_SERVICE = Symbol('PASSWORD_SERVICE');
 // AUTH
 export const AUTH_LOCAL_SERVICE = Symbol('AUTH_LOCAL_SERVICE');
 export const AUTH_KAKAO_SERVICE = Symbol('AUTH_KAKAO_SERVICE');
+export const AUTH_NAVER_SERVICE = Symbol('AUTH_NAVER_SERVICE');
 
 export const AUTH_STRATEGY = 'AUTH_STRATEGY';
 
 export const AUTH_CACHE_SERVICE = Symbol('AUTH_CACHE_SERVICE');
 
 //OAUTH URL
+//// KAKAO
 export const OAUTH_KAKAO_GET_TOKEN_URL = 'https://kauth.kakao.com/oauth/token';
 export const OAUTH_KAKAO_GET_USER_INFO_URL =
   'https://kapi.kakao.com/v2/user/me';
+
+//// NAVER
+export const OAUTH_NAVER_GET_TOKEN_URL = 'https://nid.naver.com/oauth2.0/token';
+export const OAUTH_NAVER_GET_USER_INFO_URL =
+  'https://openapi.naver.com/v1/nid/me';

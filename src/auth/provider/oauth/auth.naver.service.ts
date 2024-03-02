@@ -11,10 +11,14 @@ import {
   BasicAuthService,
   JwtPayload,
 } from '../../auth.interface';
-import { JWT_SERVICE, OAUTH_KAKAO_GET_TOKEN_URL } from '../../constant';
+import {
+  JWT_SERVICE,
+  OAUTH_NAVER_GET_TOKEN_URL,
+  OAUTH_NAVER_GET_USER_INFO_URL,
+} from '../../constant';
 
 @Injectable()
-export class AuthKakaoService implements BasicAuthService {
+export class AuthNaverService implements BasicAuthService {
   constructor(
     @Inject(UserService)
     private readonly userService: UserService,
@@ -37,7 +41,7 @@ export class AuthKakaoService implements BasicAuthService {
   }
 
   async signup(dto: Auth.SignupDto) {
-    if (dto.type !== 'kakao') {
+    if (dto.type !== 'naver') {
       return left(AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING);
     }
 
@@ -52,6 +56,11 @@ export class AuthKakaoService implements BasicAuthService {
     }
 
     const { email, social_id } = userInfoOrError.right;
+    const checkSocialIdExists = await this.checkSocialIdExists(social_id);
+    if (isLeft(checkSocialIdExists)) {
+      return checkSocialIdExists;
+    }
+
     const userOrError = await this.processSignup(email, social_id);
     return userOrError;
   }
@@ -59,21 +68,22 @@ export class AuthKakaoService implements BasicAuthService {
   //////////////////////////
   // Private
   //////////////////////////
-  private async getToken(dto: Auth.Oauth) {
+  private async getToken({ state, code }: Auth.Oauth) {
     try {
       const { access_token } = await firstValueFrom(
         this.httpService
-          .post<Auth.Oauth.Kakao.GetTokenResponse>(
-            OAUTH_KAKAO_GET_TOKEN_URL,
-            this.createTokenRequestBody(dto),
-            {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
+          .get<Auth.Oauth.Naver.GetTokenResponse>(OAUTH_NAVER_GET_TOKEN_URL, {
+            params: {
+              grant_type: 'authorization_code',
+              client_id: process.env.NAVER_CLIENT_ID,
+              client_secret: process.env.NAVER_CLIENT_SECRET,
+              state,
+              code,
             },
-          )
+          })
           .pipe(map((res) => res.data)),
       );
+
       return right(access_token);
     } catch (err) {
       return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
@@ -83,8 +93,8 @@ export class AuthKakaoService implements BasicAuthService {
   async getUserInfo(accessToken: string) {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get<Auth.Oauth.Kakao.GetUserInfoResponse>(
-          'https://kapi.kakao.com/v2/user/me',
+        this.httpService.get<Auth.Oauth.Naver.GetUserInfoResponse>(
+          OAUTH_NAVER_GET_USER_INFO_URL,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -93,13 +103,20 @@ export class AuthKakaoService implements BasicAuthService {
         ),
       );
       const {
-        id,
-        kakao_account: { email },
+        response: { id, email },
       } = data;
       return right({ social_id: id.toString(), email });
     } catch (err) {
       return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
     }
+  }
+
+  private async checkSocialIdExists(social_id: string) {
+    const checkSocialIdExists = await this.userService.checkSocialIdExists({
+      social_id,
+      provider: 'naver',
+    });
+    return checkSocialIdExists;
   }
 
   private async processSignup(email: string, social_id: string) {
@@ -108,8 +125,9 @@ export class AuthKakaoService implements BasicAuthService {
       // 기존 사용자 소셜 정보 추가
       await this.userService.createSocialInfo(checkEmailExists.right.id, {
         social_id,
-        provider: 'kakao',
+        provider: 'naver',
       });
+      return checkEmailExists;
     }
     return this.createSocialuser(email, social_id);
   }
@@ -122,7 +140,7 @@ export class AuthKakaoService implements BasicAuthService {
       },
       {
         social_id,
-        provider: 'kakao',
+        provider: 'naver',
       },
     );
     return right(newUser);
@@ -133,16 +151,5 @@ export class AuthKakaoService implements BasicAuthService {
   //////////////////////////
   private defaultNickname(email: string) {
     return email.split('@')[0];
-  }
-
-  private createTokenRequestBody(dto: Auth.Oauth) {
-    const { code, redirect_uri } = dto;
-    return {
-      grant_type: 'authorization_code',
-      client_id: process.env.KAKAO_CLIENT_ID,
-      client_secret: process.env.KAKAO_CLIENT_SECRET,
-      redirect_uri,
-      code,
-    };
   }
 }
