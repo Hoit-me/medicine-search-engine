@@ -27,7 +27,6 @@ export class AuthNaverService implements BasicAuthService {
     @Inject(JWT_SERVICE)
     private readonly jwtService: BasicAuthJWTService,
   ) {}
-
   // TODO: Implement login
   async login(dto: Auth.LoginDto) {
     dto;
