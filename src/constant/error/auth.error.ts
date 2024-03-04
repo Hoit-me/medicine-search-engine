@@ -3,8 +3,14 @@ import { ERROR } from '@src/type/error';
 import typia from 'typia';
 
 export namespace AuthError {
+  ////////////////////////////
   // 인증 관련 에러
+  ////////////////////////////
   export namespace Authentication {
+    // type이 local, google, kakao, naver가 아닌 경우
+    export type INVALID_TYPE = ERROR<'INVALID_TYPE', HttpStatus.BAD_REQUEST>;
+    export const INVALID_TYPE = typia.random<INVALID_TYPE>();
+
     // 이메일 인증이 되지 않은 경우
     export type AUTH_NOT_VERIFIED = ERROR<
       'AUTH_NOT_VERIFIED',
@@ -47,7 +53,10 @@ export namespace AuthError {
     const EMAIL_CERTIFICATION_EXCEED =
       typia.random<EMAIL_CERTIFICATION_EXCEED>();
   }
+
+  ////////////////////////////
   // 인가 관련 에러
+  ////////////////////////////
   export namespace Authorization {
     // 권한이 없는 경우
     export type PERMISSION_DENIED = ERROR<
@@ -60,7 +69,10 @@ export namespace AuthError {
     export type ACCOUNT_LOCKED = ERROR<'ACCOUNT_LOCKED', HttpStatus.FORBIDDEN>;
     export const ACCOUNT_LOCKED = typia.random<ACCOUNT_LOCKED>();
   }
-  // 소셜 인증 관련 에러
+
+  ////////////////////////////
+  // 사용자 관련 에러
+  ////////////////////////////
   export namespace User {
     // 사용자가 존재하지 않는 경우
     export type USER_NOT_FOUND = ERROR<'USER_NOT_FOUND', HttpStatus.NOT_FOUND>;
@@ -82,6 +94,9 @@ export namespace AuthError {
       typia.random<NICKNAME_ALREADY_EXISTS>();
   }
 
+  ////////////////////////////
+  // 소셜 계정 연동 관련 에러
+  ////////////////////////////
   export namespace SocialAuth {
     // 소셜 계정 연동에 실패한 경우
     export type SOCIAL_ACCOUNT_LINKING_FAILED = ERROR<

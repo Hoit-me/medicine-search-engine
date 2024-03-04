@@ -18,7 +18,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
 
   async login(dto: Auth.LoginDto) {
     if (dto.type === 'local') {
-      throw new Error('Check Login type!');
+      return left(AuthError.Authentication.INVALID_TYPE);
     }
     const isProviderValid = this.validateProvider(dto);
     if (isLeft(isProviderValid)) {
@@ -50,7 +50,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
 
   async signup(dto: Auth.SignupDto) {
     if (dto.type === 'local') {
-      return left(AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING);
+      return left(AuthError.Authentication.INVALID_TYPE);
     }
     const isProviderValid = this.validateProvider(dto);
     if (isLeft(isProviderValid)) {
@@ -65,18 +65,20 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
     if (isLeft(userInfoOrError)) {
       return userInfoOrError;
     }
+
     const { email, social_id } = userInfoOrError.right;
     const checkSocialIdExists = await this.checkSocialIdExists(social_id);
     if (isRight(checkSocialIdExists)) {
       return left(AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED);
     }
+
     const userOrError = await this.processSignup(email, social_id);
     return userOrError;
   }
 
   private validateProvider(dto: Auth.SignupDto) {
     if (dto.type !== this.getProvider()) {
-      return left(AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING);
+      return left(AuthError.Authentication.INVALID_TYPE);
     }
     return right(true);
   }

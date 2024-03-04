@@ -1,4 +1,4 @@
-import { TypedBody, TypedRoute } from '@nestia/core';
+import { TypedBody, TypedException, TypedRoute } from '@nestia/core';
 import { Controller, Request, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
@@ -23,9 +23,28 @@ export class AuthController {
 
   /**
    * 로그인 여부 확인
+   *
+   * 로그인 여부를 확인하는 API 입니다.
+   *
+   * ## Error Case
+   * - TOKEN_INVALID: 토큰이 유효하지 않음
+   * - TOKEN_MISSING: 토큰이 없음
+   *
+   * @author de-novo
+   * @tag Auth
+   * @security access_token
+   * @summary 로그인 여부 확인 API
    */
   @TypedRoute.Get('/')
   @UseGuards(AuthGuard)
+  @TypedException<AuthError.Authentication.TOKEN_INVALID>(
+    AuthError.Authentication.TOKEN_MISSING.status,
+    '토큰이 유효하지 않음',
+  )
+  @TypedException<AuthError.Authentication.TOKEN_MISSING>(
+    AuthError.Authentication.TOKEN_MISSING.status,
+    '토큰이 없음',
+  )
   async checkLogin(
     @CurrentUser() user: JwtPayload,
   ): Promise<SUCCESS<{ is_login: boolean; user?: JwtPayload }>> {
@@ -38,9 +57,36 @@ export class AuthController {
   /**
    * refresh token
    *
+   * 리프레시 토큰을 이용하여 액세스 토큰을 재발급합니다.
+   * 리프레시 토큰이 없거나 유효하지 않으면 에러를 반환합니다.
+   *
+   * **주의**
+   * 앱의경우 헤더로, 웹의 경우 쿠키로 리프레시 토큰을 전달해야합니다.
+   *
+   * 한번 사용된 리프레시 토큰은 더이상 사용할 수 없습니다.
+   * 만약 리프레시 토큰을 재사용하면 해당 유저의 리프레시 토큰은 모두 만료됩니다.
+   *
+   *
+   * ## Error Case
+   * - TOKEN_INVALID: 토큰이 유효하지 않음
+   * - TOKEN_MISSING: 토큰이 없음
+   *
+   *
+   * @author de-novo
+   * @tag Auth
+   * @security refresh_token
+   * @summary refresh token api
    */
   @TypedRoute.Get('/token')
   @UseGuards(RefreshGuard)
+  @TypedException<AuthError.Authentication.TOKEN_INVALID>(
+    AuthError.Authentication.TOKEN_INVALID.status,
+    '토큰이 유효하지 않음',
+  )
+  @TypedException<AuthError.Authentication.TOKEN_MISSING>(
+    AuthError.Authentication.TOKEN_MISSING.status,
+    '토큰이 없음',
+  )
   async refreshToken(
     @Request() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -52,7 +98,6 @@ export class AuthController {
   > {
     const { access_token, refresh_token } =
       await this.authService.refresh(user);
-
     if (
       !req.headers['x-client-type'] ||
       req.headers['x-client-type'] !== process.env.CLIENT_TYPE
@@ -73,26 +118,46 @@ export class AuthController {
    *  - 리프레시토큰 전략에 대한 설명
    *  @link https://git-blog-alpha.vercel.app/ko/post/17
    *
-   * # oauth 연동관련
-   * local 로그인과, oauth 로그인의 이메일이 중복되는 경우가 생김.
+   * 소셜로그인과 로컬로그인을 모두 지원합니다.
+   * 각 로그인방식에따라 body에 필요한 정보가 다릅니다.
    *
-   * ## 이메일을 이용하여 해결하는 방법
-   * > oauth관련 처리를 할때, email을 이용하여 유저를 판단하는 것을 좋지않은 방법이라고합니다.
-   * > 예를 들어, 카카오나 구굴의 이메일이 변경될수도있고, 유저의 설정에 의해 이메일에 접근할수 없을 수도 있기 때문입니다.
-   * > 각 상황에 알맞게 처리할 수 있는 방법을 찾아 적용하시길 바랍니다.
+   * **주의**
+   * 앱의 경우 헤더에 x-client-type을 명시 해야합니다.
+   * x-client-type이 명시되지 않으면 웹으로 간주합니다.
    *
-   * 생길수 있는 상황
-   * 1. 로컬 계정은 있지만, oauth 계정 연동을 하지 않은경우
-   * 2. oauth 계정은 있지만, 로컬 계정이 없는경우
+   * 리프레시 토큰 전달:
+   * - 웹의 경우 쿠키로 전달됩니다.
+   * - 앱의 경우 바디로 전달됩니다.
    *
-   * 해결방법.
-   * 문제 1.
-   * 로컬계정 로그인 -> oauth 연동 -> 소셜 회원가입절차 -> 로컬계정과 연동
-   *
-   * 문제 2.
-   * oauth 로그인 -> 로컬 회원가입 절차 (이메일인증 및 비밀번호 입력) -> 로컬계정과 연동
+   * @author de-novo
+   * @tag Auth
+   * @summary 로그인 API
    */
   @TypedRoute.Post('/login')
+  @TypedException<AuthError.User.USER_NOT_FOUND>(
+    AuthError.User.USER_NOT_FOUND.status,
+    '이메일이 존재하지 않습니다.',
+  )
+  @TypedException<AuthError.Authentication.INVALID_TYPE>(
+    AuthError.Authentication.INVALID_TYPE.status,
+    'type이 유효하지 않습니다.',
+  )
+  @TypedException<AuthError.Authentication.INVALID_PASSWORD>(
+    AuthError.Authentication.INVALID_PASSWORD.status,
+    '비밀번호가 일치하지 않습니다.',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_AUTH_FAILED>(
+    AuthError.SocialAuth.SOCIAL_AUTH_FAILED.status,
+    '소셜로그인 실패',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING>(
+    AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING.status,
+    '소셜로그인 정보가 없음',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED>(
+    AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED.status,
+    '소셜로그인 서비스 접근 거부',
+  )
   async login(
     @TypedBody()
     body: Auth.LoginDto,
@@ -105,6 +170,7 @@ export class AuthController {
       }>
     | SUCCESS<{ access_token: string }>
     | AuthError.User.USER_NOT_FOUND
+    | AuthError.Authentication.INVALID_TYPE
     | AuthError.Authentication.INVALID_PASSWORD
     | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
     | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
@@ -133,45 +199,108 @@ export class AuthController {
   }
 
   /**
-   * Signup
+   * 회원가입 API
    *
-   * 이메일,
-   * 비밀번호,
-   * 인증결과 ID
+   * 소셜과 로컬을 모두 지원합니다.
+   * 각 회원가입방식에따라 body에 필요한 정보가 다릅니다.
    *
-   * flow
-   * 1. 이메일 인증번호 발송
-   *  {@link AuthController.emailCertification};
-   * 2. 인증번호 확인
-   *    - 인증번호와 이메일이 일치하면 회원가입
-   *    - 인증번호가 이메일이 일치하지 않으면 에러
-   * 3. 회원가입
+   * 로컬 회원가입시, 이메일 인증이 필요합니다.
+   * 이메일 인증후, 이메일 인증ID를 body에 포함하여 회원가입을 진행합니다.
    *
-   * 고려해야할것
+   * 회원가입을 할때, email을 기준으로 유저를 구분합니다.
+   * 다만 소셜회원가입 이후, 특별한 이유로 인하여 Provider(로그인 제공업체)의 이메일이 변경될경우, 해당 이메일로 로그인시에도 기존의 유저정보를 사용합니다.
+   * 이는 소셜로그인의 특성상, 이메일이 변경될수 있기 때문입니다.
+   *
+   * **주의**
+   * 로컬회원가입 후 소셜회원가입을 할시 자동으로 소셜계정과 연동됩니다.
+   * 하지만, 소셜회원가입 후 로컬회원가입을 할시, 이미 가입된 이메일이라는 에러가 발생합니다.
+   * 해당 문제는 비밀번호 찾기 flow를 통해 해결할 수 있습니다.
+   *
+   * @author de-novo
+   * @tag Auth
+   * @summary 회원가입 API
    */
   @TypedRoute.Post('/signup')
+  @TypedException<AuthError.User.EMAIL_ALREADY_EXISTS>(
+    AuthError.User.EMAIL_ALREADY_EXISTS.status,
+    '이메일이 이미 존재합니다.',
+  )
+  @TypedException<AuthError.User.NICKNAME_ALREADY_EXISTS>(
+    AuthError.User.NICKNAME_ALREADY_EXISTS.status,
+    '닉네임이 이미 존재합니다.',
+  )
+  @TypedException<AuthError.Authentication.INVALID_TYPE>(
+    AuthError.Authentication.INVALID_TYPE.status,
+    'type이 유효하지 않습니다.',
+  )
+  @TypedException<AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED>(
+    AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED.status,
+    '이메일 인증번호가 일치하지 않습니다.',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED>(
+    AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED.status,
+    '소셜계정 연동 실패',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_AUTH_FAILED>(
+    AuthError.SocialAuth.SOCIAL_AUTH_FAILED.status,
+    '소셜로그인 실패',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING>(
+    AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING.status,
+    '소셜로그인 정보가 없음',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED>(
+    AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED.status,
+    '소셜로그인 서비스 접근 거부',
+  )
+  @TypedException<AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED>(
+    AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED.status,
+    '소셜계정이 이미 연동되어있습니다.',
+  )
   async signup(
     @TypedBody()
     body: Auth.SignupDto,
-  ) {
+  ): Promise<
+    | SUCCESS<{ email: string }>
+    | AuthError.User.EMAIL_ALREADY_EXISTS
+    | AuthError.User.NICKNAME_ALREADY_EXISTS
+    | AuthError.Authentication.INVALID_TYPE
+    | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
+    | AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED
+    | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
+    | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
+    | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
+    | AuthError.SocialAuth.SOCIAL_SERVICE_RESPONSE_ERROR
+    | AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED
+  > {
     const result = await this.authService.signup(body);
     return eitherToResponse(result);
   }
 
   /**
-   * local email certification
+   * 이메일 인증번호 발송 API
    *
-   * 이메일 인증번호 발송
+   * 로컬 회원가입을 위한 이메일 인증번호를 발송합니다.
+   * 이미 가입된 이메일인 경우 에러를 반환합니다.
    *
-   * 하루에 5번까지만 발송 가능
-   * 이메일이 이미 가입되어있으면 에러
+   * 하루에 5회까지만 인증번호를 발송할 수 있습니다.
+   * 인증번호는 15분간 유효합니다.
    *
-   * flow
-   * 1. 이메일 가입 여부 확인
-   * 2. 이메일에대한 인증번호 발송 횟수 확인
-   * 3. 인증번호 발송
+   * 15분이 지난 인증번호는 자동 만료됩니다.
+   *
+   * @author de-novo
+   * @tag Auth
+   * @summary 이메일 인증번호 발송 API
    */
   @TypedRoute.Post('/email/certification')
+  @TypedException<EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED>(
+    EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED.status,
+    '이메일 인증번호 발송 제한 초과',
+  )
+  @TypedException<AuthError.User.EMAIL_ALREADY_EXISTS>(
+    AuthError.User.EMAIL_ALREADY_EXISTS.status,
+    '이메일이 이미 존재합니다.',
+  )
   async sendEmailVerificationCode(
     @TypedBody() { email }: Auth.SendEmailVerificationCodeDto,
   ): Promise<
@@ -185,7 +314,30 @@ export class AuthController {
     return eitherToResponse(result);
   }
 
+  /**
+   * 이메일 인증번호 확인 API
+   *
+   * 로컬 회원가입을 위한 이메일 인증번호를 확인합니다.
+   * 인증번호가 일치하지 않으면 에러를 반환합니다.
+   * 이미 가입된 이메일인 경우 에러를 반환합니다.
+   * 인증번호는 15분간 유효합니다.
+   *
+   * 인증완료시 인증번호ID를 반환합니다.
+   * 해당 ID는 회원가입시 사용됩니다.
+   *
+   * @author de-novo
+   * @tag Auth
+   * @summary 이메일 인증번호 확인 API
+   */
   @TypedRoute.Post('/email/certification/verify')
+  @TypedException<AuthError.User.EMAIL_ALREADY_EXISTS>(
+    AuthError.User.EMAIL_ALREADY_EXISTS.status,
+    '이메일이 이미 존재합니다.',
+  )
+  @TypedException<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH>(
+    EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH.status,
+    '이메일 인증번호가 일치하지 않습니다.',
+  )
   async verifyEmailCode(
     @TypedBody()
     { email, code }: Auth.VerifyEmailCodeDto,
@@ -202,7 +354,22 @@ export class AuthController {
   }
 
   /**
-   * logout
+   * 로그아웃 API
+   *
+   * 로그아웃시, 리프레시 토큰을 만료시킵니다.
+   *
+   * **주의**
+   * 현재 access_token에대한 blacklist를 사용하지 않습니다. (추후 변경될수 있습니다.)
+   * - access_token까지 redis로 관리할시, 세션과 사용하는 것과 같다 생각하여 사용하지 않습니다.
+   *
+   * 따라서, 각 클라이언트는 로그아웃시 access_token을 삭제해야합니다.
+   * 웹의 경우 access_token을 삭제해야하며,
+   * 앱의 경우 access_token과 refresh_token을 삭제해야합니다.
+   *
+   * @author de-novo
+   * @tag Auth
+   * @summary 로그아웃 API
+   * @security refresh_token
    */
   @TypedRoute.Post('/logout')
   @UseGuards(RefreshGuard)
@@ -223,26 +390,17 @@ export class AuthController {
 
   /**
    * find password
+   *
+   * 메일로 비밀번호 변경할수 있는 주소를 보내줌
+   * 해당주소로 접속하면 비밀번호 변경 페이지로 이동
+   *
+   *
+   * Error Case
+   * - 이메일이 존재하지 않으면 에러
    */
 
   /**
    * change password
-   */
-
-  /**
-   * verify email
-   */
-
-  /**
-   * get api key list
-   */
-
-  /**
-   * delete api key
-   */
-
-  /**
-   * get api key detail
    */
 
   ///////////////////////////

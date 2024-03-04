@@ -29,6 +29,7 @@ export interface BasicAuthService {
     Either<
       | AuthError.User.EMAIL_ALREADY_EXISTS
       | AuthError.User.NICKNAME_ALREADY_EXISTS
+      | AuthError.Authentication.INVALID_TYPE
       | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
       | AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED
       | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
@@ -45,6 +46,7 @@ export interface BasicAuthService {
   ): Promise<
     Either<
       | AuthError.User.USER_NOT_FOUND
+      | AuthError.Authentication.INVALID_TYPE
       | AuthError.Authentication.INVALID_PASSWORD
       | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
       | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING

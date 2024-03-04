@@ -27,11 +27,11 @@ export class AuthLocalService implements BasicAuthService {
     if (dto.type !== 'local') throw new Error('Check Signup type!'); // never
     const { email, password, nickname, email_certification_id } = dto;
 
-    const user = await this.userService.findEmail(email);
-    if (isRight(user)) return left(AuthError.User.EMAIL_ALREADY_EXISTS);
+    const userOrError = await this.userService.findEmail(email);
+    if (isRight(userOrError)) return left(AuthError.User.EMAIL_ALREADY_EXISTS);
 
-    const nicknameExists = await this.userService.findNickName(nickname);
-    if (isRight(nicknameExists))
+    const nicknameExistOrError = await this.userService.findNickName(nickname);
+    if (isRight(nicknameExistOrError))
       return left(AuthError.User.NICKNAME_ALREADY_EXISTS);
 
     const checkEmailCertification =
@@ -53,11 +53,12 @@ export class AuthLocalService implements BasicAuthService {
   }
 
   async login(dto: Auth.LoginDto) {
-    if (dto.type !== 'local') throw new Error('Check Login type!'); // never
+    if (dto.type !== 'local')
+      return left(AuthError.Authentication.INVALID_TYPE);
     const { email, password } = dto;
-    const eitherUser = await this.userService.findUnique(email);
-    if (isLeft(eitherUser)) return left(AuthError.User.USER_NOT_FOUND);
-    const { right: user } = eitherUser;
+    const userOrError = await this.userService.findUnique(email);
+    if (isLeft(userOrError)) return left(AuthError.User.USER_NOT_FOUND);
+    const { right: user } = userOrError;
     const isPasswordMatch = await this.passwordService.compare(
       password,
       user.password || '',

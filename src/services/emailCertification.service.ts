@@ -42,7 +42,6 @@ export class EmailCertificationService {
         type,
         tx,
       );
-      console.log('checkEmailLimit', checkEmailLimit);
       if (isLeft(checkEmailLimit)) return checkEmailLimit;
       const code = await this.generateAndSaveEmailCode(email, type, tx);
       await this.sendVerificationEmail(email, code);
@@ -54,16 +53,11 @@ export class EmailCertificationService {
     email: string,
     code: string,
     type: 'SIGN_UP' | 'FIND_PASSWORD' = 'SIGN_UP',
-  ): Promise<
-    Either<
-      | UserError.EMAIL_ALREADY_EXISTS
-      | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH,
-      string
-    >
-  > {
+  ): Promise<Either<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH, string>> {
     const result = await this.prisma.$transaction(async (tx) => {
-      const checkUser = await this.userService.findEmail(email, tx);
-      if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
+      // TODO: 회원가입시에만 체크하도록 수정
+      // const checkUser = await this.userService.findEmail(email, tx);
+      // if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
 
       const emailCertification =
         await this.emailCertificationRepository.findFirst(
