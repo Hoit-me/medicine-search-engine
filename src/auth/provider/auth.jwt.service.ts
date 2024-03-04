@@ -26,7 +26,7 @@ export class AuthJWTService implements BasicAuthJWTService {
         secret: this.option.access_secret,
       });
     } catch (_) {
-      return throwError(AuthError.TOKEN_INVALID);
+      return throwError(AuthError.Authentication.TOKEN_INVALID);
     }
   }
 
@@ -43,7 +43,7 @@ export class AuthJWTService implements BasicAuthJWTService {
         secret: this.option.refresh_secret,
       });
     } catch (_) {
-      return throwError(AuthError.TOKEN_INVALID);
+      return throwError(AuthError.Authentication.TOKEN_INVALID);
     }
   }
 }

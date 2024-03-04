@@ -18,7 +18,7 @@ export class AuthPasswordService implements BasicAuthPasswordService {
   }
   async compare(password: string, hashed: string) {
     const isMatch = bcrypt.compare(password, hashed);
-    if (!isMatch) return left(AuthError.INVALID_PASSWORD);
+    if (!isMatch) return left(AuthError.Authentication.INVALID_PASSWORD);
     return right(true);
   }
 }

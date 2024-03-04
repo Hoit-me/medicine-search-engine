@@ -3,77 +3,86 @@ import { ERROR } from '@src/type/error';
 import typia from 'typia';
 
 export namespace AuthError {
-  // 이메일 인증이 되지 않은 경우
-  export type AUTH_NOT_VERIFIED = ERROR<
-    'AUTH_NOT_VERIFIED',
-    HttpStatus.UNAUTHORIZED
-  >;
-  export const AUTH_NOT_VERIFIED = typia.random<AUTH_NOT_VERIFIED>();
+  // 인증 관련 에러
+  export namespace Authentication {
+    // 이메일 인증이 되지 않은 경우
+    export type AUTH_NOT_VERIFIED = ERROR<
+      'AUTH_NOT_VERIFIED',
+      HttpStatus.UNAUTHORIZED
+    >;
+    export const AUTH_NOT_VERIFIED = typia.random<AUTH_NOT_VERIFIED>();
 
-  // 비밀번호가 일치하지 않은 경우
-  export type INVALID_PASSWORD = ERROR<
-    'INVALID_PASSWORD.',
-    HttpStatus.UNAUTHORIZED
-  >;
-  export const INVALID_PASSWORD = typia.random<INVALID_PASSWORD>();
+    // 비밀번호가 일치하지 않은 경우
+    export type INVALID_PASSWORD = ERROR<
+      'INVALID_PASSWORD.',
+      HttpStatus.UNAUTHORIZED
+    >;
+    export const INVALID_PASSWORD = typia.random<INVALID_PASSWORD>();
 
-  // 토큰이 유효하지 않은 경우
-  export type TOKEN_INVALID = ERROR<'TOKEN_INVALID', HttpStatus.UNAUTHORIZED>;
-  export const TOKEN_INVALID = typia.random<TOKEN_INVALID>();
+    // 토큰이 유효하지 않은 경우
+    export type TOKEN_INVALID = ERROR<'TOKEN_INVALID', HttpStatus.UNAUTHORIZED>;
+    export const TOKEN_INVALID = typia.random<TOKEN_INVALID>();
 
-  // 토큰이 만료된 경우
-  export type TOKEN_EXPIRED = ERROR<'TOKEN_EXPIRED', HttpStatus.UNAUTHORIZED>;
-  export const TOKEN_EXPIRED = typia.random<TOKEN_EXPIRED>();
+    // 토큰이 만료된 경우
+    export type TOKEN_EXPIRED = ERROR<'TOKEN_EXPIRED', HttpStatus.UNAUTHORIZED>;
+    export const TOKEN_EXPIRED = typia.random<TOKEN_EXPIRED>();
 
-  // 사용자가 존재하지 않는 경우
-  export type USER_NOT_FOUND = ERROR<'USER_NOT_FOUND', HttpStatus.NOT_FOUND>;
-  export const USER_NOT_FOUND = typia.random<USER_NOT_FOUND>();
+    // 토큰이 없는 경우
+    export type TOKEN_MISSING = ERROR<'TOKEN_MISSING', HttpStatus.BAD_REQUEST>;
+    export const TOKEN_MISSING = typia.random<TOKEN_MISSING>();
 
-  // 계정이 잠긴 경우
-  export type ACCOUNT_LOCKED = ERROR<'ACCOUNT_LOCKED', HttpStatus.FORBIDDEN>;
-  export const ACCOUNT_LOCKED = typia.random<ACCOUNT_LOCKED>();
+    // 이메일 인증번호가 일치하지 않는 경우
+    export type EMAIL_CERTIFICATION_NOT_VERIFIED = ERROR<
+      'EMAIL_CERTIFICATION_NOT_VERIFIED',
+      HttpStatus.UNAUTHORIZED
+    >;
+    export const EMAIL_CERTIFICATION_NOT_VERIFIED =
+      typia.random<EMAIL_CERTIFICATION_NOT_VERIFIED>();
 
-  // 토큰이 없는 경우
-  export type TOKEN_MISSING = ERROR<'TOKEN_MISSING', HttpStatus.BAD_REQUEST>;
-  export const TOKEN_MISSING = typia.random<TOKEN_MISSING>();
+    // 이메일 인증횟수 초과
+    export type EMAIL_CERTIFICATION_EXCEED = ERROR<
+      'EMAIL_CERTIFICATION_EXCEED',
+      HttpStatus.BAD_REQUEST
+    >;
+    const EMAIL_CERTIFICATION_EXCEED =
+      typia.random<EMAIL_CERTIFICATION_EXCEED>();
+  }
+  // 인가 관련 에러
+  export namespace Authorization {
+    // 권한이 없는 경우
+    export type PERMISSION_DENIED = ERROR<
+      'PERMISSION_DENIED',
+      HttpStatus.FORBIDDEN
+    >;
+    export const PERMISSION_DENIED = typia.random<PERMISSION_DENIED>();
 
-  // 권한이 없는 경우
-  export type PERMISSION_DENIED = ERROR<
-    'PERMISSION_DENIED',
-    HttpStatus.FORBIDDEN
-  >;
-  export const PERMISSION_DENIED = typia.random<PERMISSION_DENIED>();
+    // 계정이 잠긴 경우
+    export type ACCOUNT_LOCKED = ERROR<'ACCOUNT_LOCKED', HttpStatus.FORBIDDEN>;
+    export const ACCOUNT_LOCKED = typia.random<ACCOUNT_LOCKED>();
+  }
+  // 소셜 인증 관련 에러
+  export namespace User {
+    // 사용자가 존재하지 않는 경우
+    export type USER_NOT_FOUND = ERROR<'USER_NOT_FOUND', HttpStatus.NOT_FOUND>;
+    export const USER_NOT_FOUND = typia.random<USER_NOT_FOUND>();
 
-  // 이미 존재하는 이메일
-  export type EMAIL_ALREADY_EXISTS = ERROR<
-    'EMAIL_ALREADY_EXISTS',
-    HttpStatus.BAD_REQUEST
-  >;
-  export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
+    // 이메일이 이미 존재하는 경우
+    export type EMAIL_ALREADY_EXISTS = ERROR<
+      'EMAIL_ALREADY_EXISTS',
+      HttpStatus.BAD_REQUEST
+    >;
+    export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
 
-  // 이메일 인증번호가 일치하지 않는 경우
-  export type EMAIL_CERTIFICATION_NOT_VERIFIED = ERROR<
-    'EMAIL_CERTIFICATION_NOT_VERIFIED',
-    HttpStatus.UNAUTHORIZED
-  >;
-  export const EMAIL_CERTIFICATION_NOT_VERIFIED =
-    typia.random<EMAIL_CERTIFICATION_NOT_VERIFIED>();
+    // 닉네임이 이미 존재하는 경우
+    export type NICKNAME_ALREADY_EXISTS = ERROR<
+      'NICKNAME_ALREADY_EXISTS',
+      HttpStatus.BAD_REQUEST
+    >;
+    export const NICKNAME_ALREADY_EXISTS =
+      typia.random<NICKNAME_ALREADY_EXISTS>();
+  }
 
-  // 이메일 인증횟수 초과
-  export type EMAIL_CERTIFICATION_EXCEED = ERROR<
-    'EMAIL_CERTIFICATION_EXCEED',
-    HttpStatus.BAD_REQUEST
-  >;
-
-  // 이미 존재하는 닉네임
-  export type NICKNAME_ALREADY_EXISTS = ERROR<
-    'NICKNAME_ALREADY_EXISTS',
-    HttpStatus.BAD_REQUEST
-  >;
-  export const NICKNAME_ALREADY_EXISTS =
-    typia.random<NICKNAME_ALREADY_EXISTS>();
-
-  export namespace OAUTH {
+  export namespace SocialAuth {
     // 소셜 계정 연동에 실패한 경우
     export type SOCIAL_ACCOUNT_LINKING_FAILED = ERROR<
       'SOCIAL_ACCOUNT_LINKING_FAILED',

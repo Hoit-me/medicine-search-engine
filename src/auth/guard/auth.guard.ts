@@ -1,9 +1,11 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
   Inject,
   Injectable,
 } from '@nestjs/common';
+import { AuthError } from '@src/constant/error/auth.error';
 import { Observable } from 'rxjs';
 import typia from 'typia';
 import { BasicAuthJWTService, JwtPayload } from '../auth.interface';
@@ -25,10 +27,18 @@ export class AuthGuard implements CanActivate {
 
   private validateRequest(request: any) {
     const token = request.headers?.authorization?.split(' ')[1];
-    if (!token) return false;
+    if (!token)
+      throw new HttpException(
+        AuthError.Authentication.TOKEN_MISSING,
+        AuthError.Authentication.TOKEN_MISSING.status,
+      );
 
     const user = this.jwtService.accessTokenVerify(token);
-    if (!user || !typia.is<JwtPayload>(user)) return false;
+    if (!user || !typia.is<JwtPayload>(user))
+      throw new HttpException(
+        AuthError.Authentication.TOKEN_INVALID,
+        AuthError.Authentication.TOKEN_INVALID.status,
+      );
     request.user = user;
     return true;
   }

@@ -104,11 +104,11 @@ export class AuthController {
         refresh_token: string;
       }>
     | SUCCESS<{ access_token: string }>
-    | AuthError.USER_NOT_FOUND
-    | AuthError.INVALID_PASSWORD
-    | AuthError.OAUTH.SOCIAL_AUTH_FAILED
-    | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
-    | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED
+    | AuthError.User.USER_NOT_FOUND
+    | AuthError.Authentication.INVALID_PASSWORD
+    | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
+    | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
+    | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
   > {
     const result = await this.authService.login(body);
 

@@ -51,7 +51,7 @@ export class AuthNaverService extends AbstractAuthSocialService {
 
       return right(access_token);
     } catch (err) {
-      return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
+      return left(AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED);
     }
   }
 
@@ -72,7 +72,7 @@ export class AuthNaverService extends AbstractAuthSocialService {
       } = data;
       return right({ social_id: id.toString(), email });
     } catch (err) {
-      return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
+      return left(AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED);
     }
   }
 }

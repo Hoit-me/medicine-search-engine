@@ -50,7 +50,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
 
   async signup(dto: Auth.SignupDto) {
     if (dto.type === 'local') {
-      return left(AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING);
+      return left(AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING);
     }
     const isProviderValid = this.validateProvider(dto);
     if (isLeft(isProviderValid)) {
@@ -68,7 +68,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
     const { email, social_id } = userInfoOrError.right;
     const checkSocialIdExists = await this.checkSocialIdExists(social_id);
     if (isRight(checkSocialIdExists)) {
-      return left(AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED);
+      return left(AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED);
     }
     const userOrError = await this.processSignup(email, social_id);
     return userOrError;
@@ -76,7 +76,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
 
   private validateProvider(dto: Auth.SignupDto) {
     if (dto.type !== this.getProvider()) {
-      return left(AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING);
+      return left(AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING);
     }
     return right(true);
   }
@@ -87,7 +87,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
       provider: this.getProvider(),
     });
     if (isLeft(checkSocialIdExists)) {
-      return left(AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING);
+      return left(AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING);
     }
 
     return checkSocialIdExists;
@@ -123,10 +123,10 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
   protected abstract getProvider(): Auth.Oauth.Provider;
   protected abstract getToken(
     dto: Auth.Oauth,
-  ): Promise<Either<AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED, string>>;
+  ): Promise<Either<AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED, string>>;
   protected abstract getUserInfo(accessToken: string): Promise<
     Either<
-      AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED,
+      AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED,
       {
         social_id: string;
         email: string;

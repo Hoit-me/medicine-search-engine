@@ -19,7 +19,7 @@ export interface BasicAuthPasswordService {
   compare(
     password: string,
     hashed: string,
-  ): Promise<Either<AuthError.INVALID_PASSWORD, boolean>>;
+  ): Promise<Either<AuthError.Authentication.INVALID_PASSWORD, boolean>>;
 }
 
 export interface BasicAuthService {
@@ -27,15 +27,15 @@ export interface BasicAuthService {
     dto: Auth.SignupDto,
   ): Promise<
     Either<
-      | AuthError.EMAIL_ALREADY_EXISTS
-      | AuthError.NICKNAME_ALREADY_EXISTS
-      | AuthError.EMAIL_CERTIFICATION_NOT_VERIFIED
-      | AuthError.OAUTH.SOCIAL_ACCOUNT_LINKING_FAILED
-      | AuthError.OAUTH.SOCIAL_AUTH_FAILED
-      | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
-      | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED
-      | AuthError.OAUTH.SOCIAL_SERVICE_RESPONSE_ERROR
-      | AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED,
+      | AuthError.User.EMAIL_ALREADY_EXISTS
+      | AuthError.User.NICKNAME_ALREADY_EXISTS
+      | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
+      | AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED
+      | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
+      | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
+      | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
+      | AuthError.SocialAuth.SOCIAL_SERVICE_RESPONSE_ERROR
+      | AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED,
       { email: string }
     >
   >;
@@ -44,11 +44,11 @@ export interface BasicAuthService {
     dto: Auth.LoginDto,
   ): Promise<
     Either<
-      | AuthError.USER_NOT_FOUND
-      | AuthError.INVALID_PASSWORD
-      | AuthError.OAUTH.SOCIAL_AUTH_FAILED
-      | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
-      | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED,
+      | AuthError.User.USER_NOT_FOUND
+      | AuthError.Authentication.INVALID_PASSWORD
+      | AuthError.SocialAuth.SOCIAL_AUTH_FAILED
+      | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
+      | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED,
       { access_token: string; refresh_token: string; payload: JwtPayload }
     >
   >;

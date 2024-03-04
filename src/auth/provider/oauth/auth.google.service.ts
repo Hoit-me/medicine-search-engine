@@ -53,7 +53,7 @@ export class AuthGoogleService extends AbstractAuthSocialService {
       );
       return right(access_token);
     } catch (err) {
-      return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
+      return left(AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED);
     }
   }
 
@@ -72,7 +72,7 @@ export class AuthGoogleService extends AbstractAuthSocialService {
       const { sub, email } = data;
       return right({ social_id: sub, email });
     } catch (err) {
-      return left(AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED);
+      return left(AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED);
     }
   }
 }

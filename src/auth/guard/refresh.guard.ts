@@ -1,9 +1,11 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
   Inject,
   Injectable,
 } from '@nestjs/common';
+import { AuthError } from '@src/constant/error/auth.error';
 import { Observable } from 'rxjs';
 import typia from 'typia';
 import {
@@ -30,12 +32,24 @@ export class RefreshGuard implements CanActivate {
 
   private async validateRequest(request: any) {
     const token = this.extractToken(request);
-    if (!token) return false;
+    if (!token)
+      throw new HttpException(
+        AuthError.Authentication.TOKEN_MISSING,
+        AuthError.Authentication.TOKEN_MISSING.status,
+      );
 
     const user = this.jwtService.refreshTokenVerify(token);
-    if (!user || !this.isValidPayload(user)) return false;
+    if (!user || !this.isValidPayload(user))
+      throw new HttpException(
+        AuthError.Authentication.TOKEN_INVALID,
+        AuthError.Authentication.TOKEN_INVALID.status,
+      );
 
-    if (!(await this.isTokenValid(user.id, token))) return false;
+    if (!(await this.isTokenValid(user.id, token)))
+      throw new HttpException(
+        AuthError.Authentication.TOKEN_INVALID,
+        AuthError.Authentication.TOKEN_INVALID.status,
+      );
 
     request.user = user;
     return true;
