@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { OAUTH_PROVIDER } from '@prisma/client';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { AuthError } from '@src/constant/error/auth.error';
 import { UserError } from '@src/constant/error/user.error';
+import { Auth } from '@src/type/auth.type';
 import { left, right } from 'fp-ts/lib/Either';
 import { UserRepository } from './../repository/user.repository';
 
@@ -46,7 +46,7 @@ export class UserService {
   async checkSocialIdExists(
     dto: {
       social_id: string;
-      provider: OAUTH_PROVIDER;
+      provider: Auth.Oauth.Provider;
     },
     tx?: PrismaTxType,
   ) {
@@ -59,7 +59,7 @@ export class UserService {
 
   async createSocialUser(
     user: { email: string; nickname: string },
-    social_info: { social_id: string; provider: OAUTH_PROVIDER },
+    social_info: { social_id: string; provider: Auth.Oauth.Provider },
     tx?: PrismaTxType,
   ) {
     return await this.userRepository.create(
@@ -76,7 +76,10 @@ export class UserService {
 
   async createSocialInfo(
     user_id: string,
-    { social_id, provider }: { social_id: string; provider: OAUTH_PROVIDER },
+    {
+      social_id,
+      provider,
+    }: { social_id: string; provider: Auth.Oauth.Provider },
     tx?: PrismaTxType,
   ) {
     return await this.userRepository.createSocialInfo(

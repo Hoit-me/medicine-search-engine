@@ -1,7 +1,7 @@
 import { tags } from 'typia';
 
 export namespace Auth {
-  export type LoginType = 'local' | 'google' | 'kakao' | 'naver';
+  export type Type = 'local' | 'google' | 'kakao' | 'naver';
 
   export interface Oauth {
     /**
@@ -10,7 +10,7 @@ export namespace Auth {
      * - google: 구글 로그인
      * - kakao: 카카오 로그인
      */
-    type: Exclude<LoginType, 'local'>;
+    type: Oauth.Provider;
     /**
      * 인증 코드
      */
@@ -33,6 +33,7 @@ export namespace Auth {
     auto_login?: boolean;
   }
   export namespace Oauth {
+    export type Provider = Exclude<Type, 'local'>;
     export namespace Kakao {
       export interface GetTokenResponse {
         access_token: string;
@@ -104,7 +105,7 @@ export namespace Auth {
      * - google: 구글 로그인
      * - kakao: 카카오 로그인
      */
-    type: Extract<LoginType, 'local'>;
+    type: Extract<Type, 'local'>;
     /**
      * 이메일
      */
