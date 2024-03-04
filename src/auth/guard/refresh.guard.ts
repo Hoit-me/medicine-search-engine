@@ -45,11 +45,12 @@ export class RefreshGuard implements CanActivate {
         AuthError.Authentication.TOKEN_INVALID.status,
       );
 
-    if (!(await this.isTokenValid(user.id, token)))
+    if (!(await this.isTokenValid(user.id, token))) {
       throw new HttpException(
         AuthError.Authentication.TOKEN_INVALID,
         AuthError.Authentication.TOKEN_INVALID.status,
       );
+    }
 
     request.user = user;
     return true;
@@ -63,7 +64,7 @@ export class RefreshGuard implements CanActivate {
       return false;
     }
 
-    return !(await this.cacheService.checkBlacklist(token));
+    return await this.cacheService.checkBlacklist(token);
   }
 
   private async addToBlacklist(token: string | null) {

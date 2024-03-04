@@ -53,7 +53,9 @@ export class EmailCertificationService {
     email: string,
     code: string,
     type: 'SIGN_UP' | 'FIND_PASSWORD' = 'SIGN_UP',
-  ): Promise<Either<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH, string>> {
+  ): Promise<
+    Either<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH, { id: string }>
+  > {
     const result = await this.prisma.$transaction(async (tx) => {
       // TODO: 회원가입시에만 체크하도록 수정
       // const checkUser = await this.userService.findEmail(email, tx);
@@ -84,7 +86,7 @@ export class EmailCertificationService {
         },
         tx,
       );
-      return right(emailCertification.id);
+      return right({ id: emailCertification.id });
     });
     return result;
   }

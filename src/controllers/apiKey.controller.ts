@@ -1,4 +1,4 @@
-import { TypedBody, TypedRoute } from '@nestia/core';
+import { TypedBody, TypedParam, TypedRoute } from '@nestia/core';
 import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { JwtPayload } from '@src/auth/auth.interface';
@@ -73,9 +73,9 @@ export class ApiKeyController {
   @UseGuards(AuthGuard)
   async getApiKey(
     @CurrentUser() user: JwtPayload,
-    @TypedBody() body: ApiKey.DeleteDto,
+    @TypedParam('key') key: string,
   ): Promise<SUCCESS<ApiKey.GetDetailOutput> | ApiKeyError.API_KEY_NOT_FOUND> {
-    const result = await this.apiKeyService.getApiKeyDetail(user.id, body.key);
+    const result = await this.apiKeyService.getApiKeyDetail(user.id, key);
     return eitherToResponse(result);
   }
 
@@ -89,7 +89,6 @@ export class ApiKeyController {
   @TypedRoute.Get('/set/test')
   @UseGuards(ApiKeyGuard)
   async setTest(@CurrentApiKey() api_key: ApiKey.CurrentApiKey) {
-    console.log(api_key);
     await this.apiKeyUsageCacheRepository.set({
       key: api_key.key,
       year: new Date().getFullYear(),

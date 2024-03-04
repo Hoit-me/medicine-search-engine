@@ -25,3 +25,9 @@ export namespace SUCCESS {
     Awaited<ReturnType<T>>
   >;
 }
+
+/// test
+
+export type IHeader = {
+  'x-client-type': 'WEB' | 'APP';
+};

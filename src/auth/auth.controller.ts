@@ -1,5 +1,10 @@
-import { TypedBody, TypedException, TypedRoute } from '@nestia/core';
-import { Controller, Request, Res, UseGuards } from '@nestjs/common';
+import {
+  TypedBody,
+  TypedException,
+  TypedHeaders,
+  TypedRoute,
+} from '@nestia/core';
+import { Controller, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
@@ -8,6 +13,7 @@ import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
 import { Auth } from '@src/type/auth.type';
+import { ClientHeader } from '@src/type/header.type';
 import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
 import { JwtPayload } from './auth.interface';
@@ -32,8 +38,9 @@ export class AuthController {
    *
    * @author de-novo
    * @tag Auth
-   * @security access_token
    * @summary 로그인 여부 확인 API
+   *
+   * @security access_token
    */
   @TypedRoute.Get('/')
   @UseGuards(AuthGuard)
@@ -74,8 +81,9 @@ export class AuthController {
    *
    * @author de-novo
    * @tag Auth
-   * @security refresh_token
    * @summary refresh token api
+   * @security refresh_token
+   * @security web_refresh_token
    */
   @TypedRoute.Get('/token')
   @UseGuards(RefreshGuard)
@@ -88,9 +96,9 @@ export class AuthController {
     '토큰이 없음',
   )
   async refreshToken(
-    @Request() req: Request,
     @Res({ passthrough: true }) res: Response,
     @CurrentUser() user: JwtPayload,
+    @TypedHeaders() headers: ClientHeader,
   ): Promise<
     SUCCESS<
       { access_token: string; refresh_token: string } | { access_token: string }
@@ -99,8 +107,8 @@ export class AuthController {
     const { access_token, refresh_token } =
       await this.authService.refresh(user);
     if (
-      !req.headers['x-client-type'] ||
-      req.headers['x-client-type'] !== process.env.CLIENT_TYPE
+      !headers['X-Client-Type'] ||
+      headers['X-Client-Type'] !== process.env.CLIENT_TYPE
     ) {
       res.cookie('_refresh_token', refresh_token, {
         httpOnly: true,
@@ -116,7 +124,7 @@ export class AuthController {
   /**
    * Login
    *  - 리프레시토큰 전략에 대한 설명
-   *  @link https://git-blog-alpha.vercel.app/ko/post/17
+   *
    *
    * 소셜로그인과 로컬로그인을 모두 지원합니다.
    * 각 로그인방식에따라 body에 필요한 정보가 다릅니다.
@@ -129,6 +137,7 @@ export class AuthController {
    * - 웹의 경우 쿠키로 전달됩니다.
    * - 앱의 경우 바디로 전달됩니다.
    *
+   * @link https://git-blog-alpha.vercel.app/ko/post/17
    * @author de-novo
    * @tag Auth
    * @summary 로그인 API
@@ -161,8 +170,8 @@ export class AuthController {
   async login(
     @TypedBody()
     body: Auth.LoginDto,
-    @Request() req: Request,
     @Res({ passthrough: true }) res: Response,
+    @TypedHeaders() headers: ClientHeader,
   ): Promise<
     | SUCCESS<{
         access_token: string;
@@ -177,12 +186,10 @@ export class AuthController {
     | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
   > {
     const result = await this.authService.login(body);
-
     // 로그인 성공 및 클라이언트 유형이 웹일 경우 리프레시 토큰을 쿠키로 설정
     if (
       result._tag === 'Right' &&
-      (!req.headers['x-client-type'] ||
-        req.headers['x-client-type'] !== process.env.CLIENT_TYPE)
+      headers['X-Client-Type'] !== process.env.CLIENT_TYPE
     ) {
       body.auto_login ??
         res.cookie('_refresh_token', result.right.refresh_token, {
@@ -342,7 +349,7 @@ export class AuthController {
     @TypedBody()
     { email, code }: Auth.VerifyEmailCodeDto,
   ): Promise<
-    | SUCCESS<string>
+    | SUCCESS<{ id: string }>
     | UserError.EMAIL_ALREADY_EXISTS
     | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH
   > {
@@ -369,21 +376,18 @@ export class AuthController {
    * @author de-novo
    * @tag Auth
    * @summary 로그아웃 API
-   * @security refresh_token
    */
   @TypedRoute.Post('/logout')
   @UseGuards(RefreshGuard)
   async logout(
-    @Request() req: Request,
     @Res({ passthrough: true }) res: Response,
     @CurrentUser() user: JwtPayload,
-  ) {
-    if (
-      !req.headers['x-client-type'] ||
-      req.headers['x-client-type'] !== process.env.CLIENT_TYPE
-    ) {
+    @TypedHeaders() headers: ClientHeader,
+  ): Promise<SUCCESS<{ is_login: boolean }>> {
+    if (headers['X-Client-Type'] !== process.env.CLIENT_TYPE) {
       res.clearCookie('_refresh_token');
     }
+
     await this.authService.logout(user);
     return wrapResponse({ is_login: false });
   }

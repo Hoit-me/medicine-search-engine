@@ -13,7 +13,7 @@ dependencies:
     version: 3.515.0
   '@nestia/core':
     specifier: ^2.4.6
-    version: 2.5.8(@nestia/fetcher@2.5.8)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)(typia@5.4.10)
+    version: 2.5.8(@nestia/fetcher@2.5.12)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)(typia@5.4.10)
   '@nestia/e2e':
     specifier: ^0.4.1
     version: 0.4.1
@@ -120,7 +120,7 @@ devDependencies:
     version: 18.6.2
   '@nestia/sdk':
     specifier: ^2.4.6
-    version: 2.5.8(@nestia/fetcher@2.5.8)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(ts-node@10.9.2)(typescript@5.3.3)(typia@5.4.10)
+    version: 2.5.8(@nestia/fetcher@2.5.12)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(ts-node@10.9.2)(typescript@5.3.3)(typia@5.4.10)
   '@nestjs/cli':
     specifier: ^10.3.0
     version: 10.3.2
@@ -133,6 +133,9 @@ devDependencies:
   '@types/bcrypt':
     specifier: ^5.0.2
     version: 5.0.2
+  '@types/cookie-parser':
+    specifier: ^1.4.7
+    version: 1.4.7
   '@types/express':
     specifier: ^4.17.21
     version: 4.17.21
@@ -1837,7 +1840,7 @@ packages:
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
     dev: false
 
-  /@nestia/core@2.5.8(@nestia/fetcher@2.5.8)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)(typia@5.4.10):
+  /@nestia/core@2.5.8(@nestia/fetcher@2.5.12)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)(typia@5.4.10):
     resolution: {integrity: sha512-7CNPbDYibF9jFgbWo5nrjXnEe4chN0bLfUaKpUCqANl0lm08fdyAtWPHubQu9fwpNd93VSkbXFmzvdVHS9M72w==}
     peerDependencies:
       '@nestia/fetcher': '>=2.5.8'
@@ -1847,7 +1850,7 @@ packages:
       rxjs: '>=6.0.0'
       typia: '>=5.4.5 <6.0.0'
     dependencies:
-      '@nestia/fetcher': 2.5.8(typescript@5.3.3)
+      '@nestia/fetcher': 2.5.12(typescript@5.3.3)
       '@nestjs/common': 10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/core': 10.3.3(@nestjs/common@10.3.3)(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       detect-ts-node: 1.0.5
@@ -1867,8 +1870,8 @@ packages:
       tstl: 2.5.13
     dev: false
 
-  /@nestia/fetcher@2.5.8(typescript@5.3.3):
-    resolution: {integrity: sha512-Zoze+OCf49k+EUdaYXKI3OgsL7B8/E/1Rk2+goXRNeJUi4trSDBRZWc6uwFMrbPh6imleODkiFt3L/dHtJAY7w==}
+  /@nestia/fetcher@2.5.12(typescript@5.3.3):
+    resolution: {integrity: sha512-yNPK3KtMHJTohO9guJDDZAaNoLrovMK7tpOq1kBaoas155ApmT4o2bCr2Q5E52Zw1AvpAqxiB/f+ZgvlsDqVqA==}
     peerDependencies:
       typescript: '>= 4.8.0'
     dependencies:
@@ -1878,7 +1881,7 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@nestia/sdk@2.5.8(@nestia/fetcher@2.5.8)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(ts-node@10.9.2)(typescript@5.3.3)(typia@5.4.10):
+  /@nestia/sdk@2.5.8(@nestia/fetcher@2.5.12)(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(reflect-metadata@0.1.14)(ts-node@10.9.2)(typescript@5.3.3)(typia@5.4.10):
     resolution: {integrity: sha512-2RxoA4pt30oqHNy+cOQ7AdIn7JRGQdV2NIafHpJLdTGICeWtZqxJtn3NcRr6fympF48JuBmhgxko8A3+3/AdXQ==}
     hasBin: true
     peerDependencies:
@@ -1889,7 +1892,7 @@ packages:
       ts-node: '>=10.6.0'
       typia: '>=5.4.5 <6.0.0'
     dependencies:
-      '@nestia/fetcher': 2.5.8(typescript@5.3.3)
+      '@nestia/fetcher': 2.5.12(typescript@5.3.3)
       '@nestjs/common': 10.3.3(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/core': 10.3.3(@nestjs/common@10.3.3)(@nestjs/platform-express@10.3.3)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       cli: 1.0.1
@@ -2844,6 +2847,12 @@ packages:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
       '@types/node': 20.11.19
+    dev: true
+
+  /@types/cookie-parser@1.4.7:
+    resolution: {integrity: sha512-Fvuyi354Z+uayxzIGCwYTayFKocfV7TuDYZClCdIP9ckhvAu/ixDtCB6qx2TT0FKjPLf1f3P/J1rgf6lPs64mw==}
+    dependencies:
+      '@types/express': 4.17.21
     dev: true
 
   /@types/cookiejar@2.1.5:
@@ -4322,6 +4331,14 @@ packages:
 
   /enhanced-resolve@5.15.0:
     resolution: {integrity: sha512-LXYT42KJ7lpIKECr2mAXIaMldcNCh/7E0KBKOu4KSfkHmP+mZmSs+8V5gBAqisWBy0OO4W5Oyys0GO1Y8KtdKg==}
+    engines: {node: '>=10.13.0'}
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.2.1
+    dev: true
+
+  /enhanced-resolve@5.15.1:
+    resolution: {integrity: sha512-3d3JRbwsCLJsYgvb6NuWEG44jjPSOMuS73L/6+7BZuoKm3W+qXnSoIYVHi8dG7Qcg4inAY4jbzkZ7MnskePeDg==}
     engines: {node: '>=10.13.0'}
     dependencies:
       graceful-fs: 4.2.11
@@ -7984,7 +8001,7 @@ packages:
       acorn-import-assertions: 1.9.0(acorn@8.11.3)
       browserslist: 4.23.0
       chrome-trace-event: 1.0.3
-      enhanced-resolve: 5.15.0
+      enhanced-resolve: 5.15.1
       es-module-lexer: 1.4.1
       eslint-scope: 5.1.1
       events: 3.3.0
