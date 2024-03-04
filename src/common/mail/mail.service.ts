@@ -33,7 +33,7 @@ export class MailService {
       'https://developers.google.com/oauthplayground',
     );
     oauth2Client.setCredentials({
-      refresh_token: this.configService.get('OAUTH_REFRESH_TOKEN'),
+      refresh_token: this.configService.get('GOOGLE_REFRESH_TOKEN'),
     });
     const accessToken: string = await new Promise((resolve, reject) => {
       oauth2Client.getAccessToken((err, token) => {
@@ -43,6 +43,7 @@ export class MailService {
         resolve(token!);
       });
     });
+
     return nodemailer.createTransport({
       service: this.configService.get('MAIL_SERVICE'),
       host: this.configService.get('MAIL_HOST'),

@@ -14,7 +14,6 @@ export class UserRepository {
   }
 
   create(input: Prisma.userCreateInput, tx?: PrismaTxType) {
-    console.log(input);
     return (tx ?? this.prisma).user.create({
       data: input,
     });

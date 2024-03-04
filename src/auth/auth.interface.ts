@@ -1,6 +1,4 @@
 import { AuthError } from '@src/constant/error/auth.error';
-import { EmailError } from '@src/constant/error/email.error';
-import { UserError } from '@src/constant/error/user.error';
 import { Auth } from '@src/type/auth.type';
 import { Either } from 'fp-ts/lib/Either';
 
@@ -21,7 +19,7 @@ export interface BasicAuthPasswordService {
   compare(
     password: string,
     hashed: string,
-  ): Promise<Either<UserError.INVALID_PASSWORD, boolean>>;
+  ): Promise<Either<AuthError.INVALID_PASSWORD, boolean>>;
 }
 
 export interface BasicAuthService {
@@ -29,9 +27,9 @@ export interface BasicAuthService {
     dto: Auth.SignupDto,
   ): Promise<
     Either<
-      | UserError.EMAIL_ALREADY_EXISTS
-      | UserError.NICKNAME_ALREADY_EXISTS
-      | EmailError.EMAIL_CERTIFICATION_NOT_VERIFIED
+      | AuthError.EMAIL_ALREADY_EXISTS
+      | AuthError.NICKNAME_ALREADY_EXISTS
+      | AuthError.EMAIL_CERTIFICATION_NOT_VERIFIED
       | AuthError.OAUTH.SOCIAL_ACCOUNT_LINKING_FAILED
       | AuthError.OAUTH.SOCIAL_AUTH_FAILED
       | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
@@ -46,7 +44,11 @@ export interface BasicAuthService {
     dto: Auth.LoginDto,
   ): Promise<
     Either<
-      UserError.NOT_FOUND_USER | UserError.INVALID_PASSWORD,
+      | AuthError.USER_NOT_FOUND
+      | AuthError.INVALID_PASSWORD
+      | AuthError.OAUTH.SOCIAL_AUTH_FAILED
+      | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
+      | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED,
       { access_token: string; refresh_token: string; payload: JwtPayload }
     >
   >;

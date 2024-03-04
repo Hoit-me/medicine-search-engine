@@ -28,4 +28,12 @@ export namespace UserError {
     HttpStatus.BAD_REQUEST
   >;
   export const INVALID_PASSWORD = typia.random<INVALID_PASSWORD>();
+
+  // 소셜 계정이 연동되어있지 않은 경우
+  export type NOT_FOUND_USER_SOCIAL_INFO = ERROR<
+    'NOT_FOUND_USER_SOCIAL_INFO',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const NOT_FOUND_USER_SOCIAL_INFO =
+    typia.random<NOT_FOUND_USER_SOCIAL_INFO>();
 }

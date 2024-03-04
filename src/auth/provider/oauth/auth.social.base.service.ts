@@ -2,12 +2,12 @@ import { HttpService } from '@nestjs/axios';
 import {
   BasicAuthJWTService,
   BasicAuthService,
+  JwtPayload,
 } from '@src/auth/auth.interface';
 import { AuthError } from '@src/constant/error/auth.error';
 import { UserService } from '@src/services/user.service';
 import { Auth } from '@src/type/auth.type';
 import { Either, isLeft, isRight, left, right } from 'fp-ts/lib/Either';
-import typia from 'typia';
 
 export abstract class AbstractAuthSocialService implements BasicAuthService {
   constructor(
@@ -17,10 +17,35 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
   ) {}
 
   async login(dto: Auth.LoginDto) {
-    // 구현
+    if (dto.type === 'local') {
+      throw new Error('Check Login type!');
+    }
+    const isProviderValid = this.validateProvider(dto);
+    if (isLeft(isProviderValid)) {
+      return isProviderValid;
+    }
+    const accessTokenOrError = await this.getToken(dto);
+    if (isLeft(accessTokenOrError)) {
+      return accessTokenOrError;
+    }
 
-    dto;
-    return typia.random<BasicAuthService['login']>();
+    const userInfoOrError = await this.getUserInfo(accessTokenOrError.right);
+    if (isLeft(userInfoOrError)) {
+      return userInfoOrError;
+    }
+    const { social_id } = userInfoOrError.right;
+    const checkSocialIdExists = await this.checkSocialIdExists(social_id);
+    if (isLeft(checkSocialIdExists)) {
+      return checkSocialIdExists;
+    }
+    const user = checkSocialIdExists.right.user;
+    const payload: JwtPayload = {
+      id: user.id,
+      email: user.email,
+    };
+    const access_token = this.jwtService.accessTokenSign(payload);
+    const refresh_token = this.jwtService.refreshTokenSign(payload);
+    return right({ access_token, refresh_token, payload });
   }
 
   async signup(dto: Auth.SignupDto) {
@@ -42,8 +67,8 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
     }
     const { email, social_id } = userInfoOrError.right;
     const checkSocialIdExists = await this.checkSocialIdExists(social_id);
-    if (isLeft(checkSocialIdExists)) {
-      return checkSocialIdExists;
+    if (isRight(checkSocialIdExists)) {
+      return left(AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED);
     }
     const userOrError = await this.processSignup(email, social_id);
     return userOrError;
@@ -57,12 +82,17 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
   }
 
   protected async checkSocialIdExists(social_id: string) {
-    const checkSocialIdExists = await this.userService.checkSocialIdExists({
+    const checkSocialIdExists = await this.userService.findSocialId({
       social_id,
       provider: this.getProvider(),
     });
+    if (isLeft(checkSocialIdExists)) {
+      return left(AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING);
+    }
+
     return checkSocialIdExists;
   }
+
   protected async processSignup(email: string, social_id: string) {
     const checkEmailExists = await this.userService.findUnique(email);
     if (isRight(checkEmailExists)) {
@@ -75,6 +105,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
     }
     return this.createSocialuser(email, social_id);
   }
+
   protected async createSocialuser(email: string, social_id: string) {
     const newUser = await this.userService.createSocialUser(
       {

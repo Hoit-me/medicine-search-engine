@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
-import { AuthError } from '@src/constant/error/auth.error';
 import { UserError } from '@src/constant/error/user.error';
 import { Auth } from '@src/type/auth.type';
 import { left, right } from 'fp-ts/lib/Either';
@@ -10,20 +9,36 @@ import { UserRepository } from './../repository/user.repository';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async checkEmailExists(email: string, tx?: PrismaTxType) {
+  async findUnique(email: string, tx?: PrismaTxType) {
     const user = await this.userRepository.findUnique(email, tx);
-    if (user) {
-      return left(UserError.EMAIL_ALREADY_EXISTS);
-    }
-    return right(null);
+    if (!user) return left(UserError.NOT_FOUND_USER);
+    return right(user);
   }
 
-  async checkNicknameExists(nickname: string, tx?: PrismaTxType) {
-    const user = await this.userRepository.findUnique(nickname, tx);
-    if (user) {
-      return left(UserError.NICKNAME_ALREADY_EXISTS);
+  async findSocialId(
+    dto: {
+      social_id: string;
+      provider: Auth.Oauth.Provider;
+    },
+    tx?: PrismaTxType,
+  ) {
+    const social_info = await this.userRepository.findUniqueSocialId(dto, tx);
+    if (!social_info) {
+      return left(UserError.NOT_FOUND_USER_SOCIAL_INFO);
     }
-    return right(null);
+    return right(social_info);
+  }
+
+  async findEmail(email: string, tx?: PrismaTxType) {
+    const user = await this.userRepository.findUnique(email, tx);
+    if (!user) return left(UserError.NOT_FOUND_USER);
+    return right(user);
+  }
+
+  async findNickName(nickname: string, tx?: PrismaTxType) {
+    const user = await this.userRepository.findUnique(nickname, tx);
+    if (!user) return left(UserError.NOT_FOUND_USER);
+    return right(user);
   }
 
   async createUser(
@@ -35,26 +50,6 @@ export class UserService {
     tx?: PrismaTxType,
   ) {
     return await this.userRepository.create(user, tx);
-  }
-
-  async findUnique(email: string, tx?: PrismaTxType) {
-    const user = await this.userRepository.findUnique(email, tx);
-    if (!user) return left(UserError.NOT_FOUND_USER);
-    return right(user);
-  }
-
-  async checkSocialIdExists(
-    dto: {
-      social_id: string;
-      provider: Auth.Oauth.Provider;
-    },
-    tx?: PrismaTxType,
-  ) {
-    const social_info = await this.userRepository.findUniqueSocialId(dto, tx);
-    if (social_info) {
-      return left(AuthError.OAUTH.SOCIAL_ACCOUNT_ALREADY_LINKED);
-    }
-    return right(social_info);
   }
 
   async createSocialUser(

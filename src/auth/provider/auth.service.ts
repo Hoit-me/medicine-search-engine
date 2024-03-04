@@ -65,7 +65,17 @@ export class AuthService implements BasicAuthService {
           this.localAuthService.login.bind(this.localAuthService),
         )(dto);
       case 'google':
+        return await this.generateLogin(
+          this.googleAuthService.login.bind(this.googleAuthService),
+        )(dto);
       case 'kakao':
+        return await this.generateLogin(
+          this.kakaoAuthService.login.bind(this.kakaoAuthService),
+        )(dto);
+      case 'naver':
+        return await this.generateLogin(
+          this.naverAuthService.login.bind(this.naverAuthService),
+        )(dto);
       default:
         throw new HttpException('Not supported', HttpStatus.BAD_REQUEST);
     }

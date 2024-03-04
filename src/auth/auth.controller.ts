@@ -3,6 +3,7 @@ import { Controller, Request, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
+import { AuthError } from '@src/constant/error/auth.error';
 import { EmailError } from '@src/constant/error/email.error';
 import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
@@ -103,8 +104,11 @@ export class AuthController {
         refresh_token: string;
       }>
     | SUCCESS<{ access_token: string }>
-    | UserError.NOT_FOUND_USER
-    | UserError.INVALID_PASSWORD
+    | AuthError.USER_NOT_FOUND
+    | AuthError.INVALID_PASSWORD
+    | AuthError.OAUTH.SOCIAL_AUTH_FAILED
+    | AuthError.OAUTH.SOCIAL_AUTH_INFO_MISSING
+    | AuthError.OAUTH.SOCIAL_SERVICE_ACCESS_DENIED
   > {
     const result = await this.authService.login(body);
 

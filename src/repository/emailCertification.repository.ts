@@ -15,7 +15,7 @@ export class EmailCertificationRepository {
     {
       email,
       date,
-      status = 'PENDING',
+      status,
       type = 'SIGN_UP',
       code,
     }: {

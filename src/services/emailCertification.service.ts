@@ -7,7 +7,7 @@ import { UserError } from '@src/constant/error/user.error';
 import { EmailCertificationRepository } from '@src/repository/emailCertification.repository';
 import { getTodayDateRange } from '@src/utils/getTodayDateRange';
 import { randomCode } from '@src/utils/randomCode';
-import { Either, isLeft, left, right } from 'fp-ts/lib/Either';
+import { Either, isLeft, isRight, left, right } from 'fp-ts/lib/Either';
 import { UserService } from './user.service';
 
 @Injectable()
@@ -33,8 +33,8 @@ export class EmailCertificationService {
     >
   > {
     return await this.prisma.$transaction(async (tx) => {
-      const checkUser = await this.userService.checkEmailExists(email, tx);
-      if (isLeft(checkUser)) return checkUser;
+      const checkUser = await this.userService.findEmail(email, tx);
+      if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
 
       // 이메일 인증번호 발송 횟수 확인
       const checkEmailLimit = await this.checkEmailCertificationLimit(
@@ -42,6 +42,7 @@ export class EmailCertificationService {
         type,
         tx,
       );
+      console.log('checkEmailLimit', checkEmailLimit);
       if (isLeft(checkEmailLimit)) return checkEmailLimit;
       const code = await this.generateAndSaveEmailCode(email, type, tx);
       await this.sendVerificationEmail(email, code);
@@ -61,8 +62,8 @@ export class EmailCertificationService {
     >
   > {
     const result = await this.prisma.$transaction(async (tx) => {
-      const checkUser = await this.userService.checkEmailExists(email, tx);
-      if (isLeft(checkUser)) return checkUser;
+      const checkUser = await this.userService.findEmail(email, tx);
+      if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
 
       const emailCertification =
         await this.emailCertificationRepository.findFirst(
@@ -153,6 +154,7 @@ export class EmailCertificationService {
       },
       tx,
     );
+    console.log(exists, 'exists');
     if (exists.length >= 5) {
       return left(EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED);
     }

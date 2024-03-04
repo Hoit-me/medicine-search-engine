@@ -44,6 +44,35 @@ export namespace AuthError {
   >;
   export const PERMISSION_DENIED = typia.random<PERMISSION_DENIED>();
 
+  // 이미 존재하는 이메일
+  export type EMAIL_ALREADY_EXISTS = ERROR<
+    'EMAIL_ALREADY_EXISTS',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const EMAIL_ALREADY_EXISTS = typia.random<EMAIL_ALREADY_EXISTS>();
+
+  // 이메일 인증번호가 일치하지 않는 경우
+  export type EMAIL_CERTIFICATION_NOT_VERIFIED = ERROR<
+    'EMAIL_CERTIFICATION_NOT_VERIFIED',
+    HttpStatus.UNAUTHORIZED
+  >;
+  export const EMAIL_CERTIFICATION_NOT_VERIFIED =
+    typia.random<EMAIL_CERTIFICATION_NOT_VERIFIED>();
+
+  // 이메일 인증횟수 초과
+  export type EMAIL_CERTIFICATION_EXCEED = ERROR<
+    'EMAIL_CERTIFICATION_EXCEED',
+    HttpStatus.BAD_REQUEST
+  >;
+
+  // 이미 존재하는 닉네임
+  export type NICKNAME_ALREADY_EXISTS = ERROR<
+    'NICKNAME_ALREADY_EXISTS',
+    HttpStatus.BAD_REQUEST
+  >;
+  export const NICKNAME_ALREADY_EXISTS =
+    typia.random<NICKNAME_ALREADY_EXISTS>();
+
   export namespace OAUTH {
     // 소셜 계정 연동에 실패한 경우
     export type SOCIAL_ACCOUNT_LINKING_FAILED = ERROR<

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PasswordOption } from '@src/config/interface/option.interface';
-import { UserError } from '@src/constant/error/user.error';
+import { AuthError } from '@src/constant/error/auth.error';
 import * as bcrypt from 'bcrypt';
 import { left, right } from 'fp-ts/lib/Either';
 import { BasicAuthPasswordService } from '../auth.interface';
@@ -18,7 +18,7 @@ export class AuthPasswordService implements BasicAuthPasswordService {
   }
   async compare(password: string, hashed: string) {
     const isMatch = bcrypt.compare(password, hashed);
-    if (!isMatch) return left(UserError.INVALID_PASSWORD);
+    if (!isMatch) return left(AuthError.INVALID_PASSWORD);
     return right(true);
   }
 }
