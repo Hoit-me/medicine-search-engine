@@ -109,7 +109,7 @@ export abstract class AbstractAuthSocialService implements BasicAuthService {
   }
 
   protected async createSocialuser(email: string, social_id: string) {
-    const newUser = await this.userService.createSocialUser(
+    const newUser = await this.userService.createSocialUserWithSnapshot(
       {
         email,
         nickname: this.defaultNickname(email),

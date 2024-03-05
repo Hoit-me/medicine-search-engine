@@ -59,4 +59,13 @@ export class UserRepository {
       data: { password },
     });
   }
+
+  createSnapshot(
+    input: Prisma.user_snapshotUncheckedCreateInput,
+    tx?: PrismaTxType,
+  ) {
+    return (tx ?? this.prisma).user_snapshot.create({
+      data: input,
+    });
+  }
 }

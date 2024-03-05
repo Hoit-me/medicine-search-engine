@@ -44,7 +44,7 @@ export class AuthLocalService implements BasicAuthService {
       return left(AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED);
 
     const hashedPassword = await this.passwordService.hash(password);
-    const newUser = await this.userService.createUser({
+    const newUser = await this.userService.createUserWithSnapshot({
       email,
       password: hashedPassword,
       nickname,

@@ -65,6 +65,15 @@ export class AuthPasswordService implements BasicAuthPasswordService {
         type,
         tx,
       );
+      await this.userService.createSnapshot(
+        {
+          email,
+          nickname: user.right.nickname,
+          password: hashedPassword,
+          user_id: user.right.id,
+        },
+        tx,
+      );
     });
     return right({ email, id });
   }
@@ -83,7 +92,19 @@ export class AuthPasswordService implements BasicAuthPasswordService {
       user.right.password || '',
     );
     if (isLeft(compare)) return compare;
-    await this.userService.updatePassword(email, hashedPassword);
+
+    await this.prisma.$transaction(async (tx) => {
+      await this.userService.updatePassword(email, hashedPassword, tx);
+      await this.userService.createSnapshot(
+        {
+          email,
+          nickname: user.right.nickname,
+          password: hashedPassword,
+          user_id: user.right.id,
+        },
+        tx,
+      );
+    });
     return right({ email, id });
   }
 
