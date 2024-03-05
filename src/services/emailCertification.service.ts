@@ -113,6 +113,21 @@ export class EmailCertificationService {
     return right(check);
   }
 
+  async expireEmailCertification(
+    id: string,
+    email: string,
+    type: 'SIGN_UP' | 'FIND_PASSWORD',
+    tx?: PrismaTxType,
+  ) {
+    await this.emailCertificationRepository.updateMany(
+      {
+        where: { id, email, type },
+        data: { status: 'EXPIRED' },
+      },
+      tx,
+    );
+  }
+
   ///////////////////////////
   // Batch
   ///////////////////////////

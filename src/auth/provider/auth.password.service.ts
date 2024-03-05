@@ -24,7 +24,7 @@ export class AuthPasswordService implements BasicAuthPasswordService {
     return hashedPassword;
   }
   async compare(password: string, hashed: string) {
-    const isMatch = bcrypt.compare(password, hashed);
+    const isMatch = await bcrypt.compare(password, hashed);
     if (!isMatch) return left(AuthError.Authentication.INVALID_PASSWORD);
     return right(true);
   }
@@ -54,6 +54,11 @@ export class AuthPasswordService implements BasicAuthPasswordService {
       return left(AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED);
     const hashedPassword = await this.hash(password);
     await this.userService.updatePassword(email, hashedPassword);
+    await this.emailCertificationService.expireEmailCertification(
+      email_certification_id,
+      email,
+      type,
+    );
     return right({ email, id });
   }
 
