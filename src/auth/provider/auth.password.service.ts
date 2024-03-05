@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { PrismaService } from '@src/common/prisma/prisma.service';
 import { PasswordOption } from '@src/config/interface/option.interface';
 import { AuthError } from '@src/constant/error/auth.error';
 import { EmailCertificationService } from '@src/services/emailCertification.service';
@@ -17,6 +18,7 @@ export class AuthPasswordService implements BasicAuthPasswordService {
 
     private readonly userService: UserService,
     private readonly emailCertificationService: EmailCertificationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async hash(password: string) {
@@ -53,12 +55,16 @@ export class AuthPasswordService implements BasicAuthPasswordService {
     if (isLeft(result))
       return left(AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED);
     const hashedPassword = await this.hash(password);
-    await this.userService.updatePassword(email, hashedPassword);
-    await this.emailCertificationService.expireEmailCertification(
-      email_certification_id,
-      email,
-      type,
-    );
+
+    await this.prisma.$transaction(async (tx) => {
+      await this.userService.updatePassword(email, hashedPassword, tx);
+      await this.emailCertificationService.expireEmailCertification(
+        email_certification_id,
+        email,
+        type,
+        tx,
+      );
+    });
     return right({ email, id });
   }
 
