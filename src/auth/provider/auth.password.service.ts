@@ -46,8 +46,9 @@ export class AuthPasswordService implements BasicAuthPasswordService {
     dto: Auth.PasswordChangeViaEmailVerificationDto,
   ) {
     const { email_certification_id, email: _email, password, type } = dto;
-    const user = await this.userService.findUnique(_email);
-    if (isLeft(user)) return left(AuthError.User.USER_NOT_FOUND);
+    const user = await this.checkUser(_email);
+    if (isLeft(user)) return user;
+
     const { email, id } = user.right;
     const result = await this.emailCertificationService.checkEmailCertification(
       { email, id: email_certification_id, type },
@@ -72,8 +73,9 @@ export class AuthPasswordService implements BasicAuthPasswordService {
     dto: Auth.PasswordChangeViaCurrentPasswordDto,
   ) {
     const { email: _email, password, current_password } = dto;
-    const user = await this.userService.findUnique(_email);
-    if (isLeft(user)) return left(AuthError.User.USER_NOT_FOUND);
+    const user = await this.checkUser(_email);
+    if (isLeft(user)) return user;
+
     const { email, id } = user.right;
     const hashedPassword = await this.hash(password);
     const compare = await this.compare(
@@ -83,5 +85,11 @@ export class AuthPasswordService implements BasicAuthPasswordService {
     if (isLeft(compare)) return compare;
     await this.userService.updatePassword(email, hashedPassword);
     return right({ email, id });
+  }
+
+  private async checkUser(email: string) {
+    const user = await this.userService.findUnique(email);
+    if (isLeft(user)) return left(AuthError.User.USER_NOT_FOUND);
+    return right(user.right);
   }
 }
