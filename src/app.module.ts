@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { AwsModule } from './common/aws/aws.module';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
+import { ServerErrorInterceptor } from './common/interceptor/serverError.interceptor';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { defaultModules } from './config';
 import { AppController } from './controllers/app.controller';
@@ -26,6 +27,10 @@ import { MedicineModule } from './modules/medicine.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ServerErrorInterceptor,
     },
   ],
 })

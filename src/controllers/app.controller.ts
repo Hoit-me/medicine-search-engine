@@ -1,5 +1,6 @@
 import { TypedRoute } from '@nestia/core';
-import { Controller } from '@nestjs/common';
+import { Controller, Param } from '@nestjs/common';
+import { wrapResponse } from '@src/common/res/success';
 import { AppService } from '../app.service';
 
 @Controller({ path: '/' })
@@ -27,5 +28,17 @@ export class AppController {
   @TypedRoute.Get('/performance')
   async performance() {
     return this.appService.performance();
+  }
+
+  /**
+   * 인터셉터 테스트
+   */
+  @TypedRoute.Get('/interceptor/:test')
+  async interceptor(@Param('test') test: string) {
+    if (test === 'error') {
+      console.log('interceptor test', test);
+      throw new Error('interceptor test error');
+    }
+    return wrapResponse('interceptor test');
   }
 }
