@@ -130,10 +130,29 @@ export namespace Auth {
 
   export type SendEmailVerificationCodeDto = {
     email: string & tags.Format<'email'>;
+    type: 'SIGN_UP' | 'FIND_PASSWORD';
   };
 
   export type VerifyEmailCodeDto = {
     email: string & tags.Format<'email'>;
     code: string & tags.MinLength<6> & tags.MaxLength<6>;
+    type: 'SIGN_UP' | 'FIND_PASSWORD';
   };
+
+  export type PasswordChangeViaEmailVerificationDto = {
+    email: string & tags.Format<'email'>;
+    password: string;
+    email_certification_id: string;
+    type: 'FIND_PASSWORD';
+  };
+  export type PasswordChangeViaCurrentPasswordDto = {
+    email: string & tags.Format<'email'>;
+    password: string;
+    current_password: string;
+    type: 'PROFILE';
+  };
+
+  export type ChangePasswordDto =
+    | PasswordChangeViaEmailVerificationDto
+    | PasswordChangeViaCurrentPasswordDto;
 }

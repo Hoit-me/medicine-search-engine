@@ -309,7 +309,7 @@ export class AuthController {
     '이메일이 이미 존재합니다.',
   )
   async sendEmailVerificationCode(
-    @TypedBody() { email }: Auth.SendEmailVerificationCodeDto,
+    @TypedBody() { email, type }: Auth.SendEmailVerificationCodeDto,
   ): Promise<
     | SUCCESS<true>
     | EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED
@@ -317,7 +317,10 @@ export class AuthController {
   > {
     // 이메일 인증번호 발송
     const result =
-      await this.emailCertificationService.sendEmailVerificationCode(email);
+      await this.emailCertificationService.sendEmailVerificationCode(
+        email,
+        type,
+      );
     return eitherToResponse(result);
   }
 
@@ -337,25 +340,20 @@ export class AuthController {
    * @summary 이메일 인증번호 확인 API
    */
   @TypedRoute.Post('/email/certification/verify')
-  @TypedException<AuthError.User.EMAIL_ALREADY_EXISTS>(
-    AuthError.User.EMAIL_ALREADY_EXISTS.status,
-    '이메일이 이미 존재합니다.',
-  )
   @TypedException<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH>(
     EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH.status,
     '이메일 인증번호가 일치하지 않습니다.',
   )
   async verifyEmailCode(
     @TypedBody()
-    { email, code }: Auth.VerifyEmailCodeDto,
+    { email, code, type }: Auth.VerifyEmailCodeDto,
   ): Promise<
-    | SUCCESS<{ id: string }>
-    | UserError.EMAIL_ALREADY_EXISTS
-    | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH
+    SUCCESS<{ id: string }> | EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH
   > {
     const result = await this.emailCertificationService.verifyEmailCode(
       email,
       code,
+      type,
     );
     return eitherToResponse(result);
   }
@@ -393,19 +391,37 @@ export class AuthController {
   }
 
   /**
-   * find password
+   * 비밀번호 변경 API
    *
-   * 메일로 비밀번호 변경할수 있는 주소를 보내줌
-   * 해당주소로 접속하면 비밀번호 변경 페이지로 이동
+   * 비밀번호 api는 두가지 방식으로 사용될 수 있습니다.
+   * - 현재 비밀번호를 사용하여 변경
+   *     비밀번호는 단방향 암호화되어 저장되므로, 비밀번호를 변경할때는 현재 비밀번호를 입력해야합니다
+   *     현재 비밀번호가 일치하지 않으면 에러를 반환합니다.
    *
    *
-   * Error Case
-   * - 이메일이 존재하지 않으면 에러
+   * - 비밀번호 찾기를 통해 변경(이메일 인증번호를 사용하여 변경)
+   *      비밀번호 찾기를 통해 변경할때는 이메일 인증번호를 사용하여 변경합니다.
+   *
+   *
+   * **주의**
+   * 비밀번호 변경시,해당 유저의 모든 리프레시 토큰을 만료시킵니다.
+   * 따라서, 비밀번호 변경후에는 로그인을 다시 해야합니다.
    */
+  @TypedRoute.Post('/password')
+  async changePassword(
+    @TypedBody()
+    body: Auth.ChangePasswordDto,
+  ): Promise<
+    | SUCCESS<{ email: string }>
+    | AuthError.User.USER_NOT_FOUND
+    | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
+    | AuthError.Authentication.INVALID_PASSWORD
+    | AuthError.Authentication.INVALID_TYPE
+  > {
+    const result = await this.authService.changePassword(body);
 
-  /**
-   * change password
-   */
+    return eitherToResponse(result);
+  }
 
   ///////////////////////////
   // batch

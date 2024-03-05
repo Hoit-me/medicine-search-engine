@@ -52,4 +52,11 @@ export class UserRepository {
       },
     });
   }
+
+  updatePassword(email: string, password: string, tx?: PrismaTxType) {
+    return (tx ?? this.prisma).user.update({
+      where: { email },
+      data: { password },
+    });
+  }
 }

@@ -38,6 +38,7 @@ export class AuthLocalService implements BasicAuthService {
       await this.emailCertificationService.checkEmailCertification({
         email,
         id: email_certification_id,
+        type: 'SIGN_UP',
       });
     if (isLeft(checkEmailCertification))
       return left(AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED);

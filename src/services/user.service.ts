@@ -83,4 +83,8 @@ export class UserService {
       tx,
     );
   }
+
+  async updatePassword(email: string, password: string, tx?: PrismaTxType) {
+    return await this.userRepository.updatePassword(email, password, tx);
+  }
 }

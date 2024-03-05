@@ -34,7 +34,8 @@ export class EmailCertificationService {
   > {
     return await this.prisma.$transaction(async (tx) => {
       const checkUser = await this.userService.findEmail(email, tx);
-      if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
+      if (isRight(checkUser) && type === 'SIGN_UP')
+        return left(UserError.EMAIL_ALREADY_EXISTS);
 
       // 이메일 인증번호 발송 횟수 확인
       const checkEmailLimit = await this.checkEmailCertificationLimit(
@@ -57,10 +58,6 @@ export class EmailCertificationService {
     Either<EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH, { id: string }>
   > {
     const result = await this.prisma.$transaction(async (tx) => {
-      // TODO: 회원가입시에만 체크하도록 수정
-      // const checkUser = await this.userService.findEmail(email, tx);
-      // if (isRight(checkUser)) return left(UserError.EMAIL_ALREADY_EXISTS);
-
       const emailCertification =
         await this.emailCertificationRepository.findFirst(
           {
@@ -95,9 +92,11 @@ export class EmailCertificationService {
     {
       id,
       email,
+      type,
     }: {
       id: string;
       email: string;
+      type: 'SIGN_UP' | 'FIND_PASSWORD';
     },
     tx?: PrismaTxType,
   ) {
@@ -106,11 +105,12 @@ export class EmailCertificationService {
         id,
         email,
         status: 'VERIFIED',
+        type,
       },
       tx,
     );
     if (!check) return left(EmailError.EMAIL_CERTIFICATION_NOT_VERIFIED);
-    return right(null);
+    return right(check);
   }
 
   ///////////////////////////

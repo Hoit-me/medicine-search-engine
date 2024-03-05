@@ -20,6 +20,18 @@ export interface BasicAuthPasswordService {
     password: string,
     hashed: string,
   ): Promise<Either<AuthError.Authentication.INVALID_PASSWORD, boolean>>;
+
+  changePassword(
+    dto: Auth.ChangePasswordDto,
+  ): Promise<
+    Either<
+      | AuthError.User.USER_NOT_FOUND
+      | AuthError.Authentication.INVALID_PASSWORD
+      | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
+      | AuthError.Authentication.INVALID_TYPE,
+      { email: string; id: string }
+    >
+  >;
 }
 
 export interface BasicAuthService {
@@ -54,6 +66,24 @@ export interface BasicAuthService {
       { access_token: string; refresh_token: string; payload: JwtPayload }
     >
   >;
+}
+export interface BasicAuthServiceAdapter extends BasicAuthService {
+  changePassword(
+    dto: Auth.ChangePasswordDto,
+  ): Promise<
+    Either<
+      | AuthError.User.USER_NOT_FOUND
+      | AuthError.Authentication.INVALID_PASSWORD
+      | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
+      | AuthError.Authentication.INVALID_TYPE,
+      { email: string; id: string }
+    >
+  >;
+
+  logout(payload: JwtPayload): Promise<void>;
+  refresh(
+    payload: JwtPayload,
+  ): Promise<{ access_token: string; refresh_token: string }>;
 }
 
 export interface BasicAuthCacheService {

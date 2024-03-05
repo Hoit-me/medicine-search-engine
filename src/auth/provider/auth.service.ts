@@ -1,11 +1,14 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { AuthError } from '@src/constant/error/auth.error';
 import { Auth } from '@src/type/auth.type';
-import { isLeft } from 'fp-ts/lib/Either';
+import { isLeft, left } from 'fp-ts/lib/Either';
 import { assertPrune } from 'typia/lib/misc';
 import {
   BasicAuthCacheService,
   BasicAuthJWTService,
+  BasicAuthPasswordService,
   BasicAuthService,
+  BasicAuthServiceAdapter,
   JwtPayload,
 } from '../auth.interface';
 import {
@@ -15,6 +18,7 @@ import {
   AUTH_LOCAL_SERVICE,
   AUTH_NAVER_SERVICE,
   JWT_SERVICE,
+  PASSWORD_SERVICE,
 } from '../constant';
 
 /**
@@ -23,7 +27,7 @@ import {
  * @link https://git-blog-alpha.vercel.app/ko/post/16
  */
 @Injectable()
-export class AuthService implements BasicAuthService {
+export class AuthService implements BasicAuthServiceAdapter {
   constructor(
     @Inject(AUTH_LOCAL_SERVICE)
     private readonly localAuthService: BasicAuthService,
@@ -37,6 +41,8 @@ export class AuthService implements BasicAuthService {
     private readonly jwtService: BasicAuthJWTService,
     @Inject(AUTH_CACHE_SERVICE)
     private readonly cacheService: BasicAuthCacheService,
+    @Inject(PASSWORD_SERVICE)
+    private readonly passwordService: BasicAuthPasswordService,
   ) {}
 
   async signup(dto: Auth.SignupDto) {
@@ -94,6 +100,18 @@ export class AuthService implements BasicAuthService {
     return { access_token, refresh_token };
   }
 
+  async changePassword(dto: Auth.ChangePasswordDto) {
+    switch (dto.type) {
+      case 'FIND_PASSWORD':
+      case 'PROFILE':
+        return await this.generateChangePassword(
+          this.passwordService.changePassword.bind(this.passwordService),
+        )(dto);
+      default:
+        return left(AuthError.Authentication.INVALID_TYPE);
+    }
+  }
+
   private generateLogin(login: BasicAuthService['login']) {
     return async (dto: Auth.LoginDto) => {
       const result = await login(dto);
@@ -109,8 +127,15 @@ export class AuthService implements BasicAuthService {
     };
   }
 
-  /// dev...
-  // async getKaKaoUserInfo(accessToken: string) {
-  //   return await this.kakaoAuthService.getUserInfo(accessToken);
-  // }
+  //변경 성공시 토큰무효화
+  private generateChangePassword(
+    changePassword: BasicAuthPasswordService['changePassword'],
+  ) {
+    return async (dto: Auth.ChangePasswordDto) => {
+      const result = await changePassword(dto);
+      if (isLeft(result)) return result;
+      await this.cacheService.addBlacklist(result.right.id);
+      return result;
+    };
+  }
 }
