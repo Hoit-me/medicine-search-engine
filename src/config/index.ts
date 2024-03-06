@@ -3,6 +3,7 @@ import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PrismaModule } from '@src/common/prisma/prisma.module';
 import { redisStore } from 'cache-manager-redis-store';
 import Joi from 'joi';
 export const configValidationSchema = Joi.object({
@@ -67,4 +68,5 @@ export const defaultModules = [
   cacheModule,
   scheduleModule,
   eventEmitterModule,
+  PrismaModule,
 ];

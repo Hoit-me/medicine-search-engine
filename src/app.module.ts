@@ -6,7 +6,6 @@ import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { AwsModule } from './common/aws/aws.module';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { ServerErrorInterceptor } from './common/interceptor/serverError.interceptor';
-import { PrismaModule } from './common/prisma/prisma.module';
 import { defaultModules } from './config';
 import { AppController } from './controllers/app.controller';
 import { ApiKeyModule } from './modules/apiKey.module';
@@ -14,7 +13,7 @@ import { MedicineModule } from './modules/medicine.module';
 @Module({
   imports: [
     ...defaultModules,
-    PrismaModule,
+
     MedicineModule,
     MedicineBatchModule,
     ApiKeyModule,

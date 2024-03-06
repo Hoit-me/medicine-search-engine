@@ -80,7 +80,6 @@ export class UserLoggingInterceptor implements NestInterceptor {
             const method = req.method;
             const ip = req.ip;
             const user_agent = req.headers['user-agent'];
-            console.log(req.user);
             const payload: CreateUserLogDto = {
               user_id: '65e6a6f3847aa36939ccb96d',
               ip,
@@ -95,7 +94,6 @@ export class UserLoggingInterceptor implements NestInterceptor {
             };
             // 이벤트발급
             this.eventEmitter.emit('user.log', payload);
-
             // await this.prisma.user_log.create({
             //   data: payload,
             // });

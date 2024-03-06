@@ -4,17 +4,10 @@ import {
   TypedHeaders,
   TypedRoute,
 } from '@nestia/core';
-import {
-  Controller,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
-import { UserLoggingInterceptor } from '@src/common/interceptor/userLogging.interceptor';
+import { UserLog } from '@src/common/decorator/UserLog';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { AuthError } from '@src/constant/error/auth.error';
 import { EmailError } from '@src/constant/error/email.error';
@@ -154,7 +147,7 @@ export class AuthController {
    * @summary 로그인 API
    */
   @Post('/login')
-  @UseInterceptors(UserLoggingInterceptor)
+  @UserLog()
   @TypedException<AuthError.User.USER_NOT_FOUND>(
     AuthError.User.USER_NOT_FOUND.status,
     '이메일이 존재하지 않습니다.',
