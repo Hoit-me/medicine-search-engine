@@ -32,6 +32,10 @@ import { MedicineModule } from './modules/medicine.module';
       provide: APP_INTERCEPTOR,
       useClass: ServerErrorInterceptor,
     },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: UserLoggingInterceptor,
+    // },
   ],
 })
 export class AppModule {}

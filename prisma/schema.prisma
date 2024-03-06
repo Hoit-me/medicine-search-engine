@@ -421,37 +421,25 @@ enum OAUTH_PROVIDER {
 model user_log{
   id        String   @id @db.ObjectId @map("_id") @default(auto())
   user_id   String   @db.ObjectId
-  type      USER_LOG_TYPE
   ip        String
   user_agent String
+  uri       String? /// real path  /// /api/v1/1234
+  path      String?  /// path  ///api/v1/:id
+  method    String? 
+  time    Int
+  success Boolean
+  status_code Int?
+  message String?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  uri       String?
-  method    String?
+
   user user @relation(fields: [user_id], references: [id])
-  success Boolean
 
   @@index([user_id])
-  @@index([type])
+  @@index([uri,method])
   @@index([ip])
   @@index([created_at])
-  @@index([user_id,type])
-}
-
-enum USER_LOG_TYPE {
-  LOGIN
-  LOGOUT
-  SIGN_UP
-  FIND_PASSWORD
-  CHANGE_PASSWORD
-  CHANGE_EMAIL
-  CHANGE_NICKNAME
-  DELETE_ACCOUNT
-  LINK_SOCIAL
-  CREATE_API_KEY
-  DELETE_API_KEY
-  CHANGE_API_KEY
-  CHANGE_API_KEY_LIMIT  
 }
 
 model user_snapshot{

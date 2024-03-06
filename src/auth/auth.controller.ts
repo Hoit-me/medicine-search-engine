@@ -4,9 +4,17 @@ import {
   TypedHeaders,
   TypedRoute,
 } from '@nestia/core';
-import { Controller, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
+import { UserLoggingInterceptor } from '@src/common/interceptor/userLogging.interceptor';
 import { eitherToResponse, wrapResponse } from '@src/common/res/success';
 import { AuthError } from '@src/constant/error/auth.error';
 import { EmailError } from '@src/constant/error/email.error';
@@ -16,10 +24,12 @@ import { Auth } from '@src/type/auth.type';
 import { ClientHeader } from '@src/type/header.type';
 import { SUCCESS } from '@src/type/success';
 import { Response } from 'express';
+import { isRight } from 'fp-ts/lib/Either';
 import { JwtPayload } from './auth.interface';
 import { AuthGuard } from './guard/auth.guard';
 import { RefreshGuard } from './guard/refresh.guard';
 import { AuthService } from './provider/auth.service';
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -58,6 +68,7 @@ export class AuthController {
     if (user) {
       return wrapResponse({ is_login: true, user: user });
     }
+
     return wrapResponse({ is_login: false });
   }
 
@@ -142,7 +153,8 @@ export class AuthController {
    * @tag Auth
    * @summary 로그인 API
    */
-  @TypedRoute.Post('/login')
+  @Post('/login')
+  @UseInterceptors(UserLoggingInterceptor)
   @TypedException<AuthError.User.USER_NOT_FOUND>(
     AuthError.User.USER_NOT_FOUND.status,
     '이메일이 존재하지 않습니다.',
@@ -171,6 +183,7 @@ export class AuthController {
     @TypedBody()
     body: Auth.LoginDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: any,
     @TypedHeaders() headers: ClientHeader,
   ): Promise<
     | SUCCESS<{
@@ -187,6 +200,7 @@ export class AuthController {
   > {
     const result = await this.authService.login(body);
     // 로그인 성공 및 클라이언트 유형이 웹일 경우 리프레시 토큰을 쿠키로 설정
+    req.user = isRight(result) ? result.right.payload : undefined;
     if (
       result._tag === 'Right' &&
       headers['X-Client-Type'] !== process.env.CLIENT_TYPE
@@ -267,8 +281,9 @@ export class AuthController {
   async signup(
     @TypedBody()
     body: Auth.SignupDto,
+    @Req() req: any,
   ): Promise<
-    | SUCCESS<{ email: string }>
+    | SUCCESS<{ email: string; id: string }>
     | AuthError.User.EMAIL_ALREADY_EXISTS
     | AuthError.User.NICKNAME_ALREADY_EXISTS
     | AuthError.Authentication.INVALID_TYPE
@@ -281,6 +296,7 @@ export class AuthController {
     | AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED
   > {
     const result = await this.authService.signup(body);
+    isRight(result) && (req.user = result.right);
     return eitherToResponse(result);
   }
 

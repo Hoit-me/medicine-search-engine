@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { redisStore } from 'cache-manager-redis-store';
 import Joi from 'joi';
@@ -58,9 +59,12 @@ export const cacheModule = CacheModule.registerAsync({
 
 export const scheduleModule = ScheduleModule.forRoot();
 
+export const eventEmitterModule = EventEmitterModule.forRoot({});
+
 export const defaultModules = [
   configModule,
   httpModule,
   cacheModule,
   scheduleModule,
+  eventEmitterModule,
 ];

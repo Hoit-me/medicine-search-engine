@@ -1,6 +1,4 @@
-// utils/slackUtil.ts
-
-import { IncomingWebhook } from '@slack/client';
+import { IncomingWebhook } from '@slack/webhook';
 
 export const sendErrorReportToSlack = async ({
   method,

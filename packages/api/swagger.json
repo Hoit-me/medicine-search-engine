@@ -17,9 +17,7 @@
   "paths": {
     "/api/health-check": {
       "get": {
-        "tags": [
-          "health-check"
-        ],
+        "tags": ["health-check"],
         "parameters": [],
         "responses": {
           "200": {
@@ -561,9 +559,7 @@
     },
     "/api/auth": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [],
         "responses": {
           "200": {
@@ -598,9 +594,7 @@
     },
     "/api/auth/token": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "X-Client-Type",
@@ -660,9 +654,7 @@
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "X-Client-Type",
@@ -776,9 +768,7 @@
     },
     "/api/auth/signup": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [],
         "requestBody": {
           "content": {
@@ -889,9 +879,7 @@
     },
     "/api/auth/email/certification": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [],
         "requestBody": {
           "content": {
@@ -941,9 +929,7 @@
     },
     "/api/auth/email/certification/verify": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [],
         "requestBody": {
           "content": {
@@ -993,9 +979,7 @@
     },
     "/api/auth/logout": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "X-Client-Type",
@@ -1048,13 +1032,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "rss",
-          "heapTotal",
-          "heapUsed",
-          "external",
-          "arrayBuffers"
-        ]
+        "required": ["rss", "heapTotal", "heapUsed", "external", "arrayBuffers"]
       },
       "Page.Search": {
         "type": "object",
@@ -1083,9 +1061,7 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -1098,11 +1074,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "PageMedicine.JoinInsuranceMedicine": {
         "type": "object",
@@ -1120,10 +1092,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "data",
-          "pagenation"
-        ]
+        "required": ["data", "pagenation"]
       },
       "Medicine.JoinInsuranceMedicine": {
         "type": "object",
@@ -1200,10 +1169,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "약효분류"
           },
@@ -1227,10 +1193,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "주성분"
           },
@@ -1331,12 +1294,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "current",
-          "limit",
-          "total_count",
-          "total_page"
-        ]
+        "required": ["current", "limit", "total_count", "total_page"]
       },
       "Searchsearchstring": {
         "type": "object",
@@ -1359,18 +1317,14 @@
           }
         },
         "nullable": false,
-        "required": [
-          "search"
-        ]
+        "required": ["search"]
       },
       "SUCCESSArraystring": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -1386,20 +1340,14 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "SUCCESSMedicine.DetailJoinInsuranceAndDUR": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -1412,11 +1360,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "Medicine.DetailJoinInsuranceAndDUR": {
         "type": "object",
@@ -1517,10 +1461,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "약효분류"
           },
@@ -1544,10 +1485,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "주성분"
           },
@@ -1754,10 +1692,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -1773,10 +1708,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -1870,10 +1802,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -1889,10 +1818,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "contraindication_related_ingredients": {
@@ -1908,10 +1834,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "contraindication_pharmacological_class": {
@@ -1927,10 +1850,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2019,10 +1939,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -2038,10 +1955,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2124,10 +2038,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -2143,10 +2054,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2231,10 +2139,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -2250,10 +2155,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2339,10 +2241,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -2358,10 +2257,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2447,10 +2343,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           },
           "pharmacological_class": {
@@ -2466,10 +2359,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             }
           }
         },
@@ -2497,29 +2387,19 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "MEDICINE_NOT_FOUND"
-            ]
+            "enum": ["MEDICINE_NOT_FOUND"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              404
-            ]
+            "enum": [404]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "Page.Query": {
         "type": "object",
@@ -2543,9 +2423,7 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -2558,11 +2436,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "PageMedicine": {
         "type": "object",
@@ -2580,10 +2454,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "data",
-          "pagenation"
-        ]
+        "required": ["data", "pagenation"]
       },
       "Medicine": {
         "type": "object",
@@ -2660,10 +2531,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "약효분류"
           },
@@ -2687,10 +2555,7 @@
                 }
               },
               "nullable": false,
-              "required": [
-                "code",
-                "name"
-              ]
+              "required": ["code", "name"]
             },
             "description": "주성분"
           }
@@ -2724,9 +2589,7 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -2739,11 +2602,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "ApiKey": {
         "type": "object",
@@ -2795,20 +2654,14 @@
       },
       "STATUS": {
         "type": "string",
-        "enum": [
-          "ACTIVE",
-          "INACTIVE",
-          "DELETED"
-        ]
+        "enum": ["ACTIVE", "INACTIVE", "DELETED"]
       },
       "SUCCESSApiKey.GetListOutput": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -2821,11 +2674,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "ApiKey.GetListOutput": {
         "type": "array",
@@ -2890,10 +2739,7 @@
               }
             },
             "nullable": false,
-            "required": [
-              "api_key_monthly_usage",
-              "api_key_usage_log"
-            ]
+            "required": ["api_key_monthly_usage", "api_key_usage_log"]
           }
         },
         "nullable": false,
@@ -3018,18 +2864,14 @@
           }
         },
         "nullable": false,
-        "required": [
-          "key"
-        ]
+        "required": ["key"]
       },
       "SUCCESStrue": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3038,56 +2880,38 @@
           },
           "result": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "ApiKeyError.API_KEY_NOT_FOUND": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "API_KEY_NOT_FOUND"
-            ]
+            "enum": ["API_KEY_NOT_FOUND"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESSApiKey.GetDetailOutput": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3100,11 +2924,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "ApiKey.GetDetailOutput": {
         "type": "object",
@@ -3163,10 +2983,7 @@
               }
             },
             "nullable": false,
-            "required": [
-              "api_key_monthly_usage",
-              "api_key_usage_log"
-            ]
+            "required": ["api_key_monthly_usage", "api_key_usage_log"]
           }
         },
         "nullable": false,
@@ -3190,9 +3007,7 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3205,49 +3020,33 @@
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "AuthError.Authentication.TOKEN_INVALID": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "TOKEN_INVALID"
-            ]
+            "enum": ["TOKEN_INVALID"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              401
-            ]
+            "enum": [401]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESS__type": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3265,18 +3064,12 @@
               }
             },
             "nullable": false,
-            "required": [
-              "is_login"
-            ],
+            "required": ["is_login"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "JwtPayload": {
         "type": "object",
@@ -3289,10 +3082,7 @@
           }
         },
         "nullable": false,
-        "required": [
-          "id",
-          "email"
-        ]
+        "required": ["id", "email"]
       },
       "ClientHeader": {
         "type": "object",
@@ -3310,38 +3100,26 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "TOKEN_MISSING"
-            ]
+            "enum": ["TOKEN_MISSING"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESSaccess_tokenstringrefresh_tokenstringaccess_tokenstring": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3361,10 +3139,7 @@
                   }
                 },
                 "nullable": false,
-                "required": [
-                  "access_token",
-                  "refresh_token"
-                ]
+                "required": ["access_token", "refresh_token"]
               },
               {
                 "type": "object",
@@ -3374,31 +3149,21 @@
                   }
                 },
                 "nullable": false,
-                "required": [
-                  "access_token"
-                ]
+                "required": ["access_token"]
               }
             ],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "Auth.Oauth": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "google",
-              "kakao",
-              "naver"
-            ],
+            "enum": ["google", "kakao", "naver"],
             "description": "로그인 타입\n- local: 이메일, 비밀번호\n- google: 구글 로그인\n- kakao: 카카오 로그인"
           },
           "code": {
@@ -3420,20 +3185,14 @@
           }
         },
         "nullable": false,
-        "required": [
-          "type",
-          "code",
-          "redirect_uri"
-        ]
+        "required": ["type", "code", "redirect_uri"]
       },
       "Auth.Local": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "local"
-            ],
+            "enum": ["local"],
             "description": "로그인 타입\n- local: 이메일, 비밀번호\n- google: 구글 로그인\n- kakao: 카카오 로그인"
           },
           "email": {
@@ -3453,136 +3212,90 @@
           }
         },
         "nullable": false,
-        "required": [
-          "type",
-          "email",
-          "password"
-        ]
+        "required": ["type", "email", "password"]
       },
       "AuthError.Authentication.INVALID_TYPE": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "INVALID_TYPE"
-            ]
+            "enum": ["INVALID_TYPE"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.Authentication.INVALID_PASSWORD": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "INVALID_PASSWORD."
-            ]
+            "enum": ["INVALID_PASSWORD."]
           },
           "status": {
             "type": "number",
-            "enum": [
-              401
-            ]
+            "enum": [401]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_SERVICE_ACCESS_DENIED"
-            ]
+            "enum": ["SOCIAL_SERVICE_ACCESS_DENIED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              403
-            ]
+            "enum": [403]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.User.USER_NOT_FOUND": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "USER_NOT_FOUND"
-            ]
+            "enum": ["USER_NOT_FOUND"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              404
-            ]
+            "enum": [404]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESS__type.o2": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3597,27 +3310,19 @@
               }
             },
             "nullable": false,
-            "required": [
-              "access_token"
-            ],
+            "required": ["access_token"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "SUCCESS__type.o1": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3635,86 +3340,57 @@
               }
             },
             "nullable": false,
-            "required": [
-              "access_token",
-              "refresh_token"
-            ],
+            "required": ["access_token", "refresh_token"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "AuthError.SocialAuth.SOCIAL_AUTH_FAILED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_AUTH_FAILED"
-            ]
+            "enum": ["SOCIAL_AUTH_FAILED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              401
-            ]
+            "enum": [401]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_AUTH_INFO_MISSING"
-            ]
+            "enum": ["SOCIAL_AUTH_INFO_MISSING"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "Localnicknamestringemail_certification_idstring": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "local"
-            ],
+            "enum": ["local"],
             "description": "로그인 타입\n- local: 이메일, 비밀번호\n- google: 구글 로그인\n- kakao: 카카오 로그인"
           },
           "email": {
@@ -3753,96 +3429,64 @@
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "EMAIL_ALREADY_EXISTS"
-            ]
+            "enum": ["EMAIL_ALREADY_EXISTS"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "EMAIL_CERTIFICATION_NOT_VERIFIED"
-            ]
+            "enum": ["EMAIL_CERTIFICATION_NOT_VERIFIED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              401
-            ]
+            "enum": [401]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.SocialAuth.SOCIAL_ACCOUNT_LINKING_FAILED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_ACCOUNT_LINKING_FAILED"
-            ]
+            "enum": ["SOCIAL_ACCOUNT_LINKING_FAILED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              500
-            ]
+            "enum": [500]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESS__type.o3": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -3857,105 +3501,69 @@
               }
             },
             "nullable": false,
-            "required": [
-              "email"
-            ],
+            "required": ["email"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "AuthError.User.NICKNAME_ALREADY_EXISTS": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "NICKNAME_ALREADY_EXISTS"
-            ]
+            "enum": ["NICKNAME_ALREADY_EXISTS"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.SocialAuth.SOCIAL_SERVICE_RESPONSE_ERROR": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_SERVICE_RESPONSE_ERROR"
-            ]
+            "enum": ["SOCIAL_SERVICE_RESPONSE_ERROR"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              502
-            ]
+            "enum": [502]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "SOCIAL_ACCOUNT_ALREADY_LINKED"
-            ]
+            "enum": ["SOCIAL_ACCOUNT_ALREADY_LINKED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "Auth.SendEmailVerificationCodeDto": {
         "type": "object",
@@ -3966,67 +3574,45 @@
           }
         },
         "nullable": false,
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "EmailError.EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED"
-            ]
+            "enum": ["EMAIL_CERTIFICATION_SEND_LIMIT_EXCEEDED"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "UserError.EMAIL_ALREADY_EXISTS": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "EMAIL_ALREADY_EXISTS"
-            ]
+            "enum": ["EMAIL_ALREADY_EXISTS"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "Auth.VerifyEmailCodeDto": {
         "type": "object",
@@ -4042,19 +3628,14 @@
           }
         },
         "nullable": false,
-        "required": [
-          "email",
-          "code"
-        ]
+        "required": ["email", "code"]
       },
       "SUCCESS__type.o4": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -4069,56 +3650,38 @@
               }
             },
             "nullable": false,
-            "required": [
-              "id"
-            ],
+            "required": ["id"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       },
       "EmailError.EMAIL_CERTIFICATION_CODE_NOT_MATCH": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              false
-            ]
+            "enum": [false]
           },
           "message": {
             "type": "string",
-            "enum": [
-              "EMAIL_CERTIFICATION_CODE_NOT_MATCH"
-            ]
+            "enum": ["EMAIL_CERTIFICATION_CODE_NOT_MATCH"]
           },
           "status": {
             "type": "number",
-            "enum": [
-              400
-            ]
+            "enum": [400]
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "status"
-        ]
+        "required": ["is_success", "message", "status"]
       },
       "SUCCESS__type.o5": {
         "type": "object",
         "properties": {
           "is_success": {
             "type": "boolean",
-            "enum": [
-              true
-            ],
+            "enum": [true],
             "description": "Whether the request was successful"
           },
           "message": {
@@ -4133,18 +3696,12 @@
               }
             },
             "nullable": false,
-            "required": [
-              "is_login"
-            ],
+            "required": ["is_login"],
             "description": "Result"
           }
         },
         "nullable": false,
-        "required": [
-          "is_success",
-          "message",
-          "result"
-        ]
+        "required": ["is_success", "message", "result"]
       }
     },
     "securitySchemes": {

@@ -49,7 +49,7 @@ export interface BasicAuthService {
       | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
       | AuthError.SocialAuth.SOCIAL_SERVICE_RESPONSE_ERROR
       | AuthError.SocialAuth.SOCIAL_ACCOUNT_ALREADY_LINKED,
-      { email: string }
+      { email: string; id: string }
     >
   >;
 
