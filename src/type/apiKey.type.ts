@@ -50,13 +50,15 @@ export namespace ApiKey {
   export interface UsageLog {
     id: string;
     key: string;
+    ip: string;
+    uri: string;
+    path: string;
+    status_code: number;
     year: number;
     month: number;
-    url: string;
     method: string;
     date: Date;
-    http_status: number;
-    delay: number;
+    time: number;
     created_at: Date;
     updated_at: Date;
   }

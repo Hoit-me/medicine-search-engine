@@ -57,9 +57,9 @@ export class ApiKeyRepository {
         include: {
           logs: {
             select: {
-              url: true,
+              uri: true,
               method: true,
-              http_status: true,
+              status_code: true,
               date: true,
             },
           },

@@ -1,3 +1,4 @@
+import { InjectRedis } from '@liaoliaots/nestjs-redis';
 import {
   CallHandler,
   ExecutionContext,
@@ -5,7 +6,10 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Log } from '@src/type/log.type';
+import { Redis } from 'ioredis';
 import { Observable, mergeMap } from 'rxjs';
+import { RedisStreamClient } from '../microservice/redis-stream/redis-stream.client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -37,24 +41,14 @@ import { PrismaService } from '../prisma/prisma.service';
  *        로그데이터를 저장하는 서버를 확장하여, 로그데이터를 저장하는 시간을 최소화한다.
  *
  */
-interface CreateUserLogDto {
-  user_id: string;
-  ip: string;
-  user_agent: string;
-  uri: string; /// real path /// ex: /api/v1/1234
-  path: string; /// route path   /// ex: /api/v1/:id
-  method: string;
-  success: boolean;
-  status_code: number;
-  time: number;
-  message: string;
-}
-
 @Injectable()
 export class UserLoggingInterceptor implements NestInterceptor {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly prisma: PrismaService, // 우선 prisma를 사용하여 로그를 저장
+    @InjectRedis()
+    private readonly redis: Redis,
+    private readonly client: RedisStreamClient,
   ) {}
   intercept(
     context: ExecutionContext,
@@ -80,7 +74,7 @@ export class UserLoggingInterceptor implements NestInterceptor {
             const method = req.method;
             const ip = req.ip;
             const user_agent = req.headers['user-agent'];
-            const payload: CreateUserLogDto = {
+            const payload: Log.User = {
               user_id: '65e6a6f3847aa36939ccb96d',
               ip,
               user_agent,
@@ -93,10 +87,42 @@ export class UserLoggingInterceptor implements NestInterceptor {
               time,
             };
             // 이벤트발급
-            this.eventEmitter.emit('user.log', payload);
+            // this.eventEmitter.emit('user.log', payload);
             // await this.prisma.user_log.create({
             //   data: payload,
             // });
+            try {
+              // await this.redis.xadd(
+              //   'user.log',
+              //   '*',
+              //   'data',
+              //   JSON.stringify(payload),
+              //   'user_id',
+              //   1,
+              // );
+              this.client
+                .emit('user.log', {
+                  data: payload,
+                })
+                .pipe(
+                  mergeMap((data) => {
+                    console.log('mergeMap', data);
+                    return data;
+                  }),
+                );
+            } catch (e) {
+              console.log(e);
+              return data;
+            }
+            // const a = await this.redis.xread(
+            //   'BLOCK',
+            //   0,
+            //   'STREAMS',
+            //   'user.log',
+            //   '0',
+            // );
+            // console.log(a);
+            // this.client.emit('user.log', JSON.stringify(payload));
             return data;
           }),
         )

@@ -1,12 +1,49 @@
 import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions } from '@nestjs/microservices';
 import { SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { createResdiStreamOptions } from './common/microservice/redis-stream';
 async function bootstrap() {
   console.log(process.memoryUsage());
 
   const app = await NestFactory.create(AppModule);
+  // const micro = await NestFactory.createMicroservice<MicroserviceOptions>(
+  //   AppModule,
+  //   {
+  //     transport: Transport.REDIS,
+  //     options: {
+  //       host: 'localhost',
+  //       port: 6379,
+  //       name: 'medicine-search',
+  //     },
+  //   },
+  // );
+  // micro.listen();
+  const micro = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AppModule,
+    createResdiStreamOptions({
+      connection: {
+        path: process.env.REDIS_URL!,
+      },
+      streams: {
+        consumer: 'user-log',
+        consumerGroup: 'user-log-group',
+      },
+    }),
+  );
+  micro.listen();
+
+  // app.connectMicroservice<MicroserviceOptions>({
+  //   transport: Transport.REDIS,
+  //   options: {
+  //     host: 'localhost',
+  //     port: 6379,
+  //     name: 'user-log',
+  //   },
+  // });
+  // app.startAllMicroservices();
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,

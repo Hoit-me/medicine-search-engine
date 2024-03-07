@@ -532,13 +532,15 @@ model api_key_monthly_usage {
 model api_key_usage_log{
   id        String  @id @db.ObjectId @map("_id") @default(auto())
   key       String
+  ip       String
+  uri       String 
+  path      String
+  status_code    Int
   year      Int
   month     Int
-  url       String 
   method    String
   date      DateTime 
-  http_status    Int
-  delay     Int
+  time     Int
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -549,11 +551,11 @@ model api_key_usage_log{
   monthly_usage api_key_monthly_usage @relation(fields: [key,year,month], references: [key,year,month])
 
   @@index([key])
-  @@index([url])
+  @@index([uri])
   @@index([method])
   @@index([date])
-  @@index([http_status])
-  @@index([url,method])
+  @@index([status_code])
+  @@index([uri,method])
   @@index([key,year,month])
 }
 

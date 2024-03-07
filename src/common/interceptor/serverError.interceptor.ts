@@ -24,12 +24,17 @@ export class ServerErrorInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {
+    const type = context.getType();
+    if (type !== 'http') {
+      return next.handle();
+    }
+
     const req = context.switchToHttp().getRequest();
     const endpoint = req.url;
     const method = req.method;
     const ip = req.ip;
-    const userAgent = req.headers['user-agent'];
-    const referer = req.headers['referer'];
+    const userAgent = req?.headers?.['user-agent'];
+    const referer = req?.headers?.['referer'];
     return (
       next
         .handle()

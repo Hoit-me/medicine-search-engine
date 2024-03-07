@@ -6,6 +6,7 @@ import { MedicineBatchModule } from './batch/medicine/medicineBatch.module';
 import { AwsModule } from './common/aws/aws.module';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { ServerErrorInterceptor } from './common/interceptor/serverError.interceptor';
+import { UserLogConsumer } from './comsumer/userLog.consumer';
 import { defaultModules } from './config';
 import { AppController } from './controllers/app.controller';
 import { ApiKeyModule } from './modules/apiKey.module';
@@ -20,7 +21,7 @@ import { MedicineModule } from './modules/medicine.module';
     AwsModule,
     AuthModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserLogConsumer],
   providers: [
     AppService,
     {
