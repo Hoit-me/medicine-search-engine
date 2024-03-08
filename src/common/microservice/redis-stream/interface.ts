@@ -46,3 +46,5 @@ export interface ConstructorOptions {
   connection?: RedisConnectionOptions;
   serialization?: Serialization;
 }
+
+export type PayloadWrapper<T> = T & { correlationId: string };

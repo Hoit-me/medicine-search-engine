@@ -30,6 +30,7 @@ async function bootstrap() {
       streams: {
         consumer: 'user-log',
         consumerGroup: 'user-log-group',
+        deleteMessagesAfterAck: true,
       },
     }),
   );

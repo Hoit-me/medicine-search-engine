@@ -65,7 +65,8 @@ export class UserLoggingInterceptor implements NestInterceptor {
             const req = context.switchToHttp().getRequest();
 
             const user = req.user;
-            if (!user.id) {
+
+            if (!user) {
               return data;
             }
             const time = Date.now() - now;
@@ -75,7 +76,7 @@ export class UserLoggingInterceptor implements NestInterceptor {
             const ip = req.ip;
             const user_agent = req.headers['user-agent'];
             const payload: Log.User = {
-              user_id: '65e6a6f3847aa36939ccb96d',
+              user_id: user.id,
               ip,
               user_agent,
               uri,
@@ -85,6 +86,7 @@ export class UserLoggingInterceptor implements NestInterceptor {
               status_code: data.status,
               message: data.message,
               time,
+              created_at: new Date(),
             };
             // 이벤트발급
             // this.eventEmitter.emit('user.log', payload);
@@ -100,28 +102,15 @@ export class UserLoggingInterceptor implements NestInterceptor {
               //   'user_id',
               //   1,
               // );
-              this.client
-                .emit('user.log', {
-                  data: payload,
-                })
-                .pipe(
-                  mergeMap((data) => {
-                    console.log('mergeMap', data);
-                    return data;
-                  }),
-                );
+
+              this.client.emit<{ data: Log.User }>('user.log', {
+                data: payload,
+              });
             } catch (e) {
               console.log(e);
               return data;
             }
-            // const a = await this.redis.xread(
-            //   'BLOCK',
-            //   0,
-            //   'STREAMS',
-            //   'user.log',
-            //   '0',
-            // );
-            // console.log(a);
+
             // this.client.emit('user.log', JSON.stringify(payload));
             return data;
           }),

@@ -3,6 +3,7 @@ import { PrismaService } from '@src/common/prisma/prisma.service';
 import { PrismaTxType } from '@src/common/prisma/prisma.type';
 import { UserError } from '@src/constant/error/user.error';
 import { Auth } from '@src/type/auth.type';
+import { Log } from '@src/type/log.type';
 import { left, right } from 'fp-ts/lib/Either';
 import { UserRepository } from './../repository/user.repository';
 
@@ -146,6 +147,12 @@ export class UserService {
         tx,
       );
       return created;
+    });
+  }
+
+  async createUserLog(log: Log.User) {
+    return await this.prisma.user_log.create({
+      data: log,
     });
   }
 }

@@ -87,7 +87,12 @@ export const redisModule = RedisModule.forRoot(
 ///////// microserviceModule
 export const clinetModule = RedisStreamClientModule.register({
   connection: { path: process.env.REDIS_URL! },
-  streams: { consumer: 'api-1', block: 5000, consumerGroup: 'api' },
+  streams: {
+    consumer: 'api-1',
+    block: 5000,
+    consumerGroup: 'api',
+    deleteMessagesAfterAck: true,
+  },
   responseStreams: ['user.log', 'users:created:copy'],
 });
 // export const clinetModule = ClientsModule.register({

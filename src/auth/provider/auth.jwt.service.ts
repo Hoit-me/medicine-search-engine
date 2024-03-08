@@ -39,7 +39,6 @@ export class AuthJWTService implements BasicAuthJWTService {
 
   refreshTokenVerify(token: string) {
     try {
-      console.log('token', token);
       return this.jwtService.verify<JwtPayload>(token, {
         secret: this.option.refresh_secret,
       });

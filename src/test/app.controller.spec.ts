@@ -1,3 +1,4 @@
+import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from '@src/app.service';
 import { defaultModules } from '@src/config';
@@ -7,7 +8,18 @@ describe('AppController', () => {
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [...defaultModules],
+      imports: [
+        ...defaultModules,
+        RedisModule.forRoot(
+          {
+            readyLog: true,
+            config: {
+              url: process.env.REDIS_URL!,
+            },
+          },
+          true,
+        ),
+      ],
       controllers: [AppController],
       providers: [AppService],
     }).compile();

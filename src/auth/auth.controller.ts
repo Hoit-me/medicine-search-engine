@@ -4,7 +4,7 @@ import {
   TypedHeaders,
   TypedRoute,
 } from '@nestia/core';
-import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CurrentUser } from '@src/common/decorator/CurrentUser';
 import { UserLog } from '@src/common/decorator/UserLog';
@@ -45,8 +45,9 @@ export class AuthController {
    *
    * @security access_token
    */
-  @TypedRoute.Get('/')
+  @Get('/')
   @UseGuards(AuthGuard)
+  @UserLog()
   @TypedException<AuthError.Authentication.TOKEN_INVALID>(
     AuthError.Authentication.TOKEN_MISSING.status,
     '토큰이 유효하지 않음',
@@ -89,8 +90,9 @@ export class AuthController {
    * @security refresh_token
    * @security web_refresh_token
    */
-  @TypedRoute.Get('/token')
+  @Get('/token')
   @UseGuards(RefreshGuard)
+  @UserLog()
   @TypedException<AuthError.Authentication.TOKEN_INVALID>(
     AuthError.Authentication.TOKEN_INVALID.status,
     '토큰이 유효하지 않음',
@@ -191,9 +193,11 @@ export class AuthController {
     | AuthError.SocialAuth.SOCIAL_AUTH_INFO_MISSING
     | AuthError.SocialAuth.SOCIAL_SERVICE_ACCESS_DENIED
   > {
+    console.log('login');
     const result = await this.authService.login(body);
     // 로그인 성공 및 클라이언트 유형이 웹일 경우 리프레시 토큰을 쿠키로 설정
     req.user = isRight(result) ? result.right.payload : undefined;
+    console.log('result', result);
     if (
       result._tag === 'Right' &&
       headers['X-Client-Type'] !== process.env.CLIENT_TYPE
@@ -234,7 +238,8 @@ export class AuthController {
    * @tag Auth
    * @summary 회원가입 API
    */
-  @TypedRoute.Post('/signup')
+  @Post('/signup')
+  @UserLog()
   @TypedException<AuthError.User.EMAIL_ALREADY_EXISTS>(
     AuthError.User.EMAIL_ALREADY_EXISTS.status,
     '이메일이 이미 존재합니다.',
@@ -384,8 +389,9 @@ export class AuthController {
    * @tag Auth
    * @summary 로그아웃 API
    */
-  @TypedRoute.Post('/logout')
+  @Post('/logout')
   @UseGuards(RefreshGuard)
+  @UserLog()
   async logout(
     @Res({ passthrough: true }) res: Response,
     @CurrentUser() user: JwtPayload,
@@ -416,19 +422,21 @@ export class AuthController {
    * 비밀번호 변경시,해당 유저의 모든 리프레시 토큰을 만료시킵니다.
    * 따라서, 비밀번호 변경후에는 로그인을 다시 해야합니다.
    */
-  @TypedRoute.Post('/password')
+  @Post('/password')
+  @UserLog()
   async changePassword(
     @TypedBody()
     body: Auth.ChangePasswordDto,
+    @Req() req: any,
   ): Promise<
-    | SUCCESS<{ email: string }>
+    | SUCCESS<{ email: string; id: string }>
     | AuthError.User.USER_NOT_FOUND
     | AuthError.Authentication.EMAIL_CERTIFICATION_NOT_VERIFIED
     | AuthError.Authentication.INVALID_PASSWORD
     | AuthError.Authentication.INVALID_TYPE
   > {
     const result = await this.authService.changePassword(body);
-
+    isRight(result) && (req.user = result.right);
     return eitherToResponse(result);
   }
 

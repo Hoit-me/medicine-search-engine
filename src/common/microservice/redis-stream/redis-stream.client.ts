@@ -63,6 +63,15 @@ export class RedisStreamClient extends ClientProxy {
     this.connectServerInstance();
   }
 
+  emit<
+    TInput = {
+      data: any;
+      [key: string]: any;
+    },
+  >(pattern: string, data: TInput) {
+    return super.emit<any, TInput>(pattern, data);
+  }
+
   public async connectServerInstance() {
     try {
       this.redis = createRedisConnection(this.options?.connection);
@@ -238,7 +247,6 @@ export class RedisStreamClient extends ClientProxy {
   }
 
   // listener logic.
-
   private async initListener() {
     try {
       if (this.streamsToListenOn.length === 0) {
