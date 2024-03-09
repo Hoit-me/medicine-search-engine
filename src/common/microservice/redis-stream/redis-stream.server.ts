@@ -126,10 +126,11 @@ export class RedisStreamServer
     response,
     inboundContext,
   }: {
-    response: StreamResponse;
+    response: any;
     inboundContext: RedisStreamContext;
     isDisposed: boolean;
   }) {
+    console.log('handleRespondBack', response, inboundContext);
     try {
       if (!this.client) {
         return;
@@ -178,7 +179,7 @@ export class RedisStreamServer
       await Promise.all(
         response.map(async (resObj: StreamResponseObject) => {
           if (!this.client) return;
-
+          console.log('resObj', resObj);
           let serializedEntries: string[] = [];
           if (typeof this.options.serialization?.serializer === 'function') {
             serializedEntries = await this.options.serialization?.serializer(
@@ -189,8 +190,8 @@ export class RedisStreamServer
             serializedEntries =
               (await serialize(resObj.payload, inboundContext)) || [];
           }
-
-          await this.client.xadd(resObj.stream, '*', ...serializedEntries);
+          console.log(serializedEntries);
+          await this.client.xadd(resObj.pattern, '*', ...serializedEntries);
         }),
       );
     } catch (e) {
@@ -201,6 +202,8 @@ export class RedisStreamServer
 
   private async notifyHandlers(stream: string, message: any[]) {
     try {
+      console.log('notifyHandlers', stream, message);
+
       const handler = this.streamHandlerMap[stream];
       // console.log('message', message);
       // console.log(stream);
@@ -218,6 +221,7 @@ export class RedisStreamServer
             this.options?.streams?.consumerGroup,
             this.options?.streams?.consumer,
           ]);
+
           let parsedPayload: any;
           if (typeof this.options.serialization?.deserializer === 'function') {
             parsedPayload = await this.options.serialization?.deserializer(
@@ -227,10 +231,18 @@ export class RedisStreamServer
           } else {
             parsedPayload = await deserialize(m, ctx);
           }
-
+          console.log(
+            stream,
+            m[0],
+            this.options?.streams?.consumerGroup,
+            this.options?.streams?.consumer,
+            ctx,
+            parsedPayload,
+          );
           // console.log('notifyHandlersparsedPayload', parsedPayload);
           const stageRespondBack = async (responseObj: any) => {
             responseObj.inboundContext = ctx;
+            console.log('responseObj', responseObj);
             this.handleRespondBack(responseObj);
           };
 
@@ -290,18 +302,17 @@ export async function deserialize(
   rawMessage: any,
   inboundContext: RedisStreamContext,
 ) {
-  // console.log(rawMessage);
   const parsedMessageObj = parseRawMessage(rawMessage);
-
+  // console.log(rawMessage);
   // console.log('parsedMessageObj', parsedMessageObj);
-  if (!!!parsedMessageObj?.data)
+  if (!!!parsedMessageObj?.value)
     throw new Error("Could not find the 'data' key in the message.");
 
   const headers = { ...parsedMessageObj };
-  delete headers.data;
-  inboundContext.setMessageHeaders(headers);
+  delete headers.value;
+  inboundContext.setMessageHeaders(await parseJson(parsedMessageObj.headers));
 
-  const data = await parseJson(parsedMessageObj.data);
+  const data = await parseJson(parsedMessageObj.value);
 
   return data;
 }
@@ -310,19 +321,13 @@ export async function serialize(
   payload: any,
   inboundContext: RedisStreamContext,
 ): Promise<string[] | null> {
-  if (!!!payload.data)
-    throw new Error("Could not find the 'data' key in the payload.");
-
   try {
     const contextHeaders = inboundContext.getMessageHeaders();
-
     const responseObj = {
       ...contextHeaders,
-      ...payload,
     };
 
-    responseObj.data = JSON.stringify(payload?.data);
-
+    responseObj.data = JSON.stringify(payload);
     const stringifiedResponse = stringifyMessage(responseObj);
     // console.log('stringifiedResponse', stringifiedResponse);
     return stringifiedResponse;
@@ -358,6 +363,8 @@ export function parseRawMessage(rawMessage: any): any {
 
 export function stringifyMessage(messageObj: any[]): any {
   try {
+    // console.log('stringifyMessage', messageObj);
+
     const finalArray: any[] = [];
 
     for (const key in messageObj) {

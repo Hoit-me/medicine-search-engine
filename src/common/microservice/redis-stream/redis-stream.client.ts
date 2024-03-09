@@ -2,14 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, ReadPacket, WritePacket } from '@nestjs/microservices';
 import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
 import { firstValueFrom, share } from 'rxjs';
-import { ConstructorOptions, RedisInstance } from './interface';
+import { v4 } from 'uuid';
+import {
+  ClientConstructorOptions,
+  RedisConnectionOptions,
+  RedisInstance,
+} from './interface';
 import { createRedisConnection } from './redis';
 import {
-  deserialize,
-  generateCorrelationId,
-  serialize,
-} from './redis-stream.server';
-import { RedisStreamContext } from './stream.context';
+  RedisStreamRequestSerializer,
+  RedisStreamResponseDeserializer,
+} from './redis-stream.util';
+import { RedisStreamContext2 } from './stream.context';
 
 export class RequestsMap<T extends string | number | symbol, S> {
   private map: Record<T, S>;
@@ -37,30 +41,25 @@ export class RequestsMap<T extends string | number | symbol, S> {
   }
 }
 
-export interface ClientConstructorOptions extends ConstructorOptions {
-  responseStreams?: string[];
-}
-
 @Injectable()
 export class RedisStreamClient extends ClientProxy {
   protected readonly logger = new Logger(RedisStreamClient.name);
-
   private redis?: RedisInstance; // server instance for listening on response streams.
-
   private client?: RedisInstance; // client instance for publishing streams.
-
   protected connection?: Promise<any>; // client connection logic is required by framework.
+  private responsePatterns: string[] = []; // response streams to listen on.
+  private requestsMap: RequestsMap<string, any>;
 
-  private streamsToListenOn: string[] = []; // response streams to listen on.
-
-  private requestsMap: RequestsMap<string, any>; // hold the correlationIds and the observers.
+  // hold the correlationIds and the observers.
   // To forward the response to the correct observer.
 
   constructor(private readonly options: ClientConstructorOptions) {
     super();
     this.requestsMap = new RequestsMap();
-    this.streamsToListenOn = this.options?.responseStreams ?? [];
-    this.connectServerInstance();
+    this.responsePatterns = this.options?.responesePattern ?? [];
+    this.initialize();
+    this.initializeSerializer(options);
+    this.initializeDeserializer(options);
   }
 
   emit<
@@ -72,38 +71,18 @@ export class RedisStreamClient extends ClientProxy {
     return super.emit<any, TInput>(pattern, data);
   }
 
-  public async connectServerInstance() {
-    try {
-      this.redis = createRedisConnection(this.options?.connection);
-
-      this.handleError(this.redis);
-
-      // when server instance connect, bind handlers.
-      this.redis.on(CONNECT_EVENT, () => {
-        this.logger.log(
-          'Redis Client Responses Listener connected successfully on ' +
-            this.options.connection?.path,
-        );
-
-        this.initListener();
-      });
-    } catch (error) {
-      this.logger.error(
-        'connectServerInstance',
-        'Could not initialize the listener instance.',
-      );
-      this.logger.error(error);
-      this.close();
+  private async initialize() {
+    this.redis = await this.initializeRedisClient(
+      this.options.connection,
+      true,
+    );
+    this.client = await this.initializeRedisClient(this.options.connection);
+    if (this.redis) {
+      this.initListener();
     }
   }
 
-  /**
-   * @description
-   * the framework will call this whenever needs to send or emit a message,
-   * if an instance is found should be returned otherwise a new one should be created,
-   * the server instance should be already connected, before this connect happens.
-   */
-  public async connect(): Promise<any> {
+  async connect(): Promise<any> {
     // framework logic, if we have connection client instances, return it.
     if (this.client) {
       return this.connection;
@@ -117,152 +96,21 @@ export class RedisStreamClient extends ClientProxy {
     return this.connection;
   }
 
-  /**
-        partialPacket {pattern: 'client-streams-test', data: {
-        data: { name: 'tamim' }, // inner, will be JSON.stringify.
-        correlationId: '1234', // override the correlationId, if you want to use your own. Default is uuid.
-        anyOtherHeadersKey: 'anyOtherHeadersValue' // any other headers you want to add to the stream.
-        }
-    */
-  private getOrGenerateCorrelationId(partialPacket: ReadPacket): {
-    correlationId: string;
-    fromPacket: boolean;
-  } {
-    const payload = partialPacket.data; // outer data object nest convention.
-
-    if (payload?.correlationId) {
-      return {
-        correlationId: payload.correlationId,
-        fromPacket: true, // easier to know if the correlationId is from the packet or generated.
-      };
-    }
-
-    return {
-      correlationId: generateCorrelationId(),
-      fromPacket: false,
-    };
-  }
-
-  public async handleXadd(stream: string, serializedPayloadArray: any[]) {
-    try {
-      if (!this.client) {
-        return;
-      }
-      //   await this.redis.xadd(
-      //     'user.log',
-      //     '*',
-      //     'data',
-      //     JSON.stringify(payload),
-      //     'user_id',
-      //     1,
-      //   );
-      //   console.log('handleXadd', stream, serializedPayloadArray);
-      const response = await this.client.xadd(
-        stream,
-        '*',
-        ...serializedPayloadArray,
-      );
-      return response;
-    } catch (error) {
-      this.logger.error('handleXadd', error);
-    }
-  }
-
-  private async publishStream(partialPacket: ReadPacket) {
-    try {
-      const stream = partialPacket.pattern;
-      //   console.log('publishStream', partialPacket);
-      // placeholder outgoing context.
-      const ctx = new RedisStreamContext([
-        stream, // stream
-        '', // messageId
-        '', // consumer group
-        '', // consumer
-      ]);
-
-      const payload = partialPacket; // will have {data, correlationId, anyOtherHeadersKey}
-
-      // the headers are all keys except data key.
-      const headers = {
-        ...payload,
-      };
-      //   console.log('headers', headers);
-      delete headers?.data;
-
-      // default serializer will call getMessageHeaders().
-      ctx.setMessageHeaders(headers);
-
-      // 3. Serialize the payload. or use user defined serializer.
-      let serializedEntries: string[];
-
-      // if custom serializer is provided.
-      if (typeof this.options?.serialization?.serializer === 'function') {
-        serializedEntries = await this.options.serialization.serializer(
-          payload,
-          ctx,
-        );
-      } else {
-        serializedEntries = (await serialize(payload, ctx)) || [];
-      }
-      //   console.log('serializedEntries', serializedEntries);
-
-      // handle xadd.
-      const response = await this.handleXadd(stream, serializedEntries);
-      return response;
-    } catch (error) {
-      this.logger.error('publishStream', error);
-    }
-  }
-
-  // framework method, will be called on emit from user-land, without waiting for response.
-  protected dispatchEvent(partialPacket: ReadPacket<any>): Promise<any> {
-    const { correlationId, fromPacket } =
-      this.getOrGenerateCorrelationId(partialPacket);
-    if (!fromPacket) {
-      partialPacket.data.correlationId = correlationId;
-    }
-    return new Promise(() => this.publishStream(partialPacket));
-  }
-
-  // framework method, will be called on send from user-land, and user will get a observable to subscribe to.
-  protected publish(
-    partialPacket: ReadPacket,
-    callback: (packet: WritePacket) => void,
-  ): any {
-    try {
-      const { correlationId, fromPacket } =
-        this.getOrGenerateCorrelationId(partialPacket);
-
-      // if the correlationId is not from the packet, add it to the packet, later the serializer will extract it.
-      if (!fromPacket) {
-        partialPacket.data.correlationId = correlationId;
-      }
-
-      this.requestsMap.addEntry(correlationId, callback);
-
-      this.publishStream(partialPacket);
-    } catch (error) {
-      this.logger.error('publish', error);
-    }
-  }
-
-  // listener logic.
   private async initListener() {
     try {
-      if (this.streamsToListenOn.length === 0) {
+      if (this.responsePatterns.length === 0) {
         this.logger.warn('No response streams to listen on.');
         return;
       } else {
         // create consumer group if not exist.
         await Promise.all(
-          this.streamsToListenOn.map(async (stream) => {
+          this.responsePatterns.map(async (stream) => {
             await this.createConsumerGroup(
               stream,
               this.options.streams.consumerGroup,
             );
           }),
         );
-
         // // start listening.
         this.listenOnStreams();
       }
@@ -274,102 +122,54 @@ export class RedisStreamClient extends ClientProxy {
       );
     }
   }
-
-  private async createConsumerGroup(stream: string, consumerGroup: string) {
-    try {
-      if (!this.redis) return;
-      await this.redis.xgroup('CREATE', stream, consumerGroup, '$', 'MKSTREAM');
-
-      return true;
-    } catch (error: any) {
-      // if group exist for this stream. log debug.
-      if (error?.message && error.message.includes('BUSYGROUP')) {
-        this.logger.debug(
-          'Consumer Group "' +
-            consumerGroup +
-            '" already exists for stream: ' +
-            stream,
-        );
-        return true;
-      } else {
-        this.logger.error('createConsumerGroup', error);
-        return false;
-      }
-    }
-  }
-
   private async listenOnStreams() {
     try {
       if (!this.redis) return;
-      if (!this.options?.streams?.consumer) {
-        throw new Error('Consumer name is required to listen on streams.');
-      }
-      if (!this.options?.streams?.consumerGroup) {
-        throw new Error(
-          'Consumer Group name is required to listen on streams.',
-        );
-      }
+      if (!this.options.streams.consumer)
+        throw new Error('Consumer name is required');
+      if (!this.options.streams.consumerGroup)
+        throw new Error('Consumer group is required');
+      const results =
+        (await this.redis.xreadgroup(
+          'GROUP',
+          this.options?.streams?.consumerGroup,
+          this.options?.streams?.consumer, // need to make it throw an error.
+          'BLOCK',
+          this.options?.streams?.block || 0,
+          'STREAMS',
+          ...this.responsePatterns,
+          ...this.responsePatterns.map(() => '>'),
+        )) || [];
 
-      const results = await this.redis.xreadgroup(
-        'GROUP',
-        this.options?.streams?.consumerGroup,
-        this.options?.streams?.consumer, // need to make it throw an error.
-        'BLOCK',
-        this.options?.streams?.block || 0,
-        'STREAMS',
-        ...this.streamsToListenOn,
-        ...this.streamsToListenOn.map(() => '>'),
-      );
-
-      // if BLOCK time ended, and results are null, listen again.
-      if (!results) return this.listenOnStreams();
-
-      for (const result of results) {
-        const [stream, messages] = result as [string, any[]];
-        await this.notifyHandlers(stream, messages);
-      }
+      results.forEach((result: any) => {
+        const [stream, messages] = result;
+        this.notifyHandlers(stream, messages);
+      });
 
       return this.listenOnStreams();
     } catch (error) {
-      this.logger.error('listenOnStreams', error);
+      this.handleErrorWithLogging('listenOnStreams', error);
     }
   }
-
   private async notifyHandlers(stream: string, messages: any[]) {
     try {
       await Promise.all(
         messages.map(async (message) => {
-          // for each message, deserialize and get the handler.
-          //   console.log('notifyHandlers', message);
-          const ctx = new RedisStreamContext([
+          const ctx = new RedisStreamContext2([
             stream,
             message[0], // message id needed for ACK.
             this.options?.streams?.consumerGroup,
             this.options?.streams?.consumer,
           ]);
-
-          let parsedPayload: any;
-
-          // if custom deserializer is provided.
-          if (typeof this.options?.serialization?.deserializer === 'function') {
-            parsedPayload = await this.options.serialization.deserializer(
-              message,
-              ctx,
-            );
-          } else {
-            parsedPayload = await deserialize(message, ctx);
-          }
-
-          const { correlationId } = ctx.getMessageHeaders();
-
-          // if no correlationId, could be that this message was not meant for this service.
-          // just ack it.
-          if (!correlationId) {
+          const payload = await this.deserializer.deserialize(message, ctx);
+          const headers = ctx.getMessageHeaders();
+          if (!headers.correlation_id) {
             await this.handleAck(ctx);
             return;
-          } else {
-            await this.deliverToHandler(correlationId, parsedPayload, ctx);
           }
+          await this.deliverToHandler(headers.correlation_id, payload, ctx);
+          return;
+          // }
         }),
       );
     } catch (error) {
@@ -377,17 +177,32 @@ export class RedisStreamClient extends ClientProxy {
     }
   }
 
-  // after message
+  private async handleAck(inboundContext: RedisStreamContext2) {
+    try {
+      if (!this.client) return;
+      const stream = inboundContext.getStream();
+      const consumerGroup = inboundContext.getConsumerGroup();
+      const messageId = inboundContext.getMessageId();
+      if (stream && consumerGroup && messageId) {
+        await this.client.xack(stream, consumerGroup, messageId);
+        return true;
+      }
+      throw new Error('Invalid inbound context for ACK.');
+    } catch (error) {
+      this.logger.error('handleAck', error);
+      return false;
+    }
+  }
+
   private async deliverToHandler(
-    correlationId,
-    parsedPayload,
-    ctx: RedisStreamContext,
+    correlationId: string,
+    payload: any,
+    ctx: RedisStreamContext2,
   ) {
     try {
       // get the callback from the map.
       const callback: (packet: WritePacket) => void =
         this.requestsMap.getEntry(correlationId);
-
       // if no callback, could be that the message was not meant for this service,
       // or the message was fired by this service using the emit method, and not the send method, to fire
       // and forget. so no callback was provided.
@@ -400,11 +215,10 @@ export class RedisStreamClient extends ClientProxy {
         );
         return;
       }
-
       // 2. check if the parsed payload has error key. return an error callback.
-      if (parsedPayload?.error) {
+      if (payload?.error) {
         callback({
-          err: parsedPayload.error,
+          err: payload.error,
           response: null,
           isDisposed: true,
           status: 'error',
@@ -413,7 +227,7 @@ export class RedisStreamClient extends ClientProxy {
         // 3. if no error, return a success callback.
         callback({
           err: null,
-          response: parsedPayload,
+          response: payload,
           isDisposed: true,
           status: 'success',
         });
@@ -432,29 +246,22 @@ export class RedisStreamClient extends ClientProxy {
     }
   }
 
-  private async handleAck(inboundContext: RedisStreamContext) {
+  private async createConsumerGroup(stream: string, group: string) {
+    if (!this.redis) return;
     try {
-      if (!this.client) return;
-      await this.client.xack(
-        inboundContext.getStream(),
-        inboundContext.getConsumerGroup(),
-        inboundContext.getMessageId(),
-      );
-
+      await this.redis.xgroup('CREATE', stream, group, '$', 'MKSTREAM');
       return true;
-    } catch (error) {
-      this.logger.error('handleAck', error);
-      return false;
+    } catch (error: any) {
+      if (error?.message && error.message.includes('BUSYGROUP')) {
+        this.logger.debug(
+          'Consumer Group "' + group + '" already exists for stream: ' + stream,
+        );
+        return true;
+      } else {
+        this.handleErrorWithLogging('createConsumerGroup', error);
+        return false;
+      }
     }
-  }
-
-  public async close(): Promise<void> {
-    this.redis && this.redis.disconnect(); // listener instance.
-    this.client && this.client.disconnect(); // publisher instance.
-
-    this.client = undefined;
-    this.redis = undefined;
-    this.connection = undefined;
   }
 
   public handleError(stream: any) {
@@ -463,4 +270,134 @@ export class RedisStreamClient extends ClientProxy {
       this.close();
     });
   }
+
+  private async initializeRedisClient(
+    connectionOptions?: RedisConnectionOptions,
+    isListener: boolean = false,
+  ): Promise<RedisInstance | undefined> {
+    try {
+      const redis = createRedisConnection(connectionOptions);
+      this.connection = await firstValueFrom(
+        this.connect$(redis, ERROR_EVENT, CONNECT_EVENT).pipe(share()),
+      );
+      this.logger.log(
+        `Redis ${isListener ? 'Listener' : 'Client'} connected successfully.`,
+      );
+      // redis.on(ERROR_EVENT, (err: any) =>
+      //   this.handleErrorWithLogging('Redis Error', err),
+      // );
+      this.handleError(redis);
+      return redis;
+    } catch (error) {
+      this.handleErrorWithLogging('initializeRedisClient', error);
+      return undefined;
+    }
+  }
+
+  protected dispatchEvent<T = any>(packet: ReadPacket): Promise<T> {
+    const { pattern, data } = packet;
+    const { correlation_id, fromPacket } =
+      this.getOrGenerateCorrelationId(packet);
+    if (!fromPacket) {
+      packet.data.correlation_id = correlation_id;
+    }
+    return new Promise(() =>
+      this.publishStream({ pattern, data: { ...data, correlation_id } }),
+    );
+  }
+
+  private getOrGenerateCorrelationId(packet: any) {
+    const payload = packet.data;
+    const correlation_id = payload?.correlation_id;
+    if (correlation_id) {
+      return {
+        correlation_id,
+        fromPacket: true,
+      };
+    }
+    return {
+      correlation_id: this.generateCorrelationId(),
+      fromPacket: false,
+    };
+  }
+
+  protected async publishStream(partialPacket: ReadPacket) {
+    try {
+      const { pattern, data } = partialPacket;
+      const ctx = new RedisStreamContext2().setStream(pattern);
+
+      const headers = data?.headers || {};
+      const correlation_id = data?.correlation_id;
+      ctx.setMessageHeaders({ ...headers, correlation_id });
+      const serializedPayloadArray: string[] = await this.serializer.serialize(
+        data,
+        ctx,
+      );
+      const response = await this.handleXadd(pattern, serializedPayloadArray);
+      return response;
+    } catch (error) {
+      this.handleErrorWithLogging('publishStream', error);
+    }
+  }
+
+  private generateCorrelationId() {
+    return v4();
+  }
+
+  private async handleXadd(stream: string, serializedPayloadArray: any[]) {
+    if (!this.client) return;
+    try {
+      return await this.client.xadd(stream, '*', ...serializedPayloadArray);
+    } catch (error) {
+      this.handleErrorWithLogging('handleXadd', error);
+    }
+  }
+
+  protected publish(
+    partialPacket: ReadPacket,
+    callback: (packet: WritePacket) => void,
+  ): any {
+    try {
+      const { correlation_id, fromPacket } =
+        this.getOrGenerateCorrelationId(partialPacket);
+      // if the correlationId is not from the packet, add it to the packet, later the serializer will extract it.
+      if (!fromPacket) {
+        partialPacket.data.correlation_id = correlation_id;
+      }
+      this.requestsMap.addEntry(correlation_id, callback);
+      this.publishStream(partialPacket);
+    } catch (error) {
+      this.logger.error('publish', error);
+    }
+  }
+
+  // Listen and processing logic remains mostly unchanged but uses refactored methods for error handling and Redis commands execution
+
+  public async close(): Promise<void> {
+    this.redis?.disconnect();
+    this.client?.disconnect();
+    this.redis = undefined;
+    this.client = undefined;
+  }
+
+  protected initializeSerializer(options: ClientConstructorOptions) {
+    this.serializer =
+      (options && options.serialization?.serializer) ||
+      new RedisStreamRequestSerializer();
+  }
+
+  protected initializeDeserializer(options: ClientConstructorOptions) {
+    this.deserializer =
+      (options && options.serialization?.deserializer) ||
+      new RedisStreamResponseDeserializer();
+  }
+
+  private handleErrorWithLogging(context: string, error: any) {
+    this.logger.error(`${context}: ${error.message}`, error.stack);
+    this.close();
+  }
+  // protected initializeDeserializer(options: KafkaOptions['options']) {
+  //   this.deserializer =
+  //     (options && options.deserializer) || new KafkaResponseDeserializer();
+  // }
 }

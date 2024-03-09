@@ -6,9 +6,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Log } from '@src/type/log.type';
 import { Redis } from 'ioredis';
-import { Observable, mergeMap } from 'rxjs';
+import { Observable, lastValueFrom, mergeMap } from 'rxjs';
 import { RedisStreamClient } from '../microservice/redis-stream/redis-stream.client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -75,7 +74,7 @@ export class UserLoggingInterceptor implements NestInterceptor {
             const method = req.method;
             const ip = req.ip;
             const user_agent = req.headers['user-agent'];
-            const payload: Log.User = {
+            const payload = {
               user_id: user.id,
               ip,
               user_agent,
@@ -87,6 +86,7 @@ export class UserLoggingInterceptor implements NestInterceptor {
               message: data.message,
               time,
               created_at: new Date(),
+              a: { a: 'a' },
             };
             // 이벤트발급
             // this.eventEmitter.emit('user.log', payload);
@@ -103,9 +103,18 @@ export class UserLoggingInterceptor implements NestInterceptor {
               //   1,
               // );
 
-              this.client.emit<{ data: Log.User }>('user.log', {
-                data: payload,
-              });
+              const a = await lastValueFrom(
+                this.client.send('user.log', {
+                  value: payload,
+                  headers: { a: 'a', asd: 'asd' },
+                }),
+              );
+              console.log('this.client.send', a);
+
+              // (  this.client.send('user.log', {
+              //     value: payload,
+              //     headers: { a: 'a', asd: 'asd' },
+              //   }))
             } catch (e) {
               console.log(e);
               return data;

@@ -1,3 +1,9 @@
+import {
+  ConsumerDeserializer,
+  ConsumerSerializer,
+  ProducerDeserializer,
+  ProducerSerializer,
+} from '@nestjs/microservices';
 import * as Redis from 'ioredis';
 import { RedisStreamContext } from './stream.context';
 
@@ -21,13 +27,18 @@ export type RawStreamMessage = [id: string, payload: string[]];
 
 export interface StreamResponseObject {
   payload: {
-    [key: string]: any; // any extra keys goes as headers.
-    data: any;
+    headers: Record<string, any>;
+    value: any;
   };
-  stream: string;
+  pattern: string;
 }
 
-export type StreamResponse = StreamResponseObject[] | null | undefined;
+export type StreamResponse =
+  | StreamResponseObject[]
+  | StreamResponseObject
+  | boolean
+  | undefined
+  | null;
 
 export interface Serialization {
   deserializer?: (
@@ -39,6 +50,28 @@ export interface Serialization {
     parsedPayload: any,
     inboundContext: RedisStreamContext,
   ) => string[] | Promise<string[]>;
+}
+
+export interface ProducerSerialization {
+  serializer?: ProducerSerializer;
+  deserializer?: ProducerDeserializer;
+}
+
+export interface ConsumerSerialization {
+  deserializer?: ConsumerDeserializer;
+  serializer?: ConsumerSerializer;
+}
+
+export interface ClientConstructorOptions {
+  streams: RedisStreamOptions;
+  connection?: RedisConnectionOptions;
+  serialization?: ProducerSerialization;
+  responesePattern?: string[];
+}
+export interface ServerConstructorOptions {
+  streams: RedisStreamOptions;
+  connection?: RedisConnectionOptions;
+  serialization?: ConsumerSerialization;
 }
 
 export interface ConstructorOptions {

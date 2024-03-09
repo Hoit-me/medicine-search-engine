@@ -6,10 +6,8 @@ import {
   Provider,
   Type,
 } from '@nestjs/common';
-import {
-  ClientConstructorOptions,
-  RedisStreamClient,
-} from './redis-stream.client';
+import { ClientConstructorOptions } from './interface';
+import { RedisStreamClient } from './redis-stream.client';
 
 export interface RedisStreamClientModuleOptionsFactory {
   createRedisStreamClientModuleOptions():

@@ -93,7 +93,7 @@ export const clinetModule = RedisStreamClientModule.register({
     consumerGroup: 'api',
     deleteMessagesAfterAck: true,
   },
-  responseStreams: ['user.log', 'users:created:copy'],
+  responesePattern: ['user.log', 'users:created:copy', 'user.log.test'],
 });
 // export const clinetModule = ClientsModule.register({
 //   clients: [

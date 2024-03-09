@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { ClientConstructorOptions } from './redis-stream.client';
+import { ClientConstructorOptions } from './interface';
 import {
   RedisStreamClientCoreModule,
   RedisStreamModuleAsyncOptions,
