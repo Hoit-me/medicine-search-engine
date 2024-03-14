@@ -1,3 +1,4 @@
+import { RedisStreamClient } from '@de-novo/nestjs-redis-streams';
 import { InjectRedis } from '@liaoliaots/nestjs-redis';
 import {
   CallHandler,
@@ -8,7 +9,6 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Redis } from 'ioredis';
 import { Observable, lastValueFrom, mergeMap } from 'rxjs';
-import { RedisStreamClient } from '../microservice/redis-stream/redis-stream.client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**

@@ -1,1 +1,0 @@
-export const REDIST_STREAM = 'REDIS_STREAM';

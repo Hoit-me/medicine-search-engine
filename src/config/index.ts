@@ -1,10 +1,10 @@
+import { RedisStreamClientModule } from '@de-novo/nestjs-redis-streams';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RedisStreamClientModule } from '@src/common/microservice/redis-stream/redis-stream.client.module';
 import { PrismaModule } from '@src/common/prisma/prisma.module';
 import { redisStore } from 'cache-manager-redis-store';
 import Joi from 'joi';
@@ -91,23 +91,9 @@ export const clinetModule = RedisStreamClientModule.register({
     consumer: 'api-1',
     block: 5000,
     consumerGroup: 'api',
-    deleteMessagesAfterAck: true,
   },
-  responesePattern: ['user.log', 'users:created:copy', 'user.log.test'],
+  responsePattern: ['user.log'],
 });
-// export const clinetModule = ClientsModule.register({
-//   clients: [
-//     {
-//       name: process.env.MICROSERVICE_NAME!,
-//       transport: Transport.REDIS,
-//       options: {
-//         host: process.env.REDIS_HOST,
-//         port: parseInt(process.env.REDIS_PORT!, 10),
-//       },
-//     },
-//   ],
-//   isGlobal: true,
-// });
 
 export const defaultModules = [
   configModule,

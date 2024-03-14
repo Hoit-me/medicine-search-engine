@@ -1,10 +1,10 @@
+import { RedisStreamServer } from '@de-novo/nestjs-redis-streams';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions } from '@nestjs/microservices';
 import { SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { createResdiStreamOptions } from './common/microservice/redis-stream';
 async function bootstrap() {
   console.log(process.memoryUsage());
 
@@ -23,16 +23,17 @@ async function bootstrap() {
   // micro.listen();
   const micro = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
-    createResdiStreamOptions({
-      connection: {
-        path: process.env.REDIS_URL!,
-      },
-      streams: {
-        consumer: 'user-log',
-        consumerGroup: 'user-log-group',
-        deleteMessagesAfterAck: true,
-      },
-    }),
+    {
+      strategy: new RedisStreamServer({
+        connection: {
+          path: process.env.REDIS_URL!,
+        },
+        streams: {
+          consumer: process.env.CONSUMER!,
+          consumerGroup: process.env.CONSUMER_GROUP!,
+        },
+      }),
+    },
   );
   micro.listen();
 

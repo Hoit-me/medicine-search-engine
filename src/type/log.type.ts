@@ -1,8 +1,6 @@
-import { PayloadWrapper } from '@src/common/microservice/redis-stream/interface';
 import { tags } from 'typia';
 
 export namespace Log {
-  export type Payload<T> = PayloadWrapper<{ data: T }>;
   export interface User {
     user_id: string;
     ip: string;
@@ -15,9 +13,6 @@ export namespace Log {
     time: number;
     message: string;
     created_at: (string & tags.Format<'date-time'>) | Date;
-  }
-  export namespace User {
-    export type Paylaod = Payload<User>;
   }
 
   export interface ApiKey {

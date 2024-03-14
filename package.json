@@ -25,6 +25,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.498.0",
     "@aws-sdk/s3-request-presigner": "^3.498.0",
+    "@de-novo/nestjs-redis-streams": "^0.0.4",
     "@liaoliaots/nestjs-redis": "^9.0.5",
     "@nestia/core": "^2.4.6",
     "@nestia/e2e": "^0.4.1",
@@ -42,7 +43,6 @@
     "@nestjs/swagger": "^7.2.0",
     "@prisma/client": "5.10.2",
     "@slack/webhook": "^7.0.2",
-    "@tamimaj/nestjs-redis-streams": "^1.0.4",
     "axios": "^1.6.5",
     "bcrypt": "^5.1.1",
     "cache-manager": "^5.4.0",
@@ -131,5 +131,16 @@
   },
   "eslintIgnore": [
     "k6/**/*"
-  ]
+  ],
+  "overrides": {
+    "@liaoliaots/nestjs-redis": {
+      "@nestjs/common": "^10.0.0",
+      "@nestjs/core": "^10.0.0"
+    },
+    "@liaoliaots/nestjs-redis-health": {
+      "@nestjs/common": "^10.0.0",
+      "@nestjs/core": "^10.0.0",
+      "@nestjs/terminus": "^10.0.0"
+    }
+  }
 }
