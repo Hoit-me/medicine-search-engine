@@ -1,29 +1,15 @@
 import { Controller } from '@nestjs/common';
-import { Ctx, MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UserLogService } from '@src/services/userLog.service';
 import { Log } from '@src/type/log.type';
+import typia from 'typia';
 
 @Controller()
 export class UserLogConsumer {
   constructor(private readonly userLogService: UserLogService) {}
   @MessagePattern('user.log')
-  async handleUserLog(@Payload() log: Log.User, @Ctx() ctx: any) {
-    console.log('user log', log, ctx);
-    // console.log('user log ', ctx, log);
-    // console.log(typia.assert<Log.User.Paylaod>(log));
-    // await this.userLogService.create(log.data);
+  async handleUserLog(@Payload() log: Log.User) {
+    typia.is<Log.User>(log) && (await this.userLogService.create(log));
     return true;
   }
-
-  @MessagePattern('test.send')
-  async handleUserLogTest(@Payload() log: Log.User, @Ctx() ctx: any) {
-    console.log('user log test', ctx, log);
-    return true;
-  }
-
-  // @MessagePattern('user.log.test')
-  // async handleUserLogTest(@Payload() log: Log.User.Paylaod, @Ctx() ctx: any) {
-  //   console.log('user log test', ctx, log);
-  //   return true;
-  // }
 }

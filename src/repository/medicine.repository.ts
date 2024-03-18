@@ -62,39 +62,44 @@ export class MedicineRepository {
   //////////////////////////////////////////
   // search
   //////////////////////////////////////////
-  findManyByIntegredientCode(
+  async findManyByIntegredientCode(
     ingredient_code: string,
     { page, limit }: Required<Page.Query>,
     tx?: PrismaTxType,
   ) {
-    return (tx ?? this.prisma).medicine.findMany({
-      where: {
-        main_ingredients: {
-          some: {
-            code: ingredient_code,
-          },
+    const medicines = (await (tx ?? this.prisma).medicine.findRaw({
+      filter: {
+        'main_ingredients.code': ingredient_code,
+      },
+      options: {
+        skip: (page - 1) * limit,
+        limit,
+        projection: {
+          ...typia.random<SelectAll<Medicine, 1>>(),
+          id: '$_id',
+          _id: 0,
         },
       },
-      select: {
-        ...(typia.random<
-          SelectAll<Medicine, true>
-        >() satisfies Prisma.medicineFindManyArgs['select']),
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    })) as unknown as Medicine[];
+    return medicines;
   }
 
-  countByIntegredientCode(ingredient_code: string, tx?: PrismaTxType) {
-    return (tx ?? this.prisma).medicine.count({
-      where: {
-        main_ingredients: {
-          some: {
-            code: ingredient_code,
+  async countByIntegredientCode(ingredient_code: string, tx?: PrismaTxType) {
+    const result = (await (tx ?? this.prisma).medicine.aggregateRaw({
+      pipeline: [
+        {
+          $match: {
+            'main_ingredients.code': ingredient_code,
           },
         },
-      },
-    });
+        {
+          $count: 'count',
+        },
+      ],
+    })) as unknown as [{ count: number }];
+    const count = result[0].count;
+
+    return count;
   }
 
   async aggregateSearch(

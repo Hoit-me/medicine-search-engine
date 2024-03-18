@@ -49,7 +49,6 @@ export namespace Page {
   export interface Search extends Query {
     /**
      * Search keyword
-     * @minLength 1
      */
     search?: string;
   }

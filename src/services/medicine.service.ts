@@ -149,9 +149,10 @@ export class MedicineService {
     path: 'name' | 'english_name';
   }): Promise<string[]> {
     const arg = { page, limit, search, path };
-    return (await this.medicineRepository.aggregateKeyword(arg)).map(
+    const keyword = (await this.medicineRepository.aggregateKeyword(arg)).map(
       (item) => item.keyword,
     );
+    return [...new Set(keyword)];
   }
 
   async getMedicineDetail(

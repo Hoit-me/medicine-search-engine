@@ -1,15 +1,11 @@
 import { RedisStreamClient } from '@de-novo/nestjs-redis-streams';
-import { InjectRedis } from '@liaoliaots/nestjs-redis';
 import {
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Redis } from 'ioredis';
-import { Observable, lastValueFrom, mergeMap } from 'rxjs';
-import { PrismaService } from '../prisma/prisma.service';
+import { Observable, mergeMap } from 'rxjs';
 
 /**
  * logging.interceptor.ts
@@ -39,22 +35,18 @@ import { PrismaService } from '../prisma/prisma.service';
  *        배치작업을 통해 로그데이터를 저장하는 시간을 최소화하거나,
  *        로그데이터를 저장하는 서버를 확장하여, 로그데이터를 저장하는 시간을 최소화한다.
  *
+ *
+ * - 레디스 스트림을 사용하여, 로그데이터를 전송한다.
+ * - consumer를 통해, 로그데이터를 저장한다.
  */
 @Injectable()
 export class UserLoggingInterceptor implements NestInterceptor {
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-    private readonly prisma: PrismaService, // 우선 prisma를 사용하여 로그를 저장
-    @InjectRedis()
-    private readonly redis: Redis,
-    private readonly client: RedisStreamClient,
-  ) {}
+  constructor(private readonly client: RedisStreamClient) {}
   intercept(
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> | Promise<Observable<any>> {
     const now = Date.now();
-
     return (
       next
         .handle()
@@ -86,41 +78,12 @@ export class UserLoggingInterceptor implements NestInterceptor {
               message: data.message,
               time,
               created_at: new Date(),
-              a: { a: 'a' },
             };
-            // 이벤트발급
-            // this.eventEmitter.emit('user.log', payload);
-            // await this.prisma.user_log.create({
-            //   data: payload,
-            // });
-            try {
-              // await this.redis.xadd(
-              //   'user.log',
-              //   '*',
-              //   'data',
-              //   JSON.stringify(payload),
-              //   'user_id',
-              //   1,
-              // );
 
-              const a = await lastValueFrom(
-                this.client.send('user.log', {
-                  value: payload,
-                  headers: { a: 'a', asd: 'asd' },
-                }),
-              );
-              console.log('this.client.send', a);
+            this.client.emit('user.log', {
+              value: payload,
+            });
 
-              // (  this.client.send('user.log', {
-              //     value: payload,
-              //     headers: { a: 'a', asd: 'asd' },
-              //   }))
-            } catch (e) {
-              console.log(e);
-              return data;
-            }
-
-            // this.client.emit('user.log', JSON.stringify(payload));
             return data;
           }),
         )
