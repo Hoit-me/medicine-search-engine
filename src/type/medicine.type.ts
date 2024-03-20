@@ -55,6 +55,7 @@ export interface Medicine {
    * 주성분
    */
   main_ingredients: compound[];
+  additive_ingredients: compound[];
 }
 export namespace Medicine {
   export type JoinInsurance<T> = T & {

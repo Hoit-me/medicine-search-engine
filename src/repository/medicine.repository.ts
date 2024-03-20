@@ -96,7 +96,8 @@ export class MedicineRepository {
           $count: 'count',
         },
       ],
-    })) as unknown as [{ count: number }];
+    })) as unknown as { count: number }[];
+    if (result.length === 0) return 0;
     const count = result[0].count;
 
     return count;
@@ -132,6 +133,7 @@ export class MedicineRepository {
         type: 'total',
       },
     };
+    console.log(searchParam);
 
     const $project = {
       $project: {
@@ -155,7 +157,6 @@ export class MedicineRepository {
       medicine,
       'document' | 'usage' | 'effect' | 'change_content' | 'caution'
     >[];
-
     return data;
   }
 

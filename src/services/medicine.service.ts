@@ -106,7 +106,8 @@ export class MedicineService {
     path: ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[];
   }): Promise<Page<Medicine.JoinInsurance<Medicine>>> {
     const arg = { page, limit, search, path };
-    const editCount = search.length > 6 ? 2 : search.length > 3 ? 1 : 0;
+    // const editCount = search.length > 6 ? 2 : search.length > 3 ? 1 : 0;
+    const editCount = 0;
     const searchOption = editCount
       ? {
           fuzzy: {

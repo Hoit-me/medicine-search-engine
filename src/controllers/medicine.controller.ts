@@ -24,14 +24,29 @@ export class MedicineController {
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60 * 60 * 24)
   async getMedicineList(
-    @TypedQuery() query: Page.Search,
+    @TypedQuery()
+    query: Page.Search & {
+      mode?: 'medicine' | 'ingredient';
+      language?: 'ko' | 'en';
+    },
   ): Promise<SUCCESS<Page<Medicine.JoinInsurance<Medicine>>>> {
-    const { search } = query;
+    const { search, mode, language } = query;
+
+    // 분리필요
+    const generatePath = (
+      mode: 'medicine' | 'ingredient' = 'medicine',
+      language: 'ko' | 'en' = 'ko',
+    ): ('name' | 'english_name' | 'ingredients.ko' | 'ingredients.en')[] => {
+      if (mode === 'medicine') {
+        return language === 'ko' ? ['name'] : ['english_name'];
+      }
+      return language === 'ko' ? ['ingredients.ko'] : ['ingredients.en'];
+    };
     const result = search
       ? await this.medicineService.search({
           ...query,
           search,
-          path: ['name'],
+          path: generatePath(mode, language),
         })
       : await this.medicineService.getMedicineList(query);
     return wrapResponse(result);
@@ -39,13 +54,17 @@ export class MedicineController {
 
   @TypedRoute.Get('/keyword')
   async getMedicineKeyword(
-    @TypedQuery() query: Page.Search & { search: string },
+    @TypedQuery()
+    query: Page.Search & {
+      search: string;
+      language?: 'ko' | 'en';
+    },
   ): Promise<SUCCESS<string[]>> {
-    const { search } = query;
+    const { search, language = 'ko' } = query;
     const result = await this.medicineService.getMedicineKeyword({
       ...query,
       search,
-      path: 'name',
+      path: language === 'ko' ? 'name' : 'english_name',
     });
     return wrapResponse(result);
   }

@@ -43,6 +43,7 @@ export class DurRepository {
       },
     });
   }
+
   async findManyOldTaboo(integredient_codes: string[], tx?: PrismaTxType) {
     return await (tx ?? this.prisma).dur_ingredient_old_taboo.findMany({
       where: {
@@ -54,6 +55,7 @@ export class DurRepository {
       },
     });
   }
+
   async findManyPeriodTaboo(integredient_codes: string[], tx?: PrismaTxType) {
     return await (tx ?? this.prisma).dur_ingredient_period_taboo.findMany({
       where: {
@@ -65,6 +67,7 @@ export class DurRepository {
       },
     });
   }
+
   async findManyPregnancyTaboo(
     integredient_codes: string[],
     tx?: PrismaTxType,
